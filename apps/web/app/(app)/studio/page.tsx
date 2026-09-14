@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { storiesApi } from "@/lib/api";
+import { generateApi, storiesApi } from "@/lib/api";
 
 const genres = ["Romance", "Horror", "Thriller", "Mystery", "Fantasy", "Drama"];
 const moods = ["Dark", "Emotional", "Mysterious", "Romantic", "Hopeful", "Melancholic"];
@@ -37,16 +37,47 @@ function StudioContent() {
   const [editingId, setEditingId] = useState<string | null>(storyIdFromUrl);
   const [title, setTitle] = useState("Untitled Story");
   const [content, setContent] = useState("");
-  const [genre, setGenre] = useState("");
-  const [mood, setMood] = useState("");
+  const [genre, setGenre] = useState("Drama");
+  const [mood, setMood] = useState("Emotional");
   const [setting, setSetting] = useState("");
   const [lengthPreset, setLengthPreset] = useState("Medium");
+  const [language, setLanguage] = useState("bn");
   const [characterName, setCharacterName] = useState("");
   const [characterRole, setCharacterRole] = useState("");
   const [characterTraits, setCharacterTraits] = useState("");
   const [loadingStory, setLoadingStory] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    setSaveMsg("");
+    try {
+      const res = await generateApi().generate({
+        title,
+        genre,
+        mood,
+        setting,
+        character_name: characterName,
+        character_role: characterRole,
+        character_traits: characterTraits,
+        length_preset: lengthPreset,
+        language,
+      });
+      if (content.trim()) {
+        setContent((prev) => `${prev}\n\n${res.text}`);
+      } else {
+        setContent(res.text);
+      }
+      setSaveMsg(`Generated ${res.word_count} words!`);
+    } catch (err: unknown) {
+      setSaveMsg(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setGenerating(false);
+      setTimeout(() => setSaveMsg(""), 4000);
+    }
+  };
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
   const charCount = content.length;

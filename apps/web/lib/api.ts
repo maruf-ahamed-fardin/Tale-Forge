@@ -180,4 +180,38 @@ export function datasetsApi() {
   };
 }
 
+// ─── Generation ───────────────────────────────────────────────────────────────
+
+export interface GenerateRequest {
+  title?: string;
+  prompt?: string;
+  genre?: string;
+  mood?: string;
+  setting?: string;
+  character_name?: string;
+  character_role?: string;
+  character_traits?: string;
+  length_preset?: string;
+  language?: string;
+  temperature?: number;
+}
+
+export interface GenerateResponse {
+  text: string;
+  word_count: number;
+  provider: string;
+  finish_reason: string;
+}
+
+export function generateApi() {
+  return {
+    generate: (data: GenerateRequest) =>
+      request<GenerateResponse>("/api/v1/generate", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+  };
+}
+
 export { ApiError, getToken };
+
