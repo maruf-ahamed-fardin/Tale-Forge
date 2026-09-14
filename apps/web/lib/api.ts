@@ -213,5 +213,47 @@ export function generateApi() {
   };
 }
 
+// ─── Training ─────────────────────────────────────────────────────────────────
+
+export interface TrainingRunCreate {
+  dataset_id?: string | null;
+  base_model?: string;
+  lora_rank?: number;
+  epochs?: number;
+}
+
+export interface TrainingRunOut {
+  id: string;
+  user_id: string;
+  dataset_id: string | null;
+  status: string;
+  base_model: string;
+  lora_rank: number;
+  epochs: number;
+  log_path: string;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+}
+
+export interface TrainingRunListResponse {
+  runs: TrainingRunOut[];
+  total: number;
+}
+
+export function trainingApi() {
+  return {
+    list: (skip = 0, limit = 50) =>
+      request<TrainingRunListResponse>(`/api/v1/training/runs?skip=${skip}&limit=${limit}`),
+    start: (data: TrainingRunCreate) =>
+      request<TrainingRunOut>("/api/v1/training/runs", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    get: (id: string) =>
+      request<TrainingRunOut>(`/api/v1/training/runs/${id}`),
+  };
+}
+
 export { ApiError, getToken };
 
