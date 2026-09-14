@@ -200,9 +200,9 @@ function StudioContent() {
             New Blank Story
           </Button>
         )}
-        <Button id="generate-story-btn">
-          <Wand2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
-          {actionFromUrl === "continue" ? "Continue Story" : "Generate Story"}
+        <Button id="generate-story-btn" onClick={handleGenerate} disabled={generating}>
+          <Wand2 className={`h-4 w-4 mr-1.5 ${generating ? "animate-spin" : ""}`} aria-hidden="true" />
+          {generating ? "Crafting Story…" : actionFromUrl === "continue" ? "Continue Story" : "Generate Story"}
         </Button>
       </PageHeader>
 
@@ -214,6 +214,34 @@ function StudioContent() {
               <CardTitle>Direction</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+              <div>
+                <label className="text-sm font-semibold text-[#292524]">Language / ভাষা</label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("bn")}
+                    className={`rounded-lg border px-3 py-2 text-center text-sm font-semibold transition-colors ${
+                      language === "bn"
+                        ? "border-primary bg-[#eef2ff] text-primary"
+                        : "border-border bg-white text-[#44403c] hover:bg-[#f7f4ef]"
+                    }`}
+                  >
+                    বাংলা (Bangla)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("en")}
+                    className={`rounded-lg border px-3 py-2 text-center text-sm font-semibold transition-colors ${
+                      language === "en"
+                        ? "border-primary bg-[#eef2ff] text-primary"
+                        : "border-border bg-white text-[#44403c] hover:bg-[#f7f4ef]"
+                    }`}
+                  >
+                    English
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="text-sm font-semibold text-[#292524]">Genre</label>
                 <div className="mt-2 grid grid-cols-2 gap-2">

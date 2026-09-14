@@ -34,6 +34,9 @@ Thumbs.db
 # Private user data and generated artifacts
 storage/*
 !storage/.gitkeep
+apps/api/storage/*
+!apps/api/storage/.gitkeep
+*.tsbuildinfo
 data/raw/*
 data/extracted/*
 data/processed/*
