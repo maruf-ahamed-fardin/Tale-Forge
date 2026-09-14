@@ -1,5 +1,7 @@
 # TaleForge Phase 1 Plan
 
+![TaleForge Phase 1 Architecture](docs/assets/taleforge-phase1-architecture.svg)
+
 ## Environment Findings
 
 | Check | Result |
