@@ -11,7 +11,8 @@ from app.core.settings import get_settings
 from app.db.session import get_db
 from app.models.user import User
 
-_bearer = HTTPBearer(auto_error=True)
+_bearer = HTTPBearer(auto_error=False)
+DEFAULT_USER_ID = "default_local_author"
 
 
 def hash_password(plain: str) -> str:
@@ -35,25 +36,34 @@ def create_access_token(user_id: str) -> str:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        settings = get_settings()
-        payload = jwt.decode(credentials.credentials, settings.jwt_secret, algorithms=["HS256"])
-        user_id: str | None = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+    if credentials and credentials.credentials:
+        try:
+            settings = get_settings()
+            payload = jwt.decode(credentials.credentials, settings.jwt_secret, algorithms=["HS256"])
+            user_id: str | None = payload.get("sub")
+            if user_id:
+                result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))  # noqa: E712
+                user = result.scalar_one_or_none()
+                if user:
+                    return user
+        except Exception:
+            pass
 
-    result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))  # noqa: E712
+    # No login required! Default to local user automatically
+    result = await db.execute(select(User).where(User.id == DEFAULT_USER_ID))
     user = result.scalar_one_or_none()
-    if user is None:
-        raise credentials_exception
+    if not user:
+        user = User(
+            id=DEFAULT_USER_ID,
+            email="author@taleforge.local",
+            hashed_password=hash_password("localpass"),
+            display_name="Tale Author",
+            is_active=True,
+        )
+        db.add(user)
+        await db.flush()
+        await db.refresh(user)
     return user
