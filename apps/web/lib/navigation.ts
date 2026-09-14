@@ -1,12 +1,7 @@
 export type NavigationIcon =
-  | "LayoutDashboard"
-  | "PenLine"
+  | "MessageSquare"
+  | "GraduationCap"
   | "Library"
-  | "Database"
-  | "Activity"
-  | "Boxes"
-  | "History"
-  | "ClipboardCheck"
   | "Settings";
 
 export type NavigationItem = {
@@ -18,57 +13,27 @@ export type NavigationItem = {
 
 export const mainNavigation: NavigationItem[] = [
   {
-    href: "/dashboard",
-    label: "Dashboard",
-    description: "Overview",
-    icon: "LayoutDashboard",
+    href: "/chat",
+    label: "AI Story Chat",
+    description: "Generate & Chat with AI",
+    icon: "MessageSquare",
   },
   {
-    href: "/studio",
-    label: "Studio",
-    description: "Create stories",
-    icon: "PenLine",
+    href: "/train",
+    label: "Train AI",
+    description: "Train Model with Stories",
+    icon: "GraduationCap",
   },
   {
     href: "/stories",
-    label: "Stories",
-    description: "Library",
+    label: "Story Library",
+    description: "Saved Stories",
     icon: "Library",
-  },
-  {
-    href: "/dataset",
-    label: "Dataset",
-    description: "Source writing",
-    icon: "Database",
-  },
-  {
-    href: "/training",
-    label: "Training",
-    description: "Runs",
-    icon: "Activity",
-  },
-  {
-    href: "/models",
-    label: "Models",
-    description: "Adapters",
-    icon: "Boxes",
-  },
-  {
-    href: "/history",
-    label: "History",
-    description: "Generations",
-    icon: "History",
-  },
-  {
-    href: "/evaluation",
-    label: "Evaluation",
-    description: "Quality checks",
-    icon: "ClipboardCheck",
   },
   {
     href: "/settings",
     label: "Settings",
-    description: "Preferences",
+    description: "Preferences & Reset",
     icon: "Settings",
   },
 ];

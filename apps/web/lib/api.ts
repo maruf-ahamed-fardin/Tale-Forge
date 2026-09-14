@@ -255,5 +255,51 @@ export function trainingApi() {
   };
 }
 
+// ─── Simple Trainable AI & Story Chat ─────────────────────────────────────────
+
+export interface AIStatus {
+  total_trained_stories: number;
+  total_words: number;
+  auto_train_enabled: boolean;
+  recent_stories: Array<{ id: string; title: string; word_count: number; trained_at: string }>;
+  chat_count: number;
+}
+
+export function simpleAiApi() {
+  return {
+    chat: (message: string, autoTrain = true) =>
+      request<{ story: string; prompt: string; auto_trained: boolean; total_trained_count: number }>(
+        "/api/v1/ai/chat",
+        {
+          method: "POST",
+          body: JSON.stringify({ message, auto_train: autoTrain }),
+        },
+        false,
+      ),
+    trainText: (text: string, title = "My Story") =>
+      request<{ success: boolean; message: string; total_trained_stories: number; total_words: number }>(
+        "/api/v1/ai/train",
+        {
+          method: "POST",
+          body: JSON.stringify({ text, title }),
+        },
+        false,
+      ),
+    trainFile: (file: File, title = "") => {
+      const form = new FormData();
+      form.append("file", file);
+      if (title) form.append("title", title);
+      return fetch(`${API_BASE}/api/v1/ai/train-file`, {
+        method: "POST",
+        body: form,
+      }).then((res) => res.json());
+    },
+    status: () =>
+      request<AIStatus>("/api/v1/ai/status", {}, false),
+    reset: () =>
+      request<{ success: boolean; message: string }>("/api/v1/ai/reset", { method: "POST" }, false),
+  };
+}
+
 export { ApiError, getToken };
 

@@ -56,9 +56,13 @@ export default function DashboardPage() {
         title={`${greeting()}${user?.display_name ? `, ${user.display_name}` : ""}.`}
         description="Ready to create something new?"
       >
-        <Link href="/studio" className={buttonVariants()}>
-          <PenLine className="h-4 w-4" aria-hidden="true" />
-          New Story
+        <Link href="/train" className={buttonVariants({ variant: "outline" })}>
+          <Sparkles className="h-4 w-4 mr-1.5" aria-hidden="true" />
+          Train AI Model
+        </Link>
+        <Link href="/chat" className={buttonVariants()}>
+          <BookOpen className="h-4 w-4 mr-1.5" aria-hidden="true" />
+          AI Story Chat
         </Link>
       </PageHeader>
 
