@@ -1,0 +1,56 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+htmlcov/
+*.egg-info/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Private user data and generated artifacts
+storage/*
+!storage/.gitkeep
+data/raw/*
+data/extracted/*
+data/processed/*
+data/datasets/*
+data/manifests/*
+!data/raw/.gitkeep
+!data/extracted/.gitkeep
+!data/processed/.gitkeep
+!data/datasets/.gitkeep
+!data/manifests/.gitkeep
+models/base/*
+models/adapters/*
+models/checkpoints/*
+!models/base/.gitkeep
+!models/adapters/.gitkeep
+!models/checkpoints/.gitkeep
+outputs/generations/*
+outputs/evaluations/*
+!outputs/generations/.gitkeep
+!outputs/evaluations/.gitkeep

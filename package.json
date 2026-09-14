@@ -1,0 +1,22 @@
+{
+  "name": "taleforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal AI storytelling platform for Bangla style adaptation.",
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev:web",
+    "dev:web": "npm run dev --workspace @taleforge/web",
+    "dev:api": "python -m uvicorn app.main:app --app-dir apps/api --reload --host 0.0.0.0 --port 8000",
+    "build": "npm run build --workspace @taleforge/web",
+    "lint": "npm run lint --workspace @taleforge/web",
+    "typecheck": "npm run typecheck --workspace @taleforge/web"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

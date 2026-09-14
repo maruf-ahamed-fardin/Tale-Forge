@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taleforge-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-taleforge}
+      POSTGRES_USER: ${POSTGRES_USER:-taleforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taleforge_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taleforge} -d ${POSTGRES_DB:-taleforge}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-postgresql+psycopg://taleforge:taleforge_dev_password@postgres:5432/taleforge}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./outputs:/app/outputs
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:

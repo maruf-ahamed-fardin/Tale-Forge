@@ -1,0 +1,22 @@
+base_model: ""
+dataset_path: ""
+output_dir: "./models/adapters"
+
+learning_rate: 0.0002
+epochs: 2
+batch_size: 1
+gradient_accumulation_steps: 8
+max_seq_length: 2048
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+
+quantization:
+  enabled: true
+  bits: 4
+
+notes:
+  - "Defaults are starting points, not universal recommendations."
+  - "Use a Python 3.11 or 3.12 environment for later ML training compatibility."
