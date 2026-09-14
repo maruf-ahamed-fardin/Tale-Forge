@@ -16,6 +16,8 @@ export const buttonVariants = cva(
           "border border-border bg-surface text-[#292524] hover:bg-[#f7f4ef] focus-visible:outline-[#a8a29e]",
         ghost:
           "text-[#44403c] hover:bg-[#f4f1ec] focus-visible:outline-[#a8a29e]",
+        destructive:
+          "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:outline-red-600",
       },
       size: {
         sm: "h-9 px-3",
