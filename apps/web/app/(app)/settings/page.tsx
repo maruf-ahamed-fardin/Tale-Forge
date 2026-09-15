@@ -298,14 +298,17 @@ export default function SettingsPage() {
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-[#292524] outline-none focus:border-primary"
                   >
-                    <option value="gemini-1.5-flash">
-                      Google Gemini 1.5 Flash (Recommended - অতি দ্রুত ও সৃজনশীল বাংলা)
-                    </option>
-                    <option value="gemini-2.0-flash">
-                      Google Gemini 2.0 Flash (Next-Gen Fast Model)
+                    <option value="local-lora">
+                      TaleForge Custom Trained LoRA Model (লোকাল নিজস্ব মডেল - সম্পূর্ণ অফলাইন)
                     </option>
                     <option value="taleforge-smart">
                       TaleForge Smart Local Engine (অফলাইন / কোনো কি ছাড়া)
+                    </option>
+                    <option value="gemini-1.5-flash">
+                      Google Gemini 1.5 Flash (অপশনাল ক্লাউড এআই - অতি দ্রুত বাংলা)
+                    </option>
+                    <option value="gemini-2.0-flash">
+                      Google Gemini 2.0 Flash (অপশনাল ক্লাউড এআই)
                     </option>
                   </select>
                 </div>
