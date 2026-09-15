@@ -177,6 +177,7 @@ export default function TrainingPage() {
           <CardContent>
             <div className="text-2xl font-bold">{completedRuns}</div>
             <p className="text-xs text-muted-foreground mt-1">Ready for story generation</p>
+          </CardContent>
         </Card>
       </div>
 
