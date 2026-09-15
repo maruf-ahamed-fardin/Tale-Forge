@@ -2,6 +2,8 @@ import json
 import os
 import random
 import re
+import urllib.request
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -96,8 +98,23 @@ class AIStoryEngine:
             for s in sample_pool[-3:]:  # use up to 3 most recent stories as reference
                 style_snippets.append(s["text"][:200])
 
-        # Generate responsive story tailored to prompt
-        generated_story = self._compose_story(user_prompt_clean, is_bengali, style_snippets)
+        # Check for Google Gemini API Key
+        gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        active_model = "TaleForge Smart Engine"
+        generated_story = ""
+
+        if gemini_key:
+            try:
+                generated_story = self._generate_with_gemini(
+                    user_prompt_clean, gemini_key, style_snippets, is_bengali
+                )
+                active_model = "Google Gemini 1.5 Flash (Live AI)"
+            except Exception as e:
+                print("Gemini API call failed, falling back to smart composer:", e)
+                generated_story = self._compose_story(user_prompt_clean, is_bengali, style_snippets)
+                active_model = "TaleForge Smart Engine (Fallback)"
+        else:
+            generated_story = self._compose_story(user_prompt_clean, is_bengali, style_snippets)
 
         # Save to chat history
         self.chat_history.append({"role": "user", "content": user_prompt_clean})
@@ -120,7 +137,47 @@ class AIStoryEngine:
             "auto_trained": auto_train,
             "auto_trained_info": auto_trained_info,
             "total_trained_count": len(self.trained_stories),
+            "model": active_model,
         }
+
+    def _generate_with_gemini(
+        self, prompt: str, api_key: str, style_snippets: list[str], is_bengali: bool
+    ) -> str:
+        """Calls Gemini API with style snippets from user training data."""
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        system_instruction = (
+            "You are TaleForge AI, a master literary novelist and storyteller.\n"
+            f"Write a captivating, complete multi-paragraph story based on the user's prompt in {'fluent, poetic Bengali (বাংলা)' if is_bengali else 'expressive, literary English'}.\n"
+        )
+        if style_snippets:
+            system_instruction += "\nCRITICAL: Emulate the tone, vocabulary, and rhythm of these user-trained stories:\n"
+            for i, s in enumerate(style_snippets):
+                system_instruction += f"\n--- Sample {i+1} ---\n{s}\n"
+
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": f"{system_instruction}\n\nPrompt: {prompt}"}],
+                }
+            ],
+            "generationConfig": {"temperature": 0.85, "maxOutputTokens": 2048},
+        }
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=12) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            candidates = res_data.get("candidates", [])
+            if candidates:
+                text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                if text.strip():
+                    return text.strip()
+        raise RuntimeError("No valid story candidate from Gemini API")
 
     def _compose_story(self, prompt: str, is_bengali: bool, reference_snippets: list[str]) -> str:
         """Composes a narrative story matching the user's prompt and trained style."""

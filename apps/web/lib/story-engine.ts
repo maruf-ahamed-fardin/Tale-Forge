@@ -36,23 +36,15 @@ let inMemoryChatHistory: ChatMessageRecord[] = [];
 let memoryLoaded = false;
 
 function getMemoryFilePath(): string {
-  // Check common directories in monorepo or standard storage
-  const candidates = [
-    path.resolve(process.cwd(), "..", "..", "storage", "ai_model_memory.json"),
-    path.resolve(process.cwd(), "storage", "ai_model_memory.json"),
-    path.resolve(process.cwd(), "..", "storage", "ai_model_memory.json"),
-    path.resolve("/tmp", "ai_model_memory.json"),
-  ];
-
-  for (const p of candidates) {
-    try {
-      const dir = path.dirname(p);
-      if (fs.existsSync(dir)) return p;
-    } catch {
-      // ignore
+  try {
+    const localDir = path.join(process.cwd(), "storage");
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
     }
+    return path.join(localDir, "ai_model_memory.json");
+  } catch {
+    return path.join(process.cwd(), "ai_model_memory.json");
   }
-  return candidates[0];
 }
 
 function loadMemory(): void {
