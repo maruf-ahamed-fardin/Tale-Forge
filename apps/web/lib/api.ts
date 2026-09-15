@@ -1,4 +1,16 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+function getApiBase(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/api\/v1\/?$/, "");
+  }
+  // In the browser, default to "" so requests hit Next.js route handlers directly (no CORS, no dead localhost)
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  return "http://localhost:8000";
+}
+
+const API_BASE = getApiBase();
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -266,18 +278,40 @@ export interface AIStatus {
 }
 
 export function simpleAiApi() {
+  const getCustomApiKey = () => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("tf_gemini_api_key") || "";
+  };
+
   return {
-    chat: (message: string, autoTrain = true) =>
-      request<{ story: string; prompt: string; auto_trained: boolean; total_trained_count: number }>(
+    chat: (message: string, autoTrain = true) => {
+      const apiKey = getCustomApiKey();
+      const headers: Record<string, string> = {};
+      if (apiKey) headers["x-gemini-key"] = apiKey;
+
+      return request<{
+        story: string;
+        prompt: string;
+        auto_trained: boolean;
+        total_trained_count: number;
+        model?: string;
+      }>(
         "/api/v1/ai/chat",
         {
           method: "POST",
+          headers,
           body: JSON.stringify({ message, auto_train: autoTrain }),
         },
         false,
-      ),
+      );
+    },
     trainText: (text: string, title = "My Story") =>
-      request<{ success: boolean; message: string; total_trained_stories: number; total_words: number }>(
+      request<{
+        success: boolean;
+        message: string;
+        total_trained_stories: number;
+        total_words: number;
+      }>(
         "/api/v1/ai/train",
         {
           method: "POST",
@@ -285,14 +319,23 @@ export function simpleAiApi() {
         },
         false,
       ),
-    trainFile: (file: File, title = "") => {
+    trainFile: async (file: File, title = "") => {
       const form = new FormData();
       form.append("file", file);
       if (title) form.append("title", title);
-      return fetch(`${API_BASE}/api/v1/ai/train-file`, {
+      const res = await fetch(`${API_BASE}/api/v1/ai/train-file`, {
         method: "POST",
         body: form,
-      }).then((res) => res.json());
+      });
+      if (!res.ok) {
+        let errDetail = "File upload training failed.";
+        try {
+          const b = await res.json();
+          errDetail = b.detail || errDetail;
+        } catch {}
+        throw new Error(errDetail);
+      }
+      return res.json();
     },
     status: () =>
       request<AIStatus>("/api/v1/ai/status", {}, false),

@@ -27,6 +27,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   autoTrained?: boolean;
+  model?: string;
 }
 
 export default function AIChatPage() {
@@ -44,6 +45,7 @@ export default function AIChatPage() {
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [hasGeminiKey, setHasGeminiKey] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +58,9 @@ export default function AIChatPage() {
 
   useEffect(() => {
     refreshStatus();
+    if (typeof window !== "undefined") {
+      setHasGeminiKey(Boolean(localStorage.getItem("tf_gemini_api_key")));
+    }
   }, []);
 
   useEffect(() => {
@@ -84,14 +89,16 @@ export default function AIChatPage() {
         role: "assistant",
         content: res.story,
         autoTrained: res.auto_trained,
+        model: res.model,
       };
       setMessages((prev) => [...prev, aiMsg]);
       refreshStatus();
-    } catch {
+    } catch (err: unknown) {
+      const errDetail = err instanceof Error ? err.message : "গল্প তৈরিতে সমস্যা হয়েছে।";
       const errorMsg: ChatMessage = {
         id: `error_${Date.now()}`,
         role: "assistant",
-        content: "দুঃখিত, গল্প তৈরিতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        content: `দুঃখিত, গল্প তৈরিতে সমস্যা হয়েছে: ${errDetail}\n\nটিপ: আপনি Settings পেজে গিয়ে আপনার বিনামূল্যে পাওয়া Google Gemini API Key যোগ করে নিতে পারেন।`,
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
@@ -137,16 +144,36 @@ export default function AIChatPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            {aiStatus ? `Trained on ${aiStatus.total_trained_stories} Stories` : "AI Model Ready"}
+          {hasGeminiKey ? (
+            <Link
+              href="/settings"
+              className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition"
+              title="Google Gemini Live AI Connected"
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Live AI: Google Gemini
+            </Link>
+          ) : (
+            <Link
+              href="/settings"
+              className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200 hover:bg-amber-100 transition"
+              title="Click to connect free Google Gemini API key"
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              TaleForge Engine (+ Connect Gemini Key)
+            </Link>
+          )}
+
+          <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-primary border border-indigo-200">
+            {aiStatus ? `${aiStatus.total_trained_stories} Trained Stories` : "Ready"}
           </div>
+
           <Link
             href="/train"
-            className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-primary border border-indigo-200 hover:bg-indigo-100 transition"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary/90 transition shadow-sm"
           >
             <GraduationCap className="h-3.5 w-3.5" />
-            + Train More Data
+            + Train More
           </Link>
         </div>
       </div>
@@ -179,9 +206,16 @@ export default function AIChatPage() {
 
                 {!isUser && m.id !== "welcome" && (
                   <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-1.5 text-emerald-700 font-medium">
-                      <Zap className="h-3.5 w-3.5 text-amber-500" />
-                      <span>{m.autoTrained ? "Auto-Trained: Model updated with this story" : "Generated"}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-emerald-700 font-medium">
+                        <Zap className="h-3.5 w-3.5 text-amber-500" />
+                        <span>{m.autoTrained ? "Auto-Trained & Saved" : "Generated"}</span>
+                      </div>
+                      {m.model && (
+                        <span className="rounded bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-primary border border-indigo-200">
+                          {m.model}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">

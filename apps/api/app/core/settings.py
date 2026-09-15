@@ -24,7 +24,9 @@ class Settings(BaseSettings):
     generation_config_path: str = "./configs/generation.yaml"
     training_config_path: str = "./configs/training.yaml"
 
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5173,*"
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
+  Eye,
+  EyeOff,
   HardDrive,
+  Key,
   Lock,
   LogOut,
   RefreshCw,
@@ -36,6 +39,12 @@ export default function SettingsPage() {
   const [temperature, setTemperature] = useState(0.8);
   const [savedMsg, setSavedMsg] = useState("");
 
+  // Live AI Model & API Key
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
+  const [keySavedMsg, setKeySavedMsg] = useState("");
+
   useEffect(() => {
     // Load user profile
     const cached = getStoredUser();
@@ -60,6 +69,12 @@ export default function SettingsPage() {
         // ignore
       }
     }
+
+    // Load AI Model & Gemini API Key
+    const savedKey = localStorage.getItem("tf_gemini_api_key");
+    if (savedKey) setGeminiApiKey(savedKey);
+    const savedModel = localStorage.getItem("tf_ai_model");
+    if (savedModel) setSelectedModel(savedModel);
   }, []);
 
   const handleSavePreferences = (e: React.FormEvent) => {
@@ -73,6 +88,14 @@ export default function SettingsPage() {
     localStorage.setItem("tf_preferences", JSON.stringify(prefs));
     setSavedMsg("Preferences updated successfully!");
     setTimeout(() => setSavedMsg(""), 3500);
+  };
+
+  const handleSaveAIConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem("tf_gemini_api_key", geminiApiKey.trim());
+    localStorage.setItem("tf_ai_model", selectedModel);
+    setKeySavedMsg("AI Model and API Key saved successfully! AI will now generate live stories.");
+    setTimeout(() => setKeySavedMsg(""), 4000);
   };
 
   const handleLogout = () => {
@@ -231,6 +254,122 @@ export default function SettingsPage() {
                   <Save className="h-4 w-4 mr-1.5" />
                   Save Preferences
                 </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Live AI Model & API Key Configuration */}
+          <Card className="border-primary/40 bg-gradient-to-br from-white to-indigo-50/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <CardTitle>Live AI Model & API Configuration</CardTitle>
+                </div>
+                {geminiApiKey ? (
+                  <Badge variant="green">
+                    Live AI Connected
+                  </Badge>
+                ) : (
+                  <Badge variant="warm">
+                    Offline Smart Engine
+                  </Badge>
+                )}
+              </div>
+              <CardDescription>
+                গল্প জেনারেট এবং রিপ্লাই দেওয়ার জন্য কোন মডেলটি ব্যবহার হবে তা নির্ধারণ করুন।
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {keySavedMsg && (
+                <div className="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 border border-emerald-200">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>{keySavedMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveAIConfig} className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold text-[#292524]">
+                    AI Generation Model (মডেল নির্বাচন)
+                  </label>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-[#292524] outline-none focus:border-primary"
+                  >
+                    <option value="gemini-1.5-flash">
+                      Google Gemini 1.5 Flash (Recommended - অতি দ্রুত ও সৃজনশীল বাংলা)
+                    </option>
+                    <option value="gemini-2.0-flash">
+                      Google Gemini 2.0 Flash (Next-Gen Fast Model)
+                    </option>
+                    <option value="taleforge-smart">
+                      TaleForge Smart Local Engine (অফলাইন / কোনো কি ছাড়া)
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-[#292524] flex items-center gap-1.5">
+                      <Key className="h-4 w-4 text-primary" />
+                      Google Gemini API Key (বিনামূল্যে ব্যবহারের জন্য)
+                    </label>
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      Get Free Key (Google AI Studio) &rarr;
+                    </a>
+                  </div>
+                  <div className="relative mt-1.5">
+                    <Input
+                      type={showApiKey ? "text" : "password"}
+                      value={geminiApiKey}
+                      onChange={(e) => setGeminiApiKey(e.target.value)}
+                      placeholder="AIzaSy..."
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showApiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                    💡 বিনামূল্যে Google AI Studio থেকে API Key নিয়ে এখানে সেভ করলে ট্রেইন করা গল্পের নিখুঁত স্টাইলে আসল লাইভ AI গল্প তৈরি করবে।
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <Button type="submit">
+                    <Save className="h-4 w-4 mr-1.5" />
+                    Save Live AI Settings
+                  </Button>
+                  {geminiApiKey && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setGeminiApiKey("");
+                        localStorage.removeItem("tf_gemini_api_key");
+                        setKeySavedMsg("Gemini API Key removed. Now using TaleForge Smart Engine.");
+                        setTimeout(() => setKeySavedMsg(""), 3500);
+                      }}
+                    >
+                      Clear Key
+                    </Button>
+                  )}
+                </div>
               </form>
             </CardContent>
           </Card>

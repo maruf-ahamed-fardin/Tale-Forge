@@ -78,8 +78,11 @@ export default function SimpleTrainPage() {
       const res = await simpleAiApi().trainFile(file, title);
       setMsg({ type: "success", text: res.message });
       loadStatus();
-    } catch {
-      setMsg({ type: "error", text: "File upload training failed." });
+    } catch (err: unknown) {
+      setMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "File upload training failed.",
+      });
     } finally {
       setTraining(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
