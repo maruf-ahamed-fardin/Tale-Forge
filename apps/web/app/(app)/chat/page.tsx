@@ -5,8 +5,12 @@ import Link from "next/link";
 import {
   BookOpen,
   Bot,
+  Check,
+  CheckCircle2,
   Copy,
+  Download,
   GraduationCap,
+  Library,
   MessageSquare,
   RefreshCw,
   Send,
@@ -15,10 +19,8 @@ import {
   Zap,
 } from "lucide-react";
 
-import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { simpleAiApi, storiesApi, type AIStatus } from "@/lib/api";
 
@@ -28,6 +30,7 @@ interface ChatMessage {
   content: string;
   autoTrained?: boolean;
   model?: string;
+  saved?: boolean;
 }
 
 export default function AIChatPage() {
@@ -36,7 +39,7 @@ export default function AIChatPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "নমস্কার / Hello! আমি আপনার TaleForge AI। আপনি আমাকে যে গল্প বা ডাটা দিয়ে ট্রেইন করেছেন, আমি তার উপর ভিত্তি করে নতুন নতুন গল্প লিখবো।\n\nআপনি কী ধরণের গল্প তৈরি করতে চান? যেমন: 'একটি বৃষ্টির রাতের রোমান্টিক গল্প' বা 'Write a mystery story'.",
+        "নমস্কার / Hello! আমি আপনার TaleForge AI। আপনি আমাকে যে গল্প বা ডাটা দিয়ে ট্রেইন করেছেন, আমি তার উপর ভিত্তি করে নতুন নতুন গল্প লিখবো।\n\nআপনি কী ধরণের গল্প তৈরি করতে চান? যেমন: 'একটি বৃষ্টির রাতের রোমান্টিক গল্প' বা 'Write a mystery story'.\n\nতৈরি করা যেকোনো গল্প আপনি চাইলে সরাসরি লাইব্রেরিতে সেভ করে রাখতে পারবেন বা ডাউনলোড করতে পারবেন।",
     },
   ]);
   const [inputPrompt, setInputPrompt] = useState("");
@@ -44,8 +47,10 @@ export default function AIChatPage() {
   const [autoTrain, setAutoTrain] = useState(true);
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedStoriesMap, setSavedStoriesMap] = useState<Record<string, boolean>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -113,20 +118,58 @@ export default function AIChatPage() {
   };
 
   const handleSaveToStories = async (id: string, text: string) => {
-    const firstLine = text.split("\n")[0].replace(/[#*]/g, "").trim();
-    const title = firstLine.slice(0, 40) || "Generated Story";
+    if (savingId === id || savedStoriesMap[id]) return;
+    setSavingId(id);
+
+    // Extract evocative title
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    let title = "AI Generated Story";
+    for (const l of lines) {
+      const clean = l.replace(/^[#*\-_\s]+/, "").trim();
+      if (clean && clean.length > 2) {
+        title = clean.slice(0, 60);
+        break;
+      }
+    }
+
     try {
       await storiesApi().create({
         title,
         content: text,
         genre: "AI Generated",
-        mood: "Adaptive",
+        mood: "Literary",
       });
-      setSavedId(id);
-      setTimeout(() => setSavedId(null), 3000);
-    } catch {
-      // ignore
+
+      setSavedStoriesMap((prev) => ({ ...prev, [id]: true }));
+      setToastMsg(`"${title}" লাইব্রেরিতে সেভ করা হয়েছে!`);
+      setTimeout(() => setToastMsg(null), 4000);
+    } catch (err: unknown) {
+      const errorText = err instanceof Error ? err.message : "গল্প সেভ করতে সমস্যা হয়েছে";
+      setToastMsg(`Error: ${errorText}`);
+      setTimeout(() => setToastMsg(null), 4000);
+    } finally {
+      setSavingId(null);
     }
+  };
+
+  const handleDownloadStory = (text: string) => {
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    let title = "generated_story";
+    for (const l of lines) {
+      const clean = l.replace(/^[#*\-_\s]+/, "").trim();
+      if (clean) {
+        title = clean.replace(/[^a-z0-9\u0980-\u09FF_-]+/gi, "_").slice(0, 40);
+        break;
+      }
+    }
+
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -139,7 +182,7 @@ export default function AIChatPage() {
             AI Story Chat & Generator
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            চ্যাট করুন এবং আপনার ট্রেইন করা ডাটার ওপর নতুন গল্প তৈরি করুন।
+            চ্যাট করুন, গল্প তৈরি করুন এবং পছন্দমতো লাইব্রেরিতে সেভ বা ডাউনলোড করুন।
           </p>
         </div>
 
@@ -173,15 +216,42 @@ export default function AIChatPage() {
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary/90 transition shadow-sm"
           >
             <GraduationCap className="h-3.5 w-3.5" />
-            + Train More
+            Train Stories
+          </Link>
+
+          <Link
+            href="/stories"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-border px-3 py-1 text-xs font-semibold text-foreground hover:bg-neutral-50 transition shadow-sm"
+          >
+            <Library className="h-3.5 w-3.5 text-primary" />
+            My Library
           </Link>
         </div>
       </div>
+
+      {/* Toast Notification for Saving */}
+      {toastMsg && (
+        <div className="my-2 flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-medium text-emerald-800 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span>{toastMsg}</span>
+          </div>
+          <Link
+            href="/stories"
+            className="underline font-semibold text-emerald-900 hover:text-emerald-700 ml-3"
+          >
+            Go to Stories Library &rarr;
+          </Link>
+        </div>
+      )}
 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
         {messages.map((m) => {
           const isUser = m.role === "user";
+          const isSaved = savedStoriesMap[m.id];
+          const isSaving = savingId === m.id;
+
           return (
             <div
               key={m.id}
@@ -219,6 +289,7 @@ export default function AIChatPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Copy */}
                       <button
                         type="button"
                         onClick={() => handleCopyStory(m.id, m.content)}
@@ -228,14 +299,51 @@ export default function AIChatPage() {
                         {copiedId === m.id ? "Copied!" : "Copy"}
                       </button>
                       <span>•</span>
+
+                      {/* Download */}
                       <button
                         type="button"
-                        onClick={() => handleSaveToStories(m.id, m.content)}
-                        className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-semibold transition"
+                        onClick={() => handleDownloadStory(m.content)}
+                        className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground font-semibold transition"
+                        title="Download story as .txt"
                       >
-                        <BookOpen className="h-3.5 w-3.5" />
-                        {savedId === m.id ? "Saved to Library!" : "Save Story"}
+                        <Download className="h-3.5 w-3.5" />
+                        Download
                       </button>
+                      <span>•</span>
+
+                      {/* Save to Stories Library */}
+                      {isSaved ? (
+                        <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                          <Check className="h-3.5 w-3.5" />
+                          <span>Saved in Library</span>
+                          <Link
+                            href="/stories"
+                            className="underline text-[11px] ml-1 text-primary hover:text-primary/80"
+                          >
+                            View &rarr;
+                          </Link>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSaveToStories(m.id, m.content)}
+                          disabled={isSaving}
+                          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 font-semibold transition disabled:opacity-60"
+                        >
+                          {isSaving ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              Saving…
+                            </>
+                          ) : (
+                            <>
+                              <BookOpen className="h-3.5 w-3.5" />
+                              Save Story (সংরক্ষণ)
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

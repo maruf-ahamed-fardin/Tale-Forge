@@ -269,11 +269,21 @@ export function trainingApi() {
 
 // ─── Simple Trainable AI & Story Chat ─────────────────────────────────────────
 
+export interface TrainedStoryItem {
+  id: string;
+  title: string;
+  word_count: number;
+  trained_at: string;
+  text?: string;
+  language?: string;
+}
+
 export interface AIStatus {
   total_trained_stories: number;
   total_words: number;
   auto_train_enabled: boolean;
-  recent_stories: Array<{ id: string; title: string; word_count: number; trained_at: string }>;
+  recent_stories: TrainedStoryItem[];
+  trained_stories?: TrainedStoryItem[];
   chat_count: number;
 }
 
@@ -339,6 +349,12 @@ export function simpleAiApi() {
     },
     status: () =>
       request<AIStatus>("/api/v1/ai/status", {}, false),
+    deleteTrainedStory: (id: string) =>
+      request<{
+        success: boolean;
+        message: string;
+        status?: AIStatus;
+      }>(`/api/v1/ai/trained/${id}`, { method: "DELETE" }, false),
     reset: () =>
       request<{ success: boolean; message: string }>("/api/v1/ai/reset", { method: "POST" }, false),
   };

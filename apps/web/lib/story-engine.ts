@@ -25,7 +25,10 @@ export interface AIModelStatus {
     title: string;
     word_count: number;
     trained_at: string;
+    text?: string;
+    language?: "bn" | "en";
   }>;
+  trained_stories?: TrainedStory[];
   chat_count: number;
   active_model?: string;
 }
@@ -94,14 +97,24 @@ export function getAIStatus(): AIModelStatus {
     total_trained_stories: inMemoryTrainedStories.length,
     total_words: totalWords,
     auto_train_enabled: true,
-    recent_stories: inMemoryTrainedStories.slice(-10).reverse().map((s) => ({
+    recent_stories: inMemoryTrainedStories.slice(-20).reverse().map((s) => ({
       id: s.id,
       title: s.title,
       word_count: s.word_count,
       trained_at: s.trained_at,
+      text: s.text,
+      language: s.language,
     })),
+    trained_stories: inMemoryTrainedStories,
     chat_count: inMemoryChatHistory.length,
   };
+}
+
+export function deleteTrainedStory(id: string): AIModelStatus {
+  loadMemory();
+  inMemoryTrainedStories = inMemoryTrainedStories.filter((s) => s.id !== id);
+  saveMemory();
+  return getAIStatus();
 }
 
 export function trainOnText(text: string, title = "Trained Story") {
