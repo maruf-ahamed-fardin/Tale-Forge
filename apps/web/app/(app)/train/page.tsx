@@ -220,7 +220,7 @@ export default function SimpleTrainPage() {
         <CardHeader>
           <CardTitle>Add New Story Data to Model</CardTitle>
           <CardDescription>
-            নিচের বক্সে আপনার গল্প পেস্ট করুন অথবা সরাসরি <strong>.txt</strong> বা <strong>.pdf</strong> ফাইল (বই, পাণ্ডুলিপি বা ছোটগল্প) আপলোড করুন।
+            নিচের বক্সে আপনার গল্প পেস্ট করুন অথবা সরাসরি <strong>.docx</strong>, <strong>.doc</strong>, <strong>.pdf</strong> বা <strong>.txt</strong> ফাইল (ওয়ার্ড ফাইল, বই বা পাণ্ডুলিপি) আপলোড করুন।
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -277,7 +277,7 @@ export default function SimpleTrainPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".txt,.pdf"
+                  accept=".txt,.pdf,.docx,.doc"
                   className="hidden"
                   onChange={handleFileUpload}
                 />
@@ -290,10 +290,10 @@ export default function SimpleTrainPage() {
                   className="border-primary/40 hover:bg-primary/5"
                 >
                   <Upload className="h-4 w-4 mr-1.5 text-primary" />
-                  Upload .txt / .pdf File (বই বা ফাইল)
+                  Upload .docx / .doc / .pdf / .txt (বই বা ফাইল)
                 </Button>
                 <span className="text-[11px] text-muted-foreground">
-                  সাপোর্ট: .pdf (বই/ডকুমেন্ট) এবং .txt ফাইল
+                  সাপোর্ট: .docx, .doc (Word ফাইল), .pdf (বই) এবং .txt
                 </span>
               </div>
 

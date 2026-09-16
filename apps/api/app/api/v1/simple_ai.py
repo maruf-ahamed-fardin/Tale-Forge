@@ -54,6 +54,8 @@ async def train_with_file(
     contents = await file.read()
     filename = file.filename or "uploaded_story"
     is_pdf = filename.lower().endswith(".pdf") or file.content_type == "application/pdf"
+    is_docx = filename.lower().endswith(".docx") or file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    is_doc = filename.lower().endswith(".doc") or file.content_type == "application/msword"
 
     if is_pdf:
         try:
@@ -76,6 +78,46 @@ async def train_with_file(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"PDF ফাইল পড়া সম্ভব হয়নি: {str(e)}",
+            )
+    elif is_docx:
+        try:
+            import io
+            import zipfile
+            import xml.etree.ElementTree as ET
+
+            with zipfile.ZipFile(io.BytesIO(contents)) as z:
+                xml_content = z.read("word/document.xml")
+            tree = ET.fromstring(xml_content)
+            namespaces = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+            paragraphs = []
+            for p in tree.iterfind(".//w:p", namespaces):
+                texts = [node.text for node in p.iterfind(".//w:t", namespaces) if node.text]
+                if texts:
+                    paragraphs.append("".join(texts))
+            text = "\n\n".join(paragraphs).strip()
+            if not text:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Word (.docx) ফাইলটি থেকে কোনো লেখা উদ্ধার করা যায়নি।",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Word (.docx) ফাইল পড়া সম্ভব হয়নি: {str(e)}",
+            )
+    elif is_doc:
+        import re
+        try:
+            text_chunks = re.findall(rb"[\x20-\x7E\r\n\t]{4,}", contents)
+            text = "\n".join(c.decode("latin-1", errors="ignore") for c in text_chunks).strip()
+            if not text:
+                text = contents.decode("utf-8", errors="ignore")
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Word (.doc) ফাইল পড়া সম্ভব হয়নি: {str(e)}",
             )
     else:
         try:

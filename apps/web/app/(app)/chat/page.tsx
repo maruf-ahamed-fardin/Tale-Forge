@@ -10,12 +10,14 @@ import {
   Copy,
   Download,
   GraduationCap,
+  Image as ImageIcon,
   Library,
   MessageSquare,
   RefreshCw,
   Send,
   Sparkles,
   User,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -31,6 +33,14 @@ interface ChatMessage {
   autoTrained?: boolean;
   model?: string;
   saved?: boolean;
+  imageUrl?: string;
+}
+
+interface ImageAttachment {
+  file: File;
+  dataUrl: string;
+  base64: string;
+  type: string;
 }
 
 export default function AIChatPage() {
@@ -39,7 +49,7 @@ export default function AIChatPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "নমস্কার / Hello! আমি আপনার TaleForge AI। আপনি আমাকে যে গল্প বা ডাটা দিয়ে ট্রেইন করেছেন, আমি তার উপর ভিত্তি করে নতুন নতুন গল্প লিখবো।\n\nআপনি কী ধরণের গল্প তৈরি করতে চান? যেমন: 'একটি বৃষ্টির রাতের রোমান্টিক গল্প' বা 'Write a mystery story'.\n\nতৈরি করা যেকোনো গল্প আপনি চাইলে সরাসরি লাইব্রেরিতে সেভ করে রাখতে পারবেন বা ডাউনলোড করতে পারবেন।",
+        "নমস্কার / Hello! আমি আপনার TaleForge AI। আপনি আমাকে যে গল্প বা ডাটা দিয়ে ট্রেইন করেছেন, আমি তার উপর ভিত্তি করে নতুন নতুন গল্প লিখবো।\n\nআপনি কী ধরণের গল্প তৈরি করতে চান? যেমন: 'একটি বৃষ্টির রাতের রোমান্টিক গল্প' বা 'Write a mystery story'।\n\n🎨 আপনি চাইলে সরাসরি কোনো ছবি (Image) আপলোড করেও গল্প তৈরি করাতে পারেন! ছবি পাঠালে AI ছবিটি দেখে সম্পূর্ণ বাংলা গল্প রচনা করবে।",
     },
   ]);
   const [inputPrompt, setInputPrompt] = useState("");
@@ -51,8 +61,10 @@ export default function AIChatPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [attachedImage, setAttachedImage] = useState<ImageAttachment | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const refreshStatus = () => {
     simpleAiApi()
@@ -72,23 +84,58 @@ export default function AIChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setToastMsg("দয়া করে একটি সঠিক ইমেজ ফাইল (.jpg, .png, .webp) নির্বাচন করুন।");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.split(",")[1] || "";
+      setAttachedImage({
+        file,
+        dataUrl,
+        base64,
+        type: file.type || "image/jpeg",
+      });
+    };
+    reader.readAsDataURL(file);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     const prompt = inputPrompt.trim();
-    if (!prompt || loading) return;
+    if ((!prompt && !attachedImage) || loading) return;
+
+    const userMsgText = prompt || "এই ছবিটি দেখে একটি জীবন্ত ও চমৎকার গল্প লিখুন।";
+    const currentImage = attachedImage;
 
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
       role: "user",
-      content: prompt,
+      content: userMsgText,
+      imageUrl: currentImage?.dataUrl,
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInputPrompt("");
+    setAttachedImage(null);
     setLoading(true);
 
     try {
-      const res = await simpleAiApi().chat(prompt, autoTrain);
+      const res = await simpleAiApi().chat(
+        prompt,
+        autoTrain,
+        currentImage?.base64,
+        currentImage?.type,
+      );
+
       const aiMsg: ChatMessage = {
         id: `ai_${Date.now()}`,
         role: "assistant",
@@ -173,16 +220,16 @@ export default function AIChatPage() {
   };
 
   return (
-    <section className="flex flex-col h-[calc(100vh-120px)] max-w-5xl mx-auto">
+    <section className="flex flex-col h-[calc(100dvh-125px)] sm:h-[calc(100vh-120px)] max-w-5xl mx-auto">
       {/* Top Header & Model Status */}
       <div className="flex flex-col gap-2 pb-3 border-b border-border sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-extrabold text-[#1f1b2d] flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl font-extrabold text-[#1f1b2d] flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            AI Story Chat & Generator
+            AI Story Chat & Multimodal Generator
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            চ্যাট করুন, গল্প তৈরি করুন এবং পছন্দমতো লাইব্রেরিতে সেভ বা ডাউনলোড করুন।
+            চ্যাট করুন, ছবি বা টেক্সট থেকে গল্প তৈরি করুন এবং পছন্দমতো সেভ বা ডাউনলোড করুন।
           </p>
         </div>
 
@@ -191,16 +238,16 @@ export default function AIChatPage() {
             <Link
               href="/settings"
               className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition"
-              title="Google Gemini Live AI Connected"
+              title="Google Gemini Live Vision AI Connected"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live AI: Google Gemini
+              Live AI: Google Gemini Vision
             </Link>
           ) : (
             <Link
               href="/settings"
               className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200 hover:bg-amber-100 transition"
-              title="Click to connect free Google Gemini API key"
+              title="Click to connect free Google Gemini API key for deep visual reasoning"
             >
               <span className="h-2 w-2 rounded-full bg-amber-500" />
               TaleForge Engine (+ Connect Gemini Key)
@@ -229,7 +276,7 @@ export default function AIChatPage() {
         </div>
       </div>
 
-      {/* Toast Notification for Saving */}
+      {/* Toast Notification */}
       {toastMsg && (
         <div className="my-2 flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-medium text-emerald-800 animate-fade-in">
           <div className="flex items-center gap-2">
@@ -270,6 +317,18 @@ export default function AIChatPage() {
                     : "bg-surface border border-border text-[#292524] rounded-tl-none shadow-sm"
                 }`}
               >
+                {/* Uploaded User Image Thumbnail */}
+                {m.imageUrl && (
+                  <div className="mb-3 overflow-hidden rounded-xl border border-white/20 max-w-sm shadow-md bg-black/10">
+                    <img
+                      src={m.imageUrl}
+                      alt="Uploaded scene"
+                      className="w-full max-h-64 object-cover cursor-pointer hover:opacity-95 transition"
+                      onClick={() => window.open(m.imageUrl, "_blank")}
+                    />
+                  </div>
+                )}
+
                 <div className="whitespace-pre-wrap font-serif text-sm leading-relaxed sm:text-base">
                   {m.content}
                 </div>
@@ -366,7 +425,11 @@ export default function AIChatPage() {
             <div className="rounded-2xl rounded-tl-none border border-border bg-surface px-5 py-3 shadow-sm">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                <span>আপনার ট্রেইন করা ডাটার ওপর নতুন গল্প তৈরি ও অটো-ট্রেইনিং হচ্ছে…</span>
+                <span>
+                  {attachedImage
+                    ? "AI ছবিটি বিশ্লেষণ করছে এবং ছবি অনুযায়ী গল্প রচনা করছে…"
+                    : "আপনার ট্রেইন করা ডাটার ওপর নতুন গল্প তৈরি ও অটো-ট্রেইনিং হচ্ছে…"}
+                </span>
               </div>
             </div>
           </div>
@@ -376,6 +439,28 @@ export default function AIChatPage() {
 
       {/* Input Area */}
       <div className="pt-2 border-t border-border">
+        {/* Attached Image Preview Chip */}
+        {attachedImage && (
+          <div className="mb-2 flex items-center gap-2 rounded-xl bg-indigo-50/90 border border-indigo-200 px-3 py-1.5 text-xs text-primary w-fit shadow-xs animate-fade-in">
+            <img
+              src={attachedImage.dataUrl}
+              alt="Attached preview"
+              className="h-7 w-7 rounded-md object-cover border border-indigo-300/50"
+            />
+            <span className="font-semibold truncate max-w-[220px]">
+              {attachedImage.file.name}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAttachedImage(null)}
+              className="p-1 text-muted-foreground hover:text-red-600 transition"
+              title="Remove image"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSendMessage} className="space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
             <label className="flex items-center gap-1.5 cursor-pointer font-medium select-none">
@@ -389,18 +474,48 @@ export default function AIChatPage() {
             </label>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Hidden File Input for Image Upload */}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
+
+            {/* Image Attachment Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => imageInputRef.current?.click()}
+              className="h-12 w-12 shrink-0 border-border bg-white hover:bg-neutral-50 hover:text-primary shadow-xs"
+              title="ছবি আপলোড করে গল্প বানান (Upload Image for Story)"
+            >
+              <ImageIcon className="h-5 w-5 text-primary" />
+            </Button>
+
             <Input
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
-              placeholder="কী ধরনের গল্প চান লিখুন (যেমন: একটি কুয়াশাচ্ছন্ন সকালের প্রেমের গল্প...)"
+              placeholder={
+                attachedImage
+                  ? "ছবিটি নিয়ে কিছু বলতে চাইলে লিখুন (বা সরাসরি Generate চাপুন)..."
+                  : "কী ধরনের গল্প চান লিখুন অথবা বামের বাটন চেপে ছবি দিন..."
+              }
               className="h-12 text-sm bg-white"
               disabled={loading}
               autoFocus
             />
-            <Button type="submit" disabled={loading || !inputPrompt.trim()} className="h-12 px-5">
-              <Send className="h-4 w-4 mr-1.5" />
-              Generate
+
+            <Button
+              type="submit"
+              disabled={loading || (!inputPrompt.trim() && !attachedImage)}
+              className="h-12 px-3 sm:px-5 shrink-0"
+            >
+              <Send className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Generate</span>
             </Button>
           </div>
         </form>

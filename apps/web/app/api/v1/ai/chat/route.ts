@@ -6,12 +6,14 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const message = body.message || body.prompt;
+    const message = body.message || body.prompt || "";
     const autoTrain = body.auto_train !== false;
+    const imageBase64 = body.image_base64;
+    const imageType = body.image_type || "image/jpeg";
 
-    if (!message || typeof message !== "string" || !message.trim()) {
+    if (!message.trim() && !imageBase64) {
       return NextResponse.json(
-        { detail: "Message is required." },
+        { detail: "Message or image is required." },
         { status: 400 },
       );
     }
@@ -19,29 +21,17 @@ export async function POST(req: NextRequest) {
     const customApiKey =
       req.headers.get("x-gemini-key") || process.env.GEMINI_API_KEY || "";
 
-    // If Python backend is available AND no custom client key was sent, try python backend
-    if (!customApiKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-        const pyRes = await fetch("http://127.0.0.1:8000/api/v1/ai/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, auto_train: autoTrain }),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (pyRes.ok) {
-          const data = await pyRes.json();
-          return NextResponse.json(data);
-        }
-      } catch {
-        // Python backend not running or timed out; fall through to embedded engine
-      }
-    }
+    const image = imageBase64
+      ? { base64: imageBase64, mimeType: imageType }
+      : undefined;
 
-    // Execute with embedded AI Story Engine (supports Gemini API + smart Bengali narrative synthesis)
-    const result = await generateStoryAndChat(message, autoTrain, customApiKey);
+    // Execute with embedded AI Story Engine (supports Gemini Vision API + smart Bengali narrative synthesis)
+    const result = await generateStoryAndChat(
+      message,
+      autoTrain,
+      customApiKey,
+      image,
+    );
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Generation failed";

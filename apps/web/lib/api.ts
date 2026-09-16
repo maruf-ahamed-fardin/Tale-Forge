@@ -294,7 +294,12 @@ export function simpleAiApi() {
   };
 
   return {
-    chat: (message: string, autoTrain = true) => {
+    chat: (
+      message: string,
+      autoTrain = true,
+      imageBase64?: string,
+      imageType?: string,
+    ) => {
       const apiKey = getCustomApiKey();
       const headers: Record<string, string> = {};
       if (apiKey) headers["x-gemini-key"] = apiKey;
@@ -310,7 +315,12 @@ export function simpleAiApi() {
         {
           method: "POST",
           headers,
-          body: JSON.stringify({ message, auto_train: autoTrain }),
+          body: JSON.stringify({
+            message,
+            auto_train: autoTrain,
+            image_base64: imageBase64,
+            image_type: imageType,
+          }),
         },
         false,
       );

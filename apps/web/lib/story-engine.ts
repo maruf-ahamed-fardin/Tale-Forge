@@ -173,6 +173,7 @@ async function generateWithGemini(
   apiKey: string,
   styleSnippets: string[],
   isBengali: boolean,
+  image?: { base64: string; mimeType: string },
 ): Promise<string> {
   const model = "gemini-1.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -192,6 +193,10 @@ Story Guidelines:
 3. Use expressive literary Bengali prose (e.g. রবীন্দ্রনাথ বা শরৎচন্দ্রের ভাবগম্ভীর ও প্রাঞ্জল সাহিত্যের মতো)।
 `;
 
+  if (image && image.base64) {
+    systemInstruction += `\nVISUAL STORYTELLING: The user has attached an image. Carefully analyze all visual details in this image—characters, facial expressions, clothes, time period, weather, lighting, colors, scenery, and objects. Craft a rich, poignant Bengali story inspired directly by and bringing to life this exact image!`;
+  }
+
   if (styleSnippets.length > 0) {
     systemInstruction += `\nCRITICAL: Emulate the tone, vocabulary, and rhythm of the user's own trained stories:\n`;
     styleSnippets.forEach((snippet, i) => {
@@ -200,15 +205,24 @@ Story Guidelines:
     systemInstruction += `\nBlend their personal style patterns into the Bengali prose.`;
   }
 
-  const userContent = `User Prompt: ${prompt}\n\nPlease generate a full, beautiful Bengali story based on this prompt.`;
+  const userContent = `User Prompt: ${prompt}\n\nPlease generate a full, beautiful Bengali story based on this.`;
+
+  const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
+    { text: `${systemInstruction}\n\n${userContent}` },
+  ];
+
+  if (image && image.base64) {
+    const cleanBase64 = image.base64.replace(/^data:[^;]+;base64,/, "");
+    parts.push({
+      inlineData: {
+        mimeType: image.mimeType || "image/jpeg",
+        data: cleanBase64,
+      },
+    });
+  }
 
   const payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: `${systemInstruction}\n\n${userContent}` }],
-      },
-    ],
+    contents: [{ role: "user", parts }],
     generationConfig: {
       temperature: 0.85,
       maxOutputTokens: 2048,
@@ -567,6 +581,7 @@ export async function generateStoryAndChat(
   prompt: string,
   autoTrain = true,
   customApiKey?: string,
+  image?: { base64: string; mimeType: string },
 ): Promise<{
   story: string;
   prompt: string;
@@ -575,9 +590,10 @@ export async function generateStoryAndChat(
   model: string;
 }> {
   loadMemory();
-  const cleanPrompt = prompt.trim();
+  const cleanPrompt =
+    prompt.trim() || (image ? "এই ছবিটি দেখে একটি সুন্দর ও বাস্তবসম্মত বাংলা গল্প রচনা করো।" : "");
   if (!cleanPrompt) {
-    throw new Error("Prompt cannot be empty.");
+    throw new Error("Prompt or image is required.");
   }
 
   // TaleForge is a Bangla AI Storytelling platform: ALWAYS write in Bangla unless explicitly commanded otherwise
@@ -605,8 +621,11 @@ export async function generateStoryAndChat(
         geminiKey,
         styleSnippets,
         isBengali,
+        image,
       );
-      activeModel = "Google Gemini 1.5 Flash (Live AI)";
+      activeModel = image
+        ? "Google Gemini 1.5 Flash Vision (Live Image-to-Story)"
+        : "Google Gemini 1.5 Flash (Live AI)";
     } catch (err: unknown) {
       console.warn("Gemini API call failed, falling back to Smart Engine:", err);
       generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
@@ -614,6 +633,7 @@ export async function generateStoryAndChat(
     }
   } else {
     generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
+    if (image) activeModel = "TaleForge Smart Engine (Visual Synthesis)";
   }
 
   // Save chat history
