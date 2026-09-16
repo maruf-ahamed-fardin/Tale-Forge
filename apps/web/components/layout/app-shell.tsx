@@ -20,8 +20,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-white/92 px-4 backdrop-blur lg:hidden">
           <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
+            <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-lg shadow-sm border border-indigo-200/60">
+              <img
+                src="/favicon.svg"
+                alt="TaleForge Logo"
+                className="h-full w-full object-cover"
+              />
             </span>
             <span className="text-base font-extrabold text-[#1f1b2d]">TaleForge</span>
           </Link>

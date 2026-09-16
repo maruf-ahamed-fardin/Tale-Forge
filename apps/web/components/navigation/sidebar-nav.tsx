@@ -38,8 +38,12 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <Link href="/chat" className="flex items-center gap-3 px-5 py-5" onClick={onNavigate}>
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-sm">
-          <Sparkles className="h-5 w-5" aria-hidden="true" />
+        <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-xl shadow-md border border-indigo-200/60">
+          <img
+            src="/favicon.svg"
+            alt="TaleForge Logo"
+            className="h-full w-full object-cover"
+          />
         </span>
         <span>
           <span className="block text-lg font-extrabold text-[#1f1b2d]">TaleForge</span>
