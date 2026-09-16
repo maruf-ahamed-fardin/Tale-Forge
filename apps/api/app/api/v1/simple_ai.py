@@ -50,14 +50,40 @@ async def train_with_file(
     file: UploadFile = File(...),
     title: str = Form(""),
 ):
-    """User uploads a .txt file to train the AI directly."""
+    """User uploads a .txt or .pdf file to train the AI directly."""
     contents = await file.read()
-    try:
-        text = contents.decode("utf-8")
-    except UnicodeDecodeError:
-        text = contents.decode("latin-1", errors="ignore")
+    filename = file.filename or "uploaded_story"
+    is_pdf = filename.lower().endswith(".pdf") or file.content_type == "application/pdf"
 
-    story_title = title.strip() or file.filename or "Uploaded Story"
+    if is_pdf:
+        try:
+            import io
+            import pypdf
+
+            reader = pypdf.PdfReader(io.BytesIO(contents))
+            pages_text = []
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    pages_text.append(extracted)
+            text = "\n\n".join(pages_text).strip()
+            if not text:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="PDF ফাইলটি থেকে কোনো লেখা উদ্ধার করা যায়নি।",
+                )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"PDF ফাইল পড়া সম্ভব হয়নি: {str(e)}",
+            )
+    else:
+        try:
+            text = contents.decode("utf-8")
+        except UnicodeDecodeError:
+            text = contents.decode("latin-1", errors="ignore")
+
+    story_title = title.strip() or filename.rsplit(".", 1)[0] or "Uploaded Story"
     res = ai_engine.train_on_text(text, story_title)
     return res
 

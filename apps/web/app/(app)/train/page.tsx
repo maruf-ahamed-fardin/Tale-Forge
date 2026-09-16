@@ -148,7 +148,7 @@ export default function SimpleTrainPage() {
         <CardHeader>
           <CardTitle>Add New Story Data to Model</CardTitle>
           <CardDescription>
-            নিচের বক্সে আপনার লেখা গল্প পেস্ট করুন অথবা সরাসরি .txt ফাইল আপলোড করুন।
+            নিচের বক্সে আপনার গল্প পেস্ট করুন অথবা সরাসরি <strong>.txt</strong> বা <strong>.pdf</strong> ফাইল (বই, পাণ্ডুলিপি বা ছোটগল্প) আপলোড করুন।
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -160,7 +160,7 @@ export default function SimpleTrainPage() {
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="যেমন: একাকী দুপুর / A Quiet Rain"
+                placeholder="যেমন: একাকী দুপুর / A Quiet Rain (ফাইল আপলোড করলে নাম স্বয়ংক্রিয়ভাবে নেবে)"
                 className="mt-1.5"
               />
             </div>
@@ -178,7 +178,7 @@ export default function SimpleTrainPage() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="এখানে আপনার সম্পূর্ণ গল্প বা লেখার প্যারাগ্রাফ পেস্ট করুন..."
-                className="mt-1.5 min-h-[220px] w-full rounded-lg border border-border p-4 text-sm font-serif leading-relaxed text-[#292524] outline-none focus:border-primary"
+                className="mt-1.5 min-h-[200px] w-full rounded-lg border border-border p-4 text-sm font-serif leading-relaxed text-[#292524] outline-none focus:border-primary"
                 required
               />
             </div>
@@ -201,11 +201,11 @@ export default function SimpleTrainPage() {
             )}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
-              <div>
+              <div className="flex flex-col gap-1">
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".txt"
+                  accept=".txt,.pdf"
                   className="hidden"
                   onChange={handleFileUpload}
                 />
@@ -215,10 +215,14 @@ export default function SimpleTrainPage() {
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={training}
+                  className="border-primary/40 hover:bg-primary/5"
                 >
-                  <Upload className="h-4 w-4 mr-1.5" />
-                  Upload .txt File
+                  <Upload className="h-4 w-4 mr-1.5 text-primary" />
+                  Upload .txt / .pdf File (বই বা ফাইল)
                 </Button>
+                <span className="text-[11px] text-muted-foreground">
+                  সাপোর্ট: .pdf (বই/ডকুমেন্ট) এবং .txt ফাইল
+                </span>
               </div>
 
               <Button type="submit" disabled={training || !text.trim()}>
