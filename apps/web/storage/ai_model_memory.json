@@ -23,14 +23,6 @@
       "word_count": 122,
       "language": "bn",
       "trained_at": "2026-09-15T09:31:23.868Z"
-    },
-    {
-      "id": "story_1789590333612_4v9k",
-      "title": "My Test PDF Storybook",
-      "text": "TaleForge Bengali Story Book PDF Manuscript",
-      "word_count": 6,
-      "language": "en",
-      "trained_at": "2026-09-16T20:25:33.612Z"
     }
   ],
   "chat_history": [
@@ -176,5 +168,5 @@
     }
   ],
   "auto_train_enabled": true,
-  "last_updated": "2026-09-16T20:26:51.546Z"
+  "last_updated": "2026-09-16T20:37:32.853Z"
 }
