@@ -299,6 +299,8 @@ export function simpleAiApi() {
       autoTrain = true,
       imageBase64?: string,
       imageType?: string,
+      model = "gemini-1.5-flash",
+      persona = "default",
     ) => {
       const apiKey = getCustomApiKey();
       const headers: Record<string, string> = {};
@@ -320,6 +322,8 @@ export function simpleAiApi() {
             auto_train: autoTrain,
             image_base64: imageBase64,
             image_type: imageType,
+            model,
+            persona,
           }),
         },
         false,

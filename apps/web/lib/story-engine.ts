@@ -174,9 +174,11 @@ async function generateWithGemini(
   styleSnippets: string[],
   isBengali: boolean,
   image?: { base64: string; mimeType: string },
+  modelTarget: string = "gemini-1.5-flash",
+  persona: string = "default",
 ): Promise<string> {
-  const model = "gemini-1.5-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const chosenModel = modelTarget === "gemini-1.5-pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
 
   let systemInstruction = `You are TaleForge AI, the premier master novelist and storyteller for Bengali Literature (বাংলা সাহিত্য).
 YOUR CORE MISSION: You MUST ALWAYS write the story strictly in authentic, beautiful, expressive Bengali (শুদ্ধ ও প্রাঞ্জল বাংলা ভাষা ও হরফে).
@@ -192,6 +194,31 @@ Story Guidelines:
    - Scene 4: A poetic, touching, and unforgettable conclusion
 3. Use expressive literary Bengali prose (e.g. রবীন্দ্রনাথ বা শরৎচন্দ্রের ভাবগম্ভীর ও প্রাঞ্জল সাহিত্যের মতো)।
 `;
+
+  // Apply Author / Style Persona
+  if (persona === "humayun") {
+    systemInstruction += `\nLITERARY PERSONA - HUMAYUN AHMED STYLE (হুমায়ূন আহমেদ ধারা):
+- Simple, unpretentious, yet deeply moving and philosophical Bengali prose.
+- Witty, whimsical, eccentric characters and natural conversational dialogue.
+- Motifs of sudden rain, midnight walks, moonlight (জোছনা), and unspoken love.
+- Gentle humour interlaced with profound melancholy.`;
+  } else if (persona === "mystery") {
+    systemInstruction += `\nLITERARY PERSONA - SATYAJIT RAY / FELUDA MYSTERY STYLE (রহস্য ও গোয়েন্দা ধারা):
+- Sharp observational acumen, tight suspense, deductive puzzles, and thrilling plot.
+- Rich cultural backdrops (ancient estates, misty hill stations, old library rooms).
+- Intelligent, quick-witted protagonists and articulate dialogue.`;
+  } else if (persona === "romance") {
+    systemInstruction += `\nLITERARY PERSONA - POETIC & EMOTIONAL ROMANCE (কাব্যিক প্রেম ও মানবিক সম্পর্ক):
+- Deeply evocative, lyrical, and tender emotional storytelling.
+- Emphasis on longing, heartfelt dialogues, rainy afternoons, and soul-stirring connections.`;
+  } else if (persona === "classic") {
+    systemInstruction += `\nLITERARY PERSONA - CLASSIC BENGALI LITERATURE (শরৎচন্দ্র ও রবীন্দ্র ক্লাসিক সাহিত্য):
+- Rich, formal, ornate, and introspective literary phrasing with classical gravitas.
+- Deep moral dilemmas, familial relationships, and timeless philosophical reflections.`;
+  } else if (persona === "personal") {
+    systemInstruction += `\nLITERARY PERSONA - STRICT PERSONAL TRAINED VOICE (ব্যক্তিগত স্বর):
+- Strictly adhere to the cadence, rhythm, vocabulary, and narrative structure found in the user's trained story excerpts.`;
+  }
 
   if (image && image.base64) {
     systemInstruction += `\nVISUAL STORYTELLING: The user has attached an image. Carefully analyze all visual details in this image—characters, facial expressions, clothes, time period, weather, lighting, colors, scenery, and objects. Craft a rich, poignant Bengali story inspired directly by and bringing to life this exact image!`;
@@ -582,6 +609,8 @@ export async function generateStoryAndChat(
   autoTrain = true,
   customApiKey?: string,
   image?: { base64: string; mimeType: string },
+  model = "gemini-1.5-flash",
+  persona = "default",
 ): Promise<{
   story: string;
   prompt: string;
@@ -603,8 +632,8 @@ export async function generateStoryAndChat(
   // Collect style snippets from trained stories
   const styleSnippets: string[] = [];
   if (inMemoryTrainedStories.length > 0) {
-    inMemoryTrainedStories.slice(-3).forEach((s) => {
-      styleSnippets.push(s.text.slice(0, 300));
+    inMemoryTrainedStories.slice(-4).forEach((s) => {
+      styleSnippets.push(s.text.slice(0, 350));
     });
   }
 
@@ -614,18 +643,34 @@ export async function generateStoryAndChat(
   let generatedStory = "";
   let activeModel = "TaleForge Smart Engine";
 
-  if (geminiKey) {
+  if (model === "smart-engine") {
+    // Offline smart procedural engine
+    generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
+    activeModel = "TaleForge Smart Engine (Offline)";
+  } else if (geminiKey) {
     try {
+      const targetModel = model === "gemini-1.5-pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
+      const targetPersona = model === "taleforge-lora" ? "personal" : persona;
+
       generatedStory = await generateWithGemini(
         cleanPrompt,
         geminiKey,
         styleSnippets,
         isBengali,
         image,
+        targetModel,
+        targetPersona,
       );
-      activeModel = image
-        ? "Google Gemini 1.5 Flash Vision (Live Image-to-Story)"
-        : "Google Gemini 1.5 Flash (Live AI)";
+
+      if (model === "taleforge-lora") {
+        activeModel = "TaleForge LoRA Adapter (Personal Voice)";
+      } else if (model === "gemini-1.5-pro") {
+        activeModel = "Google Gemini 1.5 Pro (Deep Literary)";
+      } else {
+        activeModel = image
+          ? "Google Gemini 1.5 Flash Vision (Multimodal)"
+          : "Google Gemini 1.5 Flash (Live AI)";
+      }
     } catch (err: unknown) {
       console.warn("Gemini API call failed, falling back to Smart Engine:", err);
       generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
@@ -633,7 +678,13 @@ export async function generateStoryAndChat(
     }
   } else {
     generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
-    if (image) activeModel = "TaleForge Smart Engine (Visual Synthesis)";
+    if (model === "taleforge-lora") {
+      activeModel = "TaleForge LoRA Adapter (Personal Style)";
+    } else if (image) {
+      activeModel = "TaleForge Smart Engine (Visual Synthesis)";
+    } else {
+      activeModel = "TaleForge Smart Engine (Rule-based)";
+    }
   }
 
   // Save chat history

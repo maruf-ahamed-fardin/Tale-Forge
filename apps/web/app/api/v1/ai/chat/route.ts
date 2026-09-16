@@ -10,6 +10,8 @@ export async function POST(req: NextRequest) {
     const autoTrain = body.auto_train !== false;
     const imageBase64 = body.image_base64;
     const imageType = body.image_type || "image/jpeg";
+    const model = body.model || "gemini-1.5-flash";
+    const persona = body.persona || "default";
 
     if (!message.trim() && !imageBase64) {
       return NextResponse.json(
@@ -31,6 +33,8 @@ export async function POST(req: NextRequest) {
       autoTrain,
       customApiKey,
       image,
+      model,
+      persona,
     );
     return NextResponse.json(result);
   } catch (err: unknown) {
