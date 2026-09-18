@@ -305,6 +305,8 @@ export interface AIStatus {
   total_trained_stories: number;
   total_words: number;
   auto_train_enabled: boolean;
+  default_stories_count?: number;
+  personal_trained_stories?: number;
   default_stories?: TrainedStoryItem[];
   personal_stories?: TrainedStoryItem[];
   default_words?: number;

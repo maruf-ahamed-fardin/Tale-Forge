@@ -77,21 +77,26 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Model Status Card */}
       <div className="border-t border-border p-4">
-        <div className="rounded-xl bg-[#fbfaf7] p-3.5 border border-border">
+        <Link
+          href="/train"
+          onClick={onNavigate}
+          className="block rounded-xl bg-[#fbfaf7] p-3.5 border border-border hover:border-primary/40 hover:shadow-xs transition"
+          title="AI প্রশিক্ষণ কেন্দ্রে যান"
+        >
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-[#292524]">AI Memory Status</p>
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             {aiStatus
-              ? `${aiStatus.total_trained_stories} stories learned`
+              ? `${aiStatus.personal_trained_stories ?? 0} নিজস্ব / ${aiStatus.default_stories_count ?? 6} ডিফল্ট গল্প`
               : "Ready to train"}
           </p>
           <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 rounded-md px-2 py-1">
             <Zap className="h-3 w-3 text-amber-500" />
             Auto-Retrain Active
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );

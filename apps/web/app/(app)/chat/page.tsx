@@ -43,6 +43,7 @@ interface ChatMessage {
   autoTrained?: boolean;
   model?: string;
   persona?: string;
+  trainingScope?: string;
   saved?: boolean;
   imageUrl?: string;
   timestamp?: string;
@@ -129,6 +130,40 @@ const AVAILABLE_PERSONAS = [
   },
 ];
 
+// Training Scope Options (Default Master Stories vs Account Personal vs Hybrid)
+const AVAILABLE_TRAINING_SCOPES = [
+  {
+    id: "hybrid",
+    name: "হাইব্রিড শৈলী (ডিফল্ট + নিজস্ব)",
+    shortName: "হাইব্রিড শৈলী",
+    tag: "Recommended",
+    badge: "Hybrid",
+    desc: "ডিফল্ট মাস্টার সাহিত্য ভাণ্ডার এবং আপনার অ্যাকাউন্টের নিজস্ব ব্যক্তিগত গল্প—উভয়ের সেরা জ্ঞান একসাথে প্রয়োগ করবে।",
+    icon: Sparkles,
+    color: "text-amber-500",
+  },
+  {
+    id: "personal",
+    name: "শুধুমাত্র ব্যক্তিগত শৈলী (Account Only)",
+    shortName: "ব্যক্তিগত শৈলী",
+    tag: "Private",
+    badge: "Personal",
+    desc: "শুধুমাত্র আপনার অ্যাকাউন্টে আপলোড ও ট্রেইন করা গল্পগুলোর নিজস্ব বাচনভঙ্গি ও চরিত্রায়ন ব্যবহার করবে।",
+    icon: User,
+    color: "text-emerald-500",
+  },
+  {
+    id: "default",
+    name: "শুধুমাত্র ডিফল্ট সাহিত্য (Master Stories)",
+    shortName: "ডিফল্ট সাহিত্য",
+    tag: "Master Class",
+    badge: "Default",
+    desc: "হুমায়ূন আহমেদ, ফেলুদা রহস্য, বিভূতিভূষণ ও ক্লাসিক বাংলা সাহিত্যের ৬টি মাস্টার গল্পের কাঠামোর ওপর ভিত্তি করবে।",
+    icon: BookOpen,
+    color: "text-indigo-500",
+  },
+];
+
 // Starter prompt suggestion cards
 const STARTER_SUGGESTIONS = [
   {
@@ -174,10 +209,12 @@ export default function AIChatPage() {
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("gemini-1.5-flash");
   const [selectedPersona, setSelectedPersona] = useState<string>("default");
+  const [selectedTrainingScope, setSelectedTrainingScope] = useState<string>("hybrid");
 
   // Dropdown states
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showPersonaDropdown, setShowPersonaDropdown] = useState(false);
+  const [showTrainingScopeDropdown, setShowTrainingScopeDropdown] = useState(false);
 
   // Message action states
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -194,6 +231,7 @@ export default function AIChatPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const personaDropdownRef = useRef<HTMLDivElement>(null);
+  const trainingScopeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Load status and persisted preferences
   const refreshStatus = () => {
@@ -210,6 +248,8 @@ export default function AIChatPage() {
       if (savedModel) setSelectedModel(savedModel);
       const savedPersona = localStorage.getItem("tf_preferred_persona");
       if (savedPersona) setSelectedPersona(savedPersona);
+      const savedScope = localStorage.getItem("tf_preferred_training_scope");
+      if (savedScope) setSelectedTrainingScope(savedScope);
     }
 
     // Close dropdowns on outside click
@@ -225,6 +265,12 @@ export default function AIChatPage() {
         !personaDropdownRef.current.contains(e.target as Node)
       ) {
         setShowPersonaDropdown(false);
+      }
+      if (
+        trainingScopeDropdownRef.current &&
+        !trainingScopeDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowTrainingScopeDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -363,6 +409,7 @@ export default function AIChatPage() {
         imageAttach?.type,
         activeModel,
         activePersona,
+        selectedTrainingScope,
       );
 
       const aiMsg: ChatMessage = {
@@ -372,6 +419,7 @@ export default function AIChatPage() {
         autoTrained: res.auto_trained,
         model: res.model,
         persona: activePersona,
+        trainingScope: res.training_scope || selectedTrainingScope,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, aiMsg]);
@@ -481,11 +529,23 @@ export default function AIChatPage() {
     setSpeakingId(messageId);
   };
 
+  const handleSelectTrainingScope = (scopeId: string) => {
+    setSelectedTrainingScope(scopeId);
+    setShowTrainingScopeDropdown(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tf_preferred_training_scope", scopeId);
+    }
+  };
+
   const currentModelInfo =
     AVAILABLE_MODELS.find((m) => m.id === selectedModel) || AVAILABLE_MODELS[0];
   const currentPersonaInfo =
     AVAILABLE_PERSONAS.find((p) => p.id === selectedPersona) || AVAILABLE_PERSONAS[0];
+  const currentScopeInfo =
+    AVAILABLE_TRAINING_SCOPES.find((s) => s.id === selectedTrainingScope) ||
+    AVAILABLE_TRAINING_SCOPES[0];
   const ModelIcon = currentModelInfo.icon;
+  const ScopeIcon = currentScopeInfo.icon;
 
   return (
     <div className="relative flex flex-col h-[calc(100dvh-125px)] sm:h-[calc(100vh-135px)] w-full max-w-5xl mx-auto overflow-hidden">
@@ -603,6 +663,69 @@ export default function AIChatPage() {
               </div>
             )}
           </div>
+
+          {/* Training Scope Selector Dropdown */}
+          <div className="relative" ref={trainingScopeDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowTrainingScopeDropdown((prev) => !prev)}
+              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#44403c] bg-stone-100/80 hover:bg-stone-200/80 transition"
+              title="Select AI Training Scope (Personal vs Default Literature)"
+            >
+              <ScopeIcon className={`h-3.5 w-3.5 ${currentScopeInfo.color}`} />
+              <span className="hidden md:inline truncate max-w-[130px]">
+                {currentScopeInfo.shortName}
+              </span>
+              <ChevronDown className="h-3 w-3 text-stone-500" />
+            </button>
+
+            {showTrainingScopeDropdown && (
+              <div className="absolute left-0 top-full mt-2 w-72 rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Knowledge Scope / প্রশিক্ষণ জ্ঞান পরিসীমা
+                </p>
+                <div className="space-y-1">
+                  {AVAILABLE_TRAINING_SCOPES.map((s) => {
+                    const SIcon = s.icon;
+                    const isSelected = s.id === selectedTrainingScope;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleSelectTrainingScope(s.id)}
+                        className={`w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition ${
+                          isSelected
+                            ? "bg-amber-50/80 text-amber-950 font-medium"
+                            : "hover:bg-stone-50 text-[#292524]"
+                        }`}
+                      >
+                        <div className={`p-1 rounded-lg bg-white shadow-2xs mt-0.5 ${s.color}`}>
+                          <SIcon className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="text-xs font-bold leading-snug">{s.name}</p>
+                            <span
+                              className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
+                                isSelected
+                                  ? "bg-amber-600 text-white"
+                                  : "bg-stone-100 text-stone-600"
+                              }`}
+                            >
+                              {s.badge}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
+                            {s.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Header: New Chat & Library Links */}
@@ -611,10 +734,12 @@ export default function AIChatPage() {
             <Link
               href="/train"
               className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100 transition"
-              title="View and train private story memory"
+              title="View personal and default training stories"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>{aiStatus.total_trained_stories} Stories Learned</span>
+              <span>
+                {aiStatus.personal_trained_stories ?? 0} নিজস্ব / {aiStatus.default_stories_count ?? 6} ডিফল্ট
+              </span>
             </Link>
           )}
 
@@ -724,11 +849,31 @@ export default function AIChatPage() {
                     {/* Model & Persona Attribution (Assistant only) */}
                     {!isUser && (
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-border/50 text-[11px] text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-semibold text-primary">TaleForge</span>
                           {m.model && (
                             <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-700">
                               {m.model}
+                            </span>
+                          )}
+                          {m.trainingScope && (
+                            <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600 flex items-center gap-1">
+                              {m.trainingScope === "personal" ? (
+                                <>
+                                  <User className="h-2.5 w-2.5 text-emerald-600" />
+                                  <span>ব্যক্তিগত AI</span>
+                                </>
+                              ) : m.trainingScope === "default" ? (
+                                <>
+                                  <BookOpen className="h-2.5 w-2.5 text-indigo-600" />
+                                  <span>ডিফল্ট সাহিত্য</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-2.5 w-2.5 text-amber-600" />
+                                  <span>হাইব্রিড মোড</span>
+                                </>
+                              )}
                             </span>
                           )}
                         </div>
