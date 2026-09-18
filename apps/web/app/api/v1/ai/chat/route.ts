@@ -12,6 +12,11 @@ export async function POST(req: NextRequest) {
     const imageType = body.image_type || "image/jpeg";
     const model = body.model || "gemini-1.5-flash";
     const persona = body.persona || "default";
+    const trainingScope = body.training_scope || "hybrid";
+    const accountId =
+      body.account_id ||
+      req.headers.get("x-account-id") ||
+      "default_local_author";
 
     if (!message.trim() && !imageBase64) {
       return NextResponse.json(
@@ -35,6 +40,8 @@ export async function POST(req: NextRequest) {
       image,
       model,
       persona,
+      trainingScope,
+      accountId,
     );
     return NextResponse.json(result);
   } catch (err: unknown) {

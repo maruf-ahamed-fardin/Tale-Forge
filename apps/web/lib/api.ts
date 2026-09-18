@@ -269,6 +269,26 @@ export function trainingApi() {
 
 // ─── Simple Trainable AI & Story Chat ─────────────────────────────────────────
 
+export function getAccountId(): string {
+  if (typeof window === "undefined") return "default_local_author";
+  try {
+    const rawUser = localStorage.getItem("tf_user");
+    if (rawUser) {
+      const user = JSON.parse(rawUser);
+      if (user?.id) return String(user.id);
+      if (user?.email) return user.email.replace(/[^a-zA-Z0-9_-]/g, "_");
+    }
+  } catch {
+    // ignore
+  }
+  let localAccountId = localStorage.getItem("tf_account_id");
+  if (!localAccountId) {
+    localAccountId = `author_${Math.random().toString(36).slice(2, 9)}`;
+    localStorage.setItem("tf_account_id", localAccountId);
+  }
+  return localAccountId;
+}
+
 export interface TrainedStoryItem {
   id: string;
   title: string;
@@ -276,15 +296,24 @@ export interface TrainedStoryItem {
   trained_at: string;
   text?: string;
   language?: string;
+  is_default?: boolean;
+  genre?: string;
+  author_style?: string;
 }
 
 export interface AIStatus {
   total_trained_stories: number;
   total_words: number;
   auto_train_enabled: boolean;
+  default_stories?: TrainedStoryItem[];
+  personal_stories?: TrainedStoryItem[];
+  default_words?: number;
+  personal_words?: number;
+  account_id?: string;
   recent_stories: TrainedStoryItem[];
   trained_stories?: TrainedStoryItem[];
   chat_count: number;
+  active_model?: string;
 }
 
 export function simpleAiApi() {
@@ -301,9 +330,14 @@ export function simpleAiApi() {
       imageType?: string,
       model = "gemini-1.5-flash",
       persona = "default",
+      trainingScope = "hybrid",
+      accountId?: string,
     ) => {
+      const activeAccountId = accountId || getAccountId();
       const apiKey = getCustomApiKey();
-      const headers: Record<string, string> = {};
+      const headers: Record<string, string> = {
+        "x-account-id": activeAccountId,
+      };
       if (apiKey) headers["x-gemini-key"] = apiKey;
 
       return request<{
@@ -312,6 +346,8 @@ export function simpleAiApi() {
         auto_trained: boolean;
         total_trained_count: number;
         model?: string;
+        training_scope?: string;
+        account_id?: string;
       }>(
         "/api/v1/ai/chat",
         {
@@ -324,31 +360,45 @@ export function simpleAiApi() {
             image_type: imageType,
             model,
             persona,
+            training_scope: trainingScope,
+            account_id: activeAccountId,
           }),
         },
         false,
       );
     },
-    trainText: (text: string, title = "My Story") =>
-      request<{
+    trainText: (text: string, title = "My Story", accountId?: string) => {
+      const activeAccountId = accountId || getAccountId();
+      return request<{
         success: boolean;
         message: string;
         total_trained_stories: number;
         total_words: number;
+        personal_trained_stories?: number;
+        personal_words?: number;
+        account_id?: string;
       }>(
         "/api/v1/ai/train",
         {
           method: "POST",
-          body: JSON.stringify({ text, title }),
+          headers: { "x-account-id": activeAccountId },
+          body: JSON.stringify({ text, title, account_id: activeAccountId }),
         },
         false,
-      ),
-    trainFile: async (file: File, title = "") => {
+      );
+    },
+    trainFile: async (file: File, title = "", accountId?: string) => {
+      const activeAccountId = accountId || getAccountId();
       const form = new FormData();
       form.append("file", file);
       if (title) form.append("title", title);
+      form.append("account_id", activeAccountId);
+
       const res = await fetch(`${API_BASE}/api/v1/ai/train-file`, {
         method: "POST",
+        headers: {
+          "x-account-id": activeAccountId,
+        },
         body: form,
       });
       if (!res.ok) {
@@ -361,16 +411,41 @@ export function simpleAiApi() {
       }
       return res.json();
     },
-    status: () =>
-      request<AIStatus>("/api/v1/ai/status", {}, false),
-    deleteTrainedStory: (id: string) =>
-      request<{
+    status: (accountId?: string) => {
+      const activeAccountId = accountId || getAccountId();
+      return request<AIStatus>(
+        `/api/v1/ai/status?account_id=${encodeURIComponent(activeAccountId)}`,
+        { headers: { "x-account-id": activeAccountId } },
+        false,
+      );
+    },
+    deleteTrainedStory: (id: string, accountId?: string) => {
+      const activeAccountId = accountId || getAccountId();
+      return request<{
         success: boolean;
         message: string;
         status?: AIStatus;
-      }>(`/api/v1/ai/trained/${id}`, { method: "DELETE" }, false),
-    reset: () =>
-      request<{ success: boolean; message: string }>("/api/v1/ai/reset", { method: "POST" }, false),
+      }>(
+        `/api/v1/ai/trained/${encodeURIComponent(id)}?account_id=${encodeURIComponent(activeAccountId)}`,
+        {
+          method: "DELETE",
+          headers: { "x-account-id": activeAccountId },
+        },
+        false,
+      );
+    },
+    reset: (accountId?: string) => {
+      const activeAccountId = accountId || getAccountId();
+      return request<{ success: boolean; message: string; account_id?: string }>(
+        `/api/v1/ai/reset?account_id=${encodeURIComponent(activeAccountId)}`,
+        {
+          method: "POST",
+          headers: { "x-account-id": activeAccountId },
+          body: JSON.stringify({ account_id: activeAccountId }),
+        },
+        false,
+      );
+    },
   };
 }
 

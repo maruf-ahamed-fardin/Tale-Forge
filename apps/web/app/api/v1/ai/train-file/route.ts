@@ -140,6 +140,10 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file");
     const title = (formData.get("title") as string) || "";
+    const accountId =
+      (formData.get("account_id") as string) ||
+      req.headers.get("x-account-id") ||
+      "default_local_author";
 
     if (!file || typeof file === "string") {
       return NextResponse.json(
@@ -197,6 +201,7 @@ export async function POST(req: NextRequest) {
       const forwardForm = new FormData();
       forwardForm.append("file", fileObj);
       forwardForm.append("title", cleanTitle);
+      forwardForm.append("account_id", accountId);
 
       const pyRes = await fetch("http://127.0.0.1:8000/api/v1/ai/train-file", {
         method: "POST",
@@ -207,7 +212,7 @@ export async function POST(req: NextRequest) {
       if (pyRes.ok) {
         const data = await pyRes.json();
         try {
-          trainOnText(text, cleanTitle);
+          trainOnText(text, cleanTitle, accountId);
         } catch {
           // ignore
         }
@@ -217,7 +222,7 @@ export async function POST(req: NextRequest) {
       // Fall back to embedded engine
     }
 
-    const result = trainOnText(text, cleanTitle);
+    const result = trainOnText(text, cleanTitle, accountId);
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "File training failed";
