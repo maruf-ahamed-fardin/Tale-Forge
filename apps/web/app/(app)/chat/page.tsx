@@ -568,7 +568,7 @@ export default function AIChatPage() {
             </button>
 
             {showModelDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Select AI Generation Engine
                 </p>
@@ -631,7 +631,7 @@ export default function AIChatPage() {
             </button>
 
             {showPersonaDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-64 rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Literary Persona / লেখক শৈলী
                 </p>
@@ -680,7 +680,7 @@ export default function AIChatPage() {
             </button>
 
             {showTrainingScopeDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Knowledge Scope / প্রশিক্ষণ জ্ঞান পরিসীমা
                 </p>

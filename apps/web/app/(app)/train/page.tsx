@@ -289,16 +289,16 @@ export default function SimpleTrainPage() {
       <div className="flex items-center gap-2 p-1 bg-neutral-100 rounded-xl border border-border">
         <button
           onClick={() => setActiveTab("personal")}
-          className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
             activeTab === "personal"
               ? "bg-white text-primary shadow-sm border border-border"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <User className="h-4 w-4" />
-          <span>ব্যক্তিগত AI প্রশিক্ষণ (Personal AI - My Account)</span>
+          <User className="h-4 w-4 shrink-0" />
+          <span>ব্যক্তিগত AI <span className="hidden sm:inline">প্রশিক্ষণ (Personal AI)</span></span>
           {personalStories.length > 0 && (
-            <span className="bg-primary/10 text-primary text-[11px] px-1.5 py-0.2 rounded-full">
+            <span className="bg-primary/10 text-primary text-[11px] px-1.5 py-0.2 rounded-full font-medium">
               {personalStories.length}
             </span>
           )}
@@ -306,15 +306,15 @@ export default function SimpleTrainPage() {
 
         <button
           onClick={() => setActiveTab("default")}
-          className={`flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
             activeTab === "default"
               ? "bg-white text-amber-700 shadow-sm border border-border"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <BookOpen className="h-4 w-4" />
-          <span>ডিফল্ট সাহিত্য ভাণ্ডার (Default Master Stories)</span>
-          <span className="bg-amber-500/10 text-amber-700 text-[11px] px-1.5 py-0.2 rounded-full">
+          <BookOpen className="h-4 w-4 shrink-0" />
+          <span>ডিফল্ট সাহিত্য <span className="hidden sm:inline">ভাণ্ডার (Master Stories)</span></span>
+          <span className="bg-amber-500/10 text-amber-700 text-[11px] px-1.5 py-0.2 rounded-full font-medium">
             {defaultStories.length}
           </span>
         </button>
@@ -776,12 +776,12 @@ export default function SimpleTrainPage() {
               {modalStory.text}
             </div>
 
-            <div className="p-4 border-t border-border flex items-center justify-between bg-neutral-50/30">
-              <span className="text-xs text-muted-foreground">
+            <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-neutral-50/30">
+              <span className="text-xs text-muted-foreground truncate">
                 TaleForge Master Stories Collection
               </span>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 self-end sm:self-auto">
                 <Button
                   variant="outline"
                   size="sm"
