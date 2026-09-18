@@ -21,27 +21,34 @@ router = APIRouter(prefix="/ai", tags=["simple-ai"])
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
     auto_train: bool = Field(default=True)
+    training_scope: str = Field(default="hybrid")
+    account_id: str = Field(default="default_local_author")
 
 
 class TrainRequest(BaseModel):
     title: str = Field(default="My Story", max_length=200)
     text: str = Field(..., min_length=10)
+    account_id: str = Field(default="default_local_author")
 
 
 @router.post("/chat")
 async def chat_and_generate(req: ChatRequest):
-    """User prompts the AI, the AI crafts a new story in their trained style,
-
+    """User prompts the AI, the AI crafts a new story in their chosen scope and trained style,
     and automatically retrains itself on the output!
     """
-    res = ai_engine.generate_and_chat(req.message, auto_train=req.auto_train)
+    res = ai_engine.generate_and_chat(
+        req.message,
+        auto_train=req.auto_train,
+        training_scope=req.training_scope,
+        account_id=req.account_id,
+    )
     return res
 
 
 @router.post("/train")
 async def train_story(req: TrainRequest):
-    """User submits text to train the AI."""
-    res = ai_engine.train_on_text(req.text, req.title)
+    """User submits text to train the AI for their specific account."""
+    res = ai_engine.train_on_text(req.text, req.title, account_id=req.account_id)
     return res
 
 
@@ -49,8 +56,9 @@ async def train_story(req: TrainRequest):
 async def train_with_file(
     file: UploadFile = File(...),
     title: str = Form(""),
+    account_id: str = Form("default_local_author"),
 ):
-    """User uploads a .txt or .pdf file to train the AI directly."""
+    """User uploads a .txt or .pdf file to train the AI directly for their account."""
     contents = await file.read()
     filename = file.filename or "uploaded_story"
     is_pdf = filename.lower().endswith(".pdf") or file.content_type == "application/pdf"
@@ -126,24 +134,35 @@ async def train_with_file(
             text = contents.decode("latin-1", errors="ignore")
 
     story_title = title.strip() or filename.rsplit(".", 1)[0] or "Uploaded Story"
-    res = ai_engine.train_on_text(text, story_title)
+    res = ai_engine.train_on_text(text, story_title, account_id=account_id)
     return res
 
 
 @router.get("/status")
-async def get_ai_status():
-    """Returns how many stories AI is trained on and memory stats."""
-    return ai_engine.get_status()
+async def get_ai_status(account_id: str = "default_local_author"):
+    """Returns how many stories AI is trained on and memory stats for this account."""
+    return ai_engine.get_status(account_id=account_id)
+
+
+@router.delete("/trained/{story_id}")
+async def delete_trained_story(story_id: str, account_id: str = "default_local_author"):
+    """Deletes a story from personal account memory."""
+    try:
+        updated = ai_engine.delete_story(story_id, account_id=account_id)
+        return {"success": True, "message": "Trained story deleted", "status": updated}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/history")
-async def get_chat_history():
+async def get_chat_history(account_id: str = "default_local_author"):
     """Returns recent conversation messages."""
-    return {"messages": ai_engine.chat_history}
+    safe_id = ai_engine._sanitize_account_id(account_id)
+    return {"messages": ai_engine.chat_history.get(safe_id, [])}
 
 
 @router.post("/reset")
-async def reset_ai_memory():
-    """Resets AI memory to blank state."""
-    ai_engine.clear_memory()
-    return {"success": True, "message": "AI model memory reset successfully"}
+async def reset_ai_memory(account_id: str = "default_local_author"):
+    """Resets personal account AI memory to blank state."""
+    ai_engine.clear_memory(account_id=account_id)
+    return {"success": True, "message": f"AI model memory for account '{account_id}' reset successfully"}

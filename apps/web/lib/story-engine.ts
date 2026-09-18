@@ -8,6 +8,9 @@ export interface TrainedStory {
   word_count: number;
   language: "bn" | "en";
   trained_at: string;
+  genre?: string;
+  author_style?: string;
+  is_default?: boolean;
 }
 
 export interface ChatMessageRecord {
@@ -20,6 +23,11 @@ export interface AIModelStatus {
   total_trained_stories: number;
   total_words: number;
   auto_train_enabled: boolean;
+  default_stories: TrainedStory[];
+  personal_stories: TrainedStory[];
+  default_words: number;
+  personal_words: number;
+  account_id: string;
   recent_stories: Array<{
     id: string;
     title: string;
@@ -27,98 +35,296 @@ export interface AIModelStatus {
     trained_at: string;
     text?: string;
     language?: "bn" | "en";
+    is_default?: boolean;
+    genre?: string;
   }>;
   trained_stories?: TrainedStory[];
   chat_count: number;
   active_model?: string;
 }
 
-// In-memory memory storage cache (retained across serverless warm invocations)
-let inMemoryTrainedStories: TrainedStory[] = [];
-let inMemoryChatHistory: ChatMessageRecord[] = [];
-let memoryLoaded = false;
+// ─── Curated High-Quality Bengali Literature for Default AI Training ─────────
+export const DEFAULT_TRAINED_STORIES: TrainedStory[] = [
+  {
+    id: "default_story_1",
+    title: "মধ্যরাতের বৃষ্টি ও এক চিলতে জোছনা",
+    genre: "হুমায়ূন আহমেদ ধারা",
+    author_style: "জাদুকরি বাস্তবতা, নিঃসঙ্গ রাত ও গভীর মায়া",
+    is_default: true,
+    word_count: 245,
+    language: "bn",
+    trained_at: "2026-01-01T00:00:00.000Z",
+    text: `শ্রাবণের একটানা অবিরাম বর্ষণে পুরাতন ঢাকার নিস্তব্ধ গলিপথ তখন ভেসে যাচ্ছিল। টিনের চালে জলের অবিশ্রান্ত ছন্দ যেন কোনো প্রাচীন বিরহী রাগিনীর সুর বাজাচ্ছিল। কাঁচঘেরা বারান্দার এক কোণে বসে এক কাপ এলাচ দেওয়া চা হাতে নিয়ে বাইরের আঁধারের দিকে তাকিয়েছিল শুভ্র।
 
-function getMemoryFilePath(): string {
+ঠিক রাত বারোটা চার মিনিটে হঠাৎ করেই আকাশ চিরে মেঘের বুক গলে এক ফালি অদ্ভুত নীলচে জোছনা এসে পড়ল বারান্দার একপাশে। বৃষ্টির ধারার মাঝেই এমন জোছনার খেলা যেন প্রকৃতির এক জাদুকরি বিস্ময়। এমন বৃষ্টিভেজা জোছনা রাতে মনের বহুদিনের সঞ্চিত অনুভূতিগুলো এক নিমিষেই জীবন্ত হয়ে ওঠে।
+
+হঠাৎ দরজার গোড়ায় খুব হালকা পদশব্দ হলো। কড়া নাড়ারও কোনো তাড়া ছিল না, যেন বহুদিনের অতিচেনা এক ছায়ামূর্তি নিঃশব্দে এসে দাঁড়িয়েছে। শুভ্র দরজা খুলতেই থমকে গেল। দরজার ওপাশে দাঁড়িয়ে থাকা মানুষটির চোখের কোণে জমে ছিল এক অপার বিষাদ আর ঠোঁটে সেই মায়াবী উদাসীন হাসি—"শুভ্র, তুমি আজও বৃষ্টির রাতে রাত জাগো?"
+
+কোনো অভিযোগের স্থান ছিল না, কোনো অভিমানী শব্দের উচ্চারণ হলো না। কেবল জানালার কাঁচে বৃষ্টির জলের ধারা বয়ে চলার মাঝে দুটি মানুষ এক কাপ চায়ের ধোঁয়ার ওপারে বসে জীবনের হারিয়ে যাওয়া দিনগুলোর হিসেব মেলাতে লাগল। কিছু গল্প কখনো কোনো পূর্ণচ্ছেদ চায় না; বৃষ্টির জলের মতোই অনন্তকাল ধরে অন্তরের গহীনে বহমান থেকে যায়।`,
+  },
+  {
+    id: "default_story_2",
+    title: "প্রাচীন হাভেলি ও অষ্টধাতুর ব্রোঞ্জ ঘড়ি",
+    genre: "সত্যজিৎ রায় ও ফেলুদা রহস্য ধারা",
+    author_style: "বুদ্ধিবৃত্তিক পর্যবেক্ষণ, তীক্ষ্ণ যুক্তি ও টানটান সাসপেন্স",
+    is_default: true,
+    word_count: 238,
+    language: "bn",
+    trained_at: "2026-01-02T00:00:00.000Z",
+    text: `কুয়াশামোড়া ডিসেম্বরের শান্ত সকালে পদ্মাপাড়ের শতবর্ষী প্রাচীন রায় চৌধুরীদের হাভেলির কাঠের সিংহদুয়ারটি নিঃশব্দে খুলে গেল। দেউড়িতে দাঁড়িয়ে গন্ধটা প্রথম নাকে এল—বহুদিনের পুরনো চন্দনকাঠ, ভেজা নোনা মাটির দেয়াল আর ধুলোজমা ব্রাস মেটালের এক অদ্ভুত গন্ধ।
+
+টেবিলের ওপর রাখা ছিল একটি অষ্টধাতুর তৈরি প্রাচীন ব্রোঞ্জ ঘড়ি, যার পেণ্ডুলামটি গত চল্লিশ বছর ধরে স্তব্ধ ছিল বলে দাবি করা হতো। অথচ আজ ভোর সাড়ে পাঁচটায় ঠিক বারোবার গম্ভীর শব্দে বেজে উঠেছে সেই নিস্তব্ধ ঘড়ি। ঘড়ির তলার গোপন ড্রয়ারটি তখন ইঞ্চিখানেক খোলা।
+
+ম্যাগনিফাইং গ্লাস দিয়ে ড্রয়ারের কারুকার্য খচিত খাঁজগুলো পরীক্ষা করতেই ধরা পড়ল এক অকাট্য সূত্র—সেখানে কোনো চাবি দিয়ে জোর করার দাগ নেই, বরং এক ফোঁটা তাজা চেরির রস লেগে রয়েছে। এই প্রাসাদে চেরি ফলের প্রবেশাধিকার কেবল একজনেরই ছিল, যিনি গতকাল রাতেই অসুস্থতার ভান করে ঘরে খিল এঁটেছিলেন।
+
+বাইরে তখন শীতের ভোরের কুয়াশা ফুঁড়ে সূর্যের প্রথম তীক্ষ্ণ আলো এসে পড়ল ঘড়ির কাঁচের ডায়ালে। রহস্যের জটিল চাদর ভেদ করে সত্যের মুখ উন্মোচিত হতে আর মাত্র কয়েক মিনিটের অপেক্ষা ছিল। বুদ্ধির ক্ষুরধার চালে যে কোনো জটিল সংকেতই শেষ পর্যন্ত এক সরল সমীকরণে এসে দাঁড়ায়।`,
+  },
+  {
+    id: "default_story_3",
+    title: "কাশফুলের মেঠোপথ ও ফিরে আসা শৈশব",
+    genre: "বিভূতিভূষণ পল্লীসাহিত্য ধারা",
+    author_style: "গ্রামবাংলার রূপ, মেঠোপথ, নদীর ঘাট ও শিকড়ের অপার্থিব টান",
+    is_default: true,
+    word_count: 242,
+    language: "bn",
+    trained_at: "2026-01-03T00:00:00.000Z",
+    text: `শরতের সোনালী রোদ তখন ইছামতীর শান্ত জলে হিলহিলে রূপোলি আলো ছড়াচ্ছিল। নদীর পাড়ের উঁচু ঢিবির ওপর দিগন্তজোড়া কাশবন মৃদুমন্দ বাতাসে একযোগে দোলা খাচ্ছিল, যেন দূর দেশের কাউকে সাদরে ঘরে ফেরার নিমন্ত্রণ জানাচ্ছে। মেঠোপথ ধরে বহু বছর পর নিজের ফেলে আসা ভিটেমাটির দিকে এগোচ্ছিল অনুপম।
+
+বাতাসে ভাসছিল ভেজা ঘাসের মিষ্টি গন্ধ আর পাকা ধানের সোঁদা সুবাস। পথচলতি অচেনা রাখাল বালকটি যখন গরু তাড়িয়ে নিয়ে যেতে যেতে আপন মনে মিষ্টি সুরে বাঁশি বাজিয়ে গেল, অনুপমের বুকের ভেতর এক অদ্ভুত হাহাকার জেগে উঠল। এই সেই বাঁশের পুল, এই সেই শ্যাওলাধরা প্রাচীন বটগাছের ছায়া—যেখানে ছেলেবেলার বন্ধুদের সাথে কত শত দুপুর নিমেষেই হারিয়ে যেত।
+
+মাটির দাওয়ায় পা রাখতেই চোখে পড়ল উঠোনের কোণে সেই ডালিম গাছটি আজও তেমনিভাবে দাঁড়িয়ে আছে। লালচে ফুলগুলো মৃদু বাতাসে ঝরে পড়ছে উঠোনের ধুলোয়। অনুপম হাঁটু গেড়ে বসে একমুঠো জন্মমাটি হাতে তুলে নিল। শহুরে জীবনের যান্ত্রিক কোলাহল, কৃত্রিম মর্যাদা আর অর্থের অহংকার এক নিমিষেই ধুয়েমুছে গেল। মানুষ জীবনের তাগিদে যত দূরেই চলে যাক না কেন, তার প্রকৃত আত্মার শান্তি লুকিয়ে থাকে এই মাটির খাঁটি মমতার আঁচলেই।`,
+  },
+  {
+    id: "default_story_4",
+    title: "সন্ধ্যার খেয়াঘাট ও না-বলা চিঠি",
+    genre: "রবীন্দ্রনাথ ও শরৎচন্দ্র ক্লাসিক ধারা",
+    author_style: "ভাবগম্ভীর ক্লাসিক্যাল গদ্য, আত্মত্যাগ ও চিরন্তন মানবিক দ্বন্দ্ব",
+    is_default: true,
+    word_count: 251,
+    language: "bn",
+    trained_at: "2026-01-04T00:00:00.000Z",
+    text: `মেঘমেদুর গোধূলিলগ্নে নদীর ওপারে যখন সন্ধ্যার আরতিধ্বনি মন্দিরের ঘণ্টার সাথে তাল মিলিয়ে বেজে উঠছিল, তখন খেয়াঘাটের জীর্ণ বটবৃক্ষের তলায় এসে দাঁড়াল হেমাঙ্গিনী। নদীর কালো জলের স্রোতে তখন ওপারের সান্ধ্য বাতির ম্লান ছায়া কাঁপছিল। তার হাতে ধরা ছিল বহু বছর ধরে সযত্নে লুকিয়ে রাখা রেশমি ফিতায় বাঁধা একখানা জীর্ণ চিঠি।
+
+চিঠির প্রতিটি অক্ষরের ভাঁজে জড়িয়ে ছিল এক নীরব আত্মত্যাগ ও নিঃশব্দ আত্মনিবেদনের ইতিবৃত্ত। সমাজের কঠোর অনুশাসন আর ভাগ্যের পরিহাস যাকে কখনো আপন হতে দেয়নি, স্মৃতির মণিকোঠায় সেই মানুষটির স্থান ছিল সবার ঊর্ধ্বে। খেয়ানৌকাটি যখন ঘাটে এসে লাগল, মাঝির গম্ভীর হাঁক শোনা গেল—"ওপারে যাইবেন দিদিমণি?"
+
+হেমাঙ্গিনী নদীর স্রোতের দিকে চাইল। অন্তরের সমস্ত দ্বিধা, বহু বছরের সঞ্চিত বেদনা আর লোকলজ্জার ভারী বোঝা যেন এক মুহূর্তে লঘু হয়ে গেল। সে আলতো করে রেশমি ফিতাটি খুলে চিঠিখানি ভাসিয়ে দিল নদীর শান্ত তরঙ্গে। কাগজের তরীটি সন্ধ্যার আবছায়ায় ভাসতে ভাসতে দূর দিগন্তের মোহনার দিকে মিলিয়ে গেল। কিছু প্রেম কোনো প্রাপ্তির অপেক্ষা করে না, কেবল হৃদয়ের নীরব আত্মত্যাগে অনন্তকালের জন্য অমর হয়ে থাকে।`,
+  },
+  {
+    id: "default_story_5",
+    title: "সোডিয়াম বাতির নিচে মহানগর ও একাকী স্বপ্ন",
+    genre: "আধুনিক জীবনবোধ ও নগর বাস্তবতা",
+    author_style: "মধ্যরাতের শহরের মনস্তত্ত্ব, আত্মবিশ্বাস ও লড়াকু জীবন",
+    is_default: true,
+    word_count: 236,
+    language: "bn",
+    trained_at: "2026-01-05T00:00:00.000Z",
+    text: `রাত আড়াইটায় ফার্মগেটের ওভারব্রিজের ওপর দাঁড়ালে পুরো ঢাকাকে সম্পূর্ণ ভিন্ন এক শহর বলে মনে হয়। দিনের বেলার তীব্র ধুলো, বাসের তীব্র হর্ন আর মানুষের ক্লান্ত পদচারণার কোনো চিহ্ন এখন আর নেই। সোডিয়াম বাতির একঘেয়ে হলুদ আলোয় ভিজে থাকা পিচঢালা রাজপথটি যেন এক নিঃশব্দ দীর্ঘশ্বাস।
+
+ব্রিজের রেলিং ধরে ঠান্ডা বাতাসে দাঁড়িয়েছিল ফারহান। পকেটে রাখা ল্যাপটপের ব্যাগে তার গত ছয় মাসের অক্লান্ত পরিশ্রমের তৈরি সফটওয়্যারের ব্লুপ্রিন্ট। দিনে একটি সামান্য বেতনের কাজ আর রাতে না ঘুমিয়ে নিজের স্বপ্নের প্রজেক্ট তৈরি করা—গত দুটি বছর এভাবেই কেটে গেছে তার। অনেকেই তাকে পাগল বলেছে, অনেকেই হাল ছেড়ে দিতে বলেছে।
+
+কিন্তু এই সুবিশাল কংক্রিটের শহরটি যেমন কঠিন, তেমনই এর গভীরে লুকিয়ে আছে অজস্র লড়াকু মানুষের স্বপ্ন। দূরের তেজগাঁও রেললাইনের ওপর দিয়ে হুইসেল বাজিয়ে একটি মালবাহী ট্রেন ছুটে চলে গেল রাতের অন্ধকারের বুক চিরে। ফারহান পকেট থেকে এক চিলতে হাসিমুখ নিয়ে ফোনটা বের করল। ভোরের আলো ফুটতে আর মাত্র দুই ঘণ্টা বাকি। প্রতিটি অন্ধকার রাতের শেষেই এক নতুন বিজয়ের সোনালী প্রভাত অপেক্ষা করে।`,
+  },
+  {
+    id: "default_story_6",
+    title: "কালবৈশাখীর মেঘ ও নীল খামের শেষ পাতা",
+    genre: "কাব্যিক প্রেম ও মানবিক পুনর্মিলন",
+    author_style: "আবেগময় আকুলতা, ঝড়ো হাওয়া ও হৃদয়ের স্পন্দন",
+    is_default: true,
+    word_count: 228,
+    language: "bn",
+    trained_at: "2026-01-06T00:00:00.000Z",
+    text: `বৈশাখী বিকেলের আকাশ হঠাৎ করেই কালচে সিঁদুরে মেঘে ঢেকে গেল। উত্তর-পশ্চিম কোণ থেকে ধেয়ে আসা মাতাল বাতাসের প্রথম ঝাপটাতেই বারান্দার টবের রজনীগন্ধাগুলো নত হয়ে পড়ল। ঘরের কাঁচের জানালায় এসে আছড়ে পড়তে লাগল প্রথম ঝোড়ো বৃষ্টির ফোঁটা।
+
+টেবিলের ওপর ছড়িয়ে থাকা কাগজপত্রের মাঝ থেকে হঠাৎ খসে পড়ল একটি নীল খাম। এই খামটি গত সাত বছর ধরে স্পর্শ করার সাহস হয়নি তনয়ার। খামের ভেতরে রাখা শুকনো বকুল ফুলের পাপড়িগুলো আজ ধুলো হয়ে গেছে, কিন্তু চিঠির শেষ পঙক্তিটি আজও তেমনি স্পষ্ট—"যেখানে সীমানা শেষ হয়, সেখানেই আমাদের অপেক্ষার শুরু।"
+
+বিদ্যুতের তীব্র চমকে ঘরটি এক পলকের জন্য আলোয় ভেসে উঠল। তনয়া জানালার কাছে এসে দাঁড়াল। শীতল বৃষ্টির ছাঁট তার মুখে এসে লাগতেই চোখ দিয়ে গড়িয়ে পড়ল বহুদিনের রুদ্ধ অশ্রু। ঠিক তখনই কলিং বেলের পরিচিত একটানা ছন্দ বাজল। দরজা খুলে তনয়া দেখল, ভেজা ছাতা হাতে ঠিক তেমনিভাবে দাঁড়িয়ে আছে সেই হারিয়ে যাওয়া মানুষটি। দীর্ঘ বিরহের পর কালবৈশাখীর ঝড়ের তোড়ে দুটি হৃদয় আবার এক শান্ত মোহনায় এসে মিলিত হলো।`,
+  },
+];
+
+// In-memory cache for personal training by account ID
+const accountPersonalStories: Map<string, TrainedStory[]> = new Map();
+const accountChatHistory: Map<string, ChatMessageRecord[]> = new Map();
+const memoryLoadedAccounts = new Set<string>();
+
+const DEFAULT_ACCOUNT_ID = "default_local_author";
+
+function sanitizeAccountId(rawId?: string | null): string {
+  if (!rawId || typeof rawId !== "string" || !rawId.trim()) {
+    return DEFAULT_ACCOUNT_ID;
+  }
+  return rawId.trim().replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 80) || DEFAULT_ACCOUNT_ID;
+}
+
+function getAccountStoragePath(accountId: string): string {
+  const safeId = sanitizeAccountId(accountId);
   try {
-    const localDir = path.join(process.cwd(), "storage");
-    if (!fs.existsSync(localDir)) {
-      fs.mkdirSync(localDir, { recursive: true });
+    const dir = path.join(process.cwd(), "storage", "personal_training");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
-    return path.join(localDir, "ai_model_memory.json");
+    return path.join(dir, `${safeId}.json`);
   } catch {
-    return path.join(process.cwd(), "ai_model_memory.json");
+    return path.join(process.cwd(), `personal_training_${safeId}.json`);
   }
 }
 
-function loadMemory(): void {
-  if (memoryLoaded) return;
-  const filePath = getMemoryFilePath();
+function loadAccountMemory(accountId: string): void {
+  const safeId = sanitizeAccountId(accountId);
+  if (memoryLoadedAccounts.has(safeId)) return;
+
+  const filePath = getAccountStoragePath(safeId);
   try {
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, "utf-8");
       const data = JSON.parse(raw);
-      inMemoryTrainedStories = Array.isArray(data.trained_stories) ? data.trained_stories : [];
-      inMemoryChatHistory = Array.isArray(data.chat_history) ? data.chat_history : [];
-      memoryLoaded = true;
+      accountPersonalStories.set(
+        safeId,
+        Array.isArray(data.trained_stories) ? data.trained_stories : [],
+      );
+      accountChatHistory.set(
+        safeId,
+        Array.isArray(data.chat_history) ? data.chat_history : [],
+      );
+      memoryLoadedAccounts.add(safeId);
       return;
     }
   } catch {
-    // If filesystem not accessible, in-memory state is maintained
+    // filesystem read fallback
   }
-  memoryLoaded = true;
+
+  // Check legacy shared memory file if loading default local account
+  if (safeId === DEFAULT_ACCOUNT_ID) {
+    try {
+      const legacyPath = path.join(process.cwd(), "storage", "ai_model_memory.json");
+      if (fs.existsSync(legacyPath)) {
+        const raw = fs.readFileSync(legacyPath, "utf-8");
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.trained_stories) && data.trained_stories.length > 0) {
+          accountPersonalStories.set(safeId, data.trained_stories);
+          accountChatHistory.set(safeId, data.chat_history || []);
+          memoryLoadedAccounts.add(safeId);
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  accountPersonalStories.set(safeId, []);
+  accountChatHistory.set(safeId, []);
+  memoryLoadedAccounts.add(safeId);
 }
 
-function saveMemory(): void {
-  const filePath = getMemoryFilePath();
+function saveAccountMemory(accountId: string): void {
+  const safeId = sanitizeAccountId(accountId);
+  const filePath = getAccountStoragePath(safeId);
   try {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
     const data = {
-      trained_stories: inMemoryTrainedStories,
-      chat_history: inMemoryChatHistory.slice(-50),
-      auto_train_enabled: true,
+      account_id: safeId,
+      trained_stories: accountPersonalStories.get(safeId) || [],
+      chat_history: (accountChatHistory.get(safeId) || []).slice(-50),
       last_updated: new Date().toISOString(),
     };
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
   } catch {
-    // In-memory remains active if filesystem is read-only (e.g. Vercel)
+    // In-memory remains intact if fs is read-only
   }
 }
 
-export function getAIStatus(): AIModelStatus {
-  loadMemory();
-  const totalWords = inMemoryTrainedStories.reduce(
+export function getAccountPersonalStories(accountId?: string): TrainedStory[] {
+  const safeId = sanitizeAccountId(accountId);
+  loadAccountMemory(safeId);
+  return accountPersonalStories.get(safeId) || [];
+}
+
+export function getAIStatus(accountId?: string): AIModelStatus {
+  const safeId = sanitizeAccountId(accountId);
+  loadAccountMemory(safeId);
+
+  const personalStories = accountPersonalStories.get(safeId) || [];
+  const defaultWords = DEFAULT_TRAINED_STORIES.reduce(
     (acc, s) => acc + (s.word_count || 0),
     0,
   );
-  return {
-    total_trained_stories: inMemoryTrainedStories.length,
-    total_words: totalWords,
-    auto_train_enabled: true,
-    recent_stories: inMemoryTrainedStories.slice(-20).reverse().map((s) => ({
+  const personalWords = personalStories.reduce(
+    (acc, s) => acc + (s.word_count || 0),
+    0,
+  );
+  const totalWords = defaultWords + personalWords;
+  const totalStories = DEFAULT_TRAINED_STORIES.length + personalStories.length;
+
+  const chatHist = accountChatHistory.get(safeId) || [];
+
+  // Recent stories list (personal prioritized, followed by default)
+  const recentStories = [
+    ...personalStories.map((s) => ({
       id: s.id,
       title: s.title,
       word_count: s.word_count,
       trained_at: s.trained_at,
       text: s.text,
       language: s.language,
+      is_default: false,
+      genre: s.genre,
     })),
-    trained_stories: inMemoryTrainedStories,
-    chat_count: inMemoryChatHistory.length,
+    ...DEFAULT_TRAINED_STORIES.map((s) => ({
+      id: s.id,
+      title: s.title,
+      word_count: s.word_count,
+      trained_at: s.trained_at,
+      text: s.text,
+      language: s.language,
+      is_default: true,
+      genre: s.genre,
+    })),
+  ];
+
+  return {
+    total_trained_stories: totalStories,
+    total_words: totalWords,
+    auto_train_enabled: true,
+    default_stories: DEFAULT_TRAINED_STORIES,
+    personal_stories: personalStories,
+    default_words: defaultWords,
+    personal_words: personalWords,
+    account_id: safeId,
+    recent_stories: recentStories,
+    trained_stories: personalStories.length > 0 ? personalStories : DEFAULT_TRAINED_STORIES,
+    chat_count: chatHist.length,
+    active_model: "TaleForge Adaptive AI (Bengali Master Engine)",
   };
 }
 
-export function deleteTrainedStory(id: string): AIModelStatus {
-  loadMemory();
-  inMemoryTrainedStories = inMemoryTrainedStories.filter((s) => s.id !== id);
-  saveMemory();
-  return getAIStatus();
+export function deleteTrainedStory(id: string, accountId?: string): AIModelStatus {
+  const safeId = sanitizeAccountId(accountId);
+  loadAccountMemory(safeId);
+
+  // Default master stories are system protected and cannot be deleted
+  if (DEFAULT_TRAINED_STORIES.some((s) => s.id === id)) {
+    throw new Error("ডিফল্ট মাস্টার সাহিত্য গল্পগুলো সিস্টেম প্রটেক্টেড। এগুলো মোছা যাবে না।");
+  }
+
+  const existing = accountPersonalStories.get(safeId) || [];
+  const updated = existing.filter((s) => s.id !== id);
+  accountPersonalStories.set(safeId, updated);
+  saveAccountMemory(safeId);
+
+  return getAIStatus(safeId);
 }
 
-export function trainOnText(text: string, title = "Trained Story") {
-  loadMemory();
+export function trainOnText(
+  text: string,
+  title = "Trained Story",
+  accountId?: string,
+) {
+  const safeId = sanitizeAccountId(accountId);
+  loadAccountMemory(safeId);
+
   const clean = text.trim();
   if (!clean) {
     throw new Error("Story text cannot be empty for training.");
@@ -129,39 +335,49 @@ export function trainOnText(text: string, title = "Trained Story") {
   const isBengali = /[\u0980-\u09FF]/.test(clean);
   const language: "bn" | "en" = isBengali ? "bn" : "en";
 
+  const personalStories = accountPersonalStories.get(safeId) || [];
+
   const newStory: TrainedStory = {
-    id: `story_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    title: title.trim() || `Trained Story #${inMemoryTrainedStories.length + 1}`,
+    id: `personal_${safeId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    title: title.trim() || `My Story #${personalStories.length + 1}`,
     text: clean,
     word_count: wordCount,
     language,
     trained_at: new Date().toISOString(),
+    is_default: false,
+    author_style: `Personal account trained (${safeId})`,
   };
 
-  inMemoryTrainedStories.push(newStory);
-  saveMemory();
+  personalStories.push(newStory);
+  accountPersonalStories.set(safeId, personalStories);
+  saveAccountMemory(safeId);
 
-  const totalWords = inMemoryTrainedStories.reduce(
+  const totalPersonalWords = personalStories.reduce(
     (acc, s) => acc + (s.word_count || 0),
     0,
   );
 
   return {
     success: true,
-    message: `Successfully trained AI on '${newStory.title}' (${wordCount} words).`,
+    message: `আপনার অ্যাকাউন্ট (${safeId})-এ '${newStory.title}' (${wordCount} শব্দ) সফলভাবে ট্রেইন করা হয়েছে।`,
     story: newStory,
-    total_trained_stories: inMemoryTrainedStories.length,
-    total_words: totalWords,
+    personal_trained_stories: personalStories.length,
+    personal_words: totalPersonalWords,
+    total_trained_stories: DEFAULT_TRAINED_STORIES.length + personalStories.length,
+    account_id: safeId,
   };
 }
 
-export function resetAIMemory() {
-  inMemoryTrainedStories = [];
-  inMemoryChatHistory = [];
-  saveMemory();
+export function resetAIMemory(accountId?: string) {
+  const safeId = sanitizeAccountId(accountId);
+  accountPersonalStories.set(safeId, []);
+  accountChatHistory.set(safeId, []);
+  saveAccountMemory(safeId);
+
   return {
     success: true,
-    message: "AI model memory reset successfully.",
+    message: `অ্যাকাউন্ট (${safeId})-এর ব্যক্তিগত AI প্রশিক্ষণ মেমোরি সফলভাবে রিসেট করা হয়েছে। ডিফল্ট গল্পগুলো অপরিবর্তিত রয়েছে।`,
+    account_id: safeId,
   };
 }
 
@@ -611,14 +827,20 @@ export async function generateStoryAndChat(
   image?: { base64: string; mimeType: string },
   model = "gemini-1.5-flash",
   persona = "default",
+  trainingScope: "hybrid" | "personal" | "default" = "hybrid",
+  accountId: string = "default_local_author",
 ): Promise<{
   story: string;
   prompt: string;
   auto_trained: boolean;
   total_trained_count: number;
   model: string;
+  training_scope: string;
+  account_id: string;
 }> {
-  loadMemory();
+  const safeAccountId = sanitizeAccountId(accountId);
+  loadAccountMemory(safeAccountId);
+
   const cleanPrompt =
     prompt.trim() || (image ? "এই ছবিটি দেখে একটি সুন্দর ও বাস্তবসম্মত বাংলা গল্প রচনা করো।" : "");
   if (!cleanPrompt) {
@@ -629,11 +851,36 @@ export async function generateStoryAndChat(
   const isEnglishExplicit = /\b(in english|only english|write in english|english story)\b/i.test(cleanPrompt);
   const isBengali = !isEnglishExplicit;
 
-  // Collect style snippets from trained stories
+  // Collect style snippets based on chosen training scope
+  const personalStories = accountPersonalStories.get(safeAccountId) || [];
   const styleSnippets: string[] = [];
-  if (inMemoryTrainedStories.length > 0) {
-    inMemoryTrainedStories.slice(-4).forEach((s) => {
-      styleSnippets.push(s.text.slice(0, 350));
+
+  if (trainingScope === "personal") {
+    if (personalStories.length > 0) {
+      personalStories.slice(-4).forEach((s) => {
+        styleSnippets.push(s.text.slice(0, 400));
+      });
+    } else {
+      // Graceful fallback to default master literature if user hasn't trained any story yet
+      DEFAULT_TRAINED_STORIES.slice(0, 2).forEach((s) => {
+        styleSnippets.push(s.text.slice(0, 400));
+      });
+    }
+  } else if (trainingScope === "default") {
+    // Only default master literature collection
+    DEFAULT_TRAINED_STORIES.slice(0, 4).forEach((s) => {
+      styleSnippets.push(s.text.slice(0, 400));
+    });
+  } else {
+    // Hybrid (Default Master Foundation + Personal Voice)
+    if (personalStories.length > 0) {
+      personalStories.slice(-2).forEach((s) => {
+        styleSnippets.push(`[ব্যক্তিগত অ্যাকাউন্ট স্বর (${safeAccountId})]: ${s.text.slice(0, 350)}`);
+      });
+    }
+    const defaultNeeded = personalStories.length > 0 ? 2 : 4;
+    DEFAULT_TRAINED_STORIES.slice(0, defaultNeeded).forEach((s) => {
+      styleSnippets.push(`[ডিফল্ট সাহিত্য ধারা]: ${s.text.slice(0, 350)}`);
     });
   }
 
@@ -687,20 +934,22 @@ export async function generateStoryAndChat(
     }
   }
 
-  // Save chat history
-  inMemoryChatHistory.push({
+  // Save chat history for this specific account
+  const chatHist = accountChatHistory.get(safeAccountId) || [];
+  chatHist.push({
     role: "user",
     content: cleanPrompt,
     timestamp: new Date().toISOString(),
   });
-  inMemoryChatHistory.push({
+  chatHist.push({
     role: "assistant",
     content: generatedStory,
     timestamp: new Date().toISOString(),
   });
+  accountChatHistory.set(safeAccountId, chatHist);
 
   if (autoTrain) {
-    // Auto-retrain: save this story into memory
+    // Auto-retrain: save this newly generated story into this account's personal memory
     const firstLine = generatedStory
       .split("\n")[0]
       .replace(/[#*]/g, "")
@@ -709,16 +958,22 @@ export async function generateStoryAndChat(
     trainOnText(
       generatedStory,
       `Auto-Trained: ${firstLine || cleanPrompt.slice(0, 30)}`,
+      safeAccountId,
     );
   } else {
-    saveMemory();
+    saveAccountMemory(safeAccountId);
   }
+
+  const updatedPersonalStories = accountPersonalStories.get(safeAccountId) || [];
+  const currentTotal = DEFAULT_TRAINED_STORIES.length + updatedPersonalStories.length;
 
   return {
     story: generatedStory,
     prompt: cleanPrompt,
     auto_trained: autoTrain,
-    total_trained_count: inMemoryTrainedStories.length,
+    total_trained_count: currentTotal,
     model: activeModel,
+    training_scope: trainingScope,
+    account_id: safeAccountId,
   };
 }

@@ -8,97 +8,242 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# Storage directory for persistent trained memory
-MEMORY_FILE = Path(__file__).resolve().parent.parent / "storage" / "ai_model_memory.json"
+# Storage directory for persistent memory
+STORAGE_DIR = Path(__file__).resolve().parent.parent / "storage"
+PERSONAL_TRAINING_DIR = STORAGE_DIR / "personal_training"
+DEFAULT_ACCOUNT_ID = "default_local_author"
+
+DEFAULT_TRAINED_STORIES = [
+    {
+        "id": "default_story_1",
+        "title": "মধ্যরাতের বৃষ্টি ও এক চিলতে জোছনা",
+        "genre": "হুমায়ূন আহমেদ ধারা",
+        "author_style": "জাদুকরি বাস্তবতা, নিঃসঙ্গ রাত ও গভীর মায়া",
+        "is_default": True,
+        "word_count": 245,
+        "language": "bn",
+        "trained_at": "2026-01-01T00:00:00.000Z",
+        "text": """শ্রাবণের একটানা অবিরাম বর্ষণে পুরাতন ঢাকার নিস্তব্ধ গলিপথ তখন ভেসে যাচ্ছিল। টিনের চালে জলের অবিশ্রান্ত ছন্দ যেন কোনো প্রাচীন বিরহী রাগিনীর সুর বাজাচ্ছিল। কাঁচঘেরা বারান্দার এক কোণে বসে এক কাপ এলাচ দেওয়া চা হাতে নিয়ে বাইরের আঁধারের দিকে তাকিয়েছিল শুভ্র।
+
+ঠিক রাত বারোটা চার মিনিটে হঠাৎ করেই আকাশ চিরে মেঘের বুক গলে এক ফালি অদ্ভুত নীলচে জোছনা এসে পড়ল বারান্দার একপাশে। বৃষ্টির ধারার মাঝেই এমন জোছনার খেলা যেন প্রকৃতির এক জাদুকরি বিস্ময়। এমন বৃষ্টিভেজা জোছনা রাতে মনের বহুদিনের সঞ্চিত অনুভূতিগুলো এক নিমিষেই জীবন্ত হয়ে ওঠে।
+
+হঠাৎ দরজার গোড়ায় খুব হালকা পদশব্দ হলো। কড়া নাড়ারও কোনো তাড়া ছিল না, যেন বহুদিনের অতিচেনা এক ছায়ামূর্তি নিঃশব্দে এসে দাঁড়িয়েছে। শুভ্র দরজা খুলতেই থমকে গেল। দরজার ওপাশে দাঁড়িয়ে থাকা মানুষটির চোখের কোণে জমে ছিল এক অপার বিষাদ আর ঠোঁটে সেই মায়াবী উদাসীন হাসি—"শুভ্র, তুমি আজও বৃষ্টির রাতে রাত জাগো?"
+
+কোনো অভিযোগের স্থান ছিল না, কোনো অভিমানী শব্দের উচ্চারণ হলো না। কেবল জানালার কাঁচে বৃষ্টির জলের ধারা বয়ে চলার মাঝে দুটি মানুষ এক কাপ চায়ের ধোঁয়ার ওপারে বসে জীবনের হারিয়ে যাওয়া দিনগুলোর হিসেব মেলাতে লাগল। কিছু গল্প কখনো কোনো পূর্ণচ্ছেদ চায় না; বৃষ্টির জলের মতোই অনন্তকাল ধরে অন্তরের গহীনে বহমান থেকে যায়।""",
+    },
+    {
+        "id": "default_story_2",
+        "title": "প্রাচীন হাভেলি ও অষ্টধাতুর ব্রোঞ্জ ঘড়ি",
+        "genre": "সত্যজিৎ রায় ও ফেলুদা রহস্য ধারা",
+        "author_style": "বুদ্ধিবৃত্তিক পর্যবেক্ষণ, তীক্ষ্ণ যুক্তি ও টানটান সাসপেন্স",
+        "is_default": True,
+        "word_count": 238,
+        "language": "bn",
+        "trained_at": "2026-01-02T00:00:00.000Z",
+        "text": """কুয়াশামোড়া ডিসেম্বরের শান্ত সকালে পদ্মাপাড়ের শতবর্ষী প্রাচীন রায় চৌধুরীদের হাভেলির কাঠের সিংহদুয়ারটি নিঃশব্দে খুলে গেল। দেউড়িতে দাঁড়িয়ে গন্ধটা প্রথম নাকে এল—বহুদিনের পুরনো চন্দনকাঠ, ভেজা নোনা মাটির দেয়াল আর ধুলোজমা ব্রাস মেটালের এক অদ্ভুত গন্ধ।
+
+টেবিলের ওপর রাখা ছিল একটি অষ্টধাতুর তৈরি প্রাচীন ব্রোঞ্জ ঘড়ি, যার পেণ্ডুলামটি গত চল্লিশ বছর ধরে স্তব্ধ ছিল বলে দাবি করা হতো। অথচ আজ ভোর সাড়ে পাঁচটায় ঠিক বারোবার গম্ভীর শব্দে বেজে উঠেছে সেই নিস্তব্ধ ঘড়ি। ঘড়ির তলার গোপন ড্রয়ারটি তখন ইঞ্চিখানেক খোলা।
+
+ম্যাগনিফাইং গ্লাস দিয়ে ড্রয়ারের কারুকার্য খচিত খাঁজগুলো পরীক্ষা করতেই ধরা পড়ল এক অকাট্য সূত্র—সেখানে কোনো চাবি দিয়ে জোর করার দাগ নেই, বরং এক ফোঁটা তাজা চেরির রস লেগে রয়েছে। এই প্রাসাদে চেরি ফলের প্রবেশাধিকার কেবল একজনেরই ছিল, যিনি গতকাল রাতেই অসুস্থতার ভান করে ঘরে খিল এঁটেছিলেন।
+
+বাইরে তখন শীতের ভোরের কুয়াশা ফুঁড়ে সূর্যের প্রথম তীক্ষ্ণ আলো এসে পড়ল ঘড়ির কাঁচের ডায়ালে। রহস্যের জটিল চাদর ভেদ করে সত্যের মুখ উন্মোচিত হতে আর মাত্র কয়েক মিনিটের অপেক্ষা ছিল। বুদ্ধির ক্ষুরধার চালে যে কোনো জটিল সংকেতই শেষ পর্যন্ত এক সরল সমীকরণে এসে দাঁড়ায়।""",
+    },
+    {
+        "id": "default_story_3",
+        "title": "কাশফুলের মেঠোপথ ও ফিরে আসা শৈশব",
+        "genre": "বিভূতিভূষণ পল্লীসাহিত্য ধারা",
+        "author_style": "গ্রামবাংলার রূপ, মেঠোপথ, নদীর ঘাট ও শিকড়ের অপার্থিব টান",
+        "is_default": True,
+        "word_count": 242,
+        "language": "bn",
+        "trained_at": "2026-01-03T00:00:00.000Z",
+        "text": """শরতের সোনালী রোদ তখন ইছামতীর শান্ত জলে হিলহিলে রূপোলি আলো ছড়াচ্ছিল। নদীর পাড়ের উঁচু ঢিবির ওপর দিগন্তজোড়া কাশবন মৃদুমন্দ বাতাসে একযোগে দোলা খাচ্ছিল, যেন দূর দেশের কাউকে সাদরে ঘরে ফেরার নিমন্ত্রণ জানাচ্ছে। মেঠোপথ ধরে বহু বছর পর নিজের ফেলে আসা ভিটেমাটির দিকে এগোচ্ছিল অনুপম।
+
+বাতাসে ভাসছিল ভেজা ঘাসের মিষ্টি গন্ধ আর পাকা ধানের সোঁদা সুবাস। পথচলতি অচেনা রাখাল বালকটি যখন গরু তাড়িয়ে নিয়ে যেতে যেতে আপন মনে মিষ্টি সুরে বাঁশি বাজিয়ে গেল, অনুপমের বুকের ভেতর এক অদ্ভুত হাহাকার জেগে উঠল। এই সেই বাঁশের পুল, এই সেই শ্যাওলাধরা প্রাচীন বটগাছের ছায়া—যেখানে ছেলেবেলার বন্ধুদের সাথে কত শত দুপুর নিমেষেই হারিয়ে যেত।
+
+মাটির দাওয়ায় পা রাখতেই চোখে পড়ল উঠোনের কোণে সেই ডালিম গাছটি আজও তেমনিভাবে দাঁড়িয়ে আছে। লালচে ফুলগুলো মৃদু বাতাসে ঝরে পড়ছে উঠোনের ধুলোয়। অনুপম হাঁটু গেড়ে বসে একমুঠো জন্মমাটি হাতে তুলে নিল। শহুরে জীবনের যান্ত্রিক কোলাহল, কৃত্রিম মর্যাদা আর অর্থের অহংকার এক নিমিষেই ধুয়েমুছে গেল। মানুষ জীবনের তাগিদে যত দূরেই চলে যাক না কেন, তার প্রকৃত আত্মার শান্তি লুকিয়ে থাকে এই মাটির খাঁটি মমতার আঁচলেই।""",
+    },
+    {
+        "id": "default_story_4",
+        "title": "সন্ধ্যার খেয়াঘাট ও না-বলা চিঠি",
+        "genre": "রবীন্দ্রনাথ ও শরৎচন্দ্র ক্লাসিক ধারা",
+        "author_style": "ভাবগম্ভীর ক্লাসিক্যাল গদ্য, আত্মত্যাগ ও চিরন্তন মানবিক দ্বন্দ্ব",
+        "is_default": True,
+        "word_count": 251,
+        "language": "bn",
+        "trained_at": "2026-01-04T00:00:00.000Z",
+        "text": """মেঘমেদুর গোধূলিলগ্নে নদীর ওপারে যখন সন্ধ্যার আরতিধ্বনি মন্দিরের ঘণ্টার সাথে তাল মিলিয়ে বেজে উঠছিল, তখন খেয়াঘাটের জীর্ণ বটবৃক্ষের তলায় এসে দাঁড়াল হেমাঙ্গিনী। নদীর কালো জলের স্রোতে তখন ওপারের সান্ধ্য বাতির ম্লান ছায়া কাঁপছিল। তার হাতে ধরা ছিল বহু বছর ধরে সযত্নে লুকিয়ে রাখা রেশমি ফিতায় বাঁধা একখানা জীর্ণ চিঠি।
+
+চিঠির প্রতিটি অক্ষরের ভাঁজে জড়িয়ে ছিল এক নীরব আত্মত্যাগ ও নিঃশব্দ আত্মনিবেদনের ইতিবৃত্ত। সমাজের কঠোর অনুশাসন আর ভাগ্যের পরিহাস যাকে কখনো আপন হতে দেয়নি, স্মৃতির মণিকোঠায় সেই মানুষটির স্থান ছিল সবার ঊর্ধ্বে। খেয়ানৌকাটি যখন ঘাটে এসে লাগল, মাঝির গম্ভীর হাঁক শোনা গেল—"ওপারে যাইবেন দিদিমণি?"
+
+হেমাঙ্গিনী নদীর স্রোতের দিকে চাইল। অন্তরের সমস্ত দ্বিধা, বহু বছরের সঞ্চিত বেদনা আর লোকলজ্জার ভারী বোঝা যেন এক মুহূর্তে লঘু হয়ে গেল। সে আলতো করে রেশমি ফিতাটি খুলে চিঠিখানি ভাসিয়ে দিল নদীর শান্ত তরঙ্গে। কাগজের তরীটি সন্ধ্যার আবছায়ায় ভাসতে ভাসতে দূর দিগন্তের মোহনার দিকে মিলিয়ে গেল। কিছু প্রেম কোনো প্রাপ্তির অপেক্ষা করে না, কেবল হৃদয়ের নীরব আত্মত্যাগে অনন্তকালের জন্য অমর হয়ে থাকে।""",
+    },
+    {
+        "id": "default_story_5",
+        "title": "সোডিয়াম বাতির নিচে মহানগর ও একাকী স্বপ্ন",
+        "genre": "আধুনিক জীবনবোধ ও নগর বাস্তবতা",
+        "author_style": "মধ্যরাতের শহরের মনস্তত্ত্ব, আত্মবিশ্বাস ও লড়াকু জীবন",
+        "is_default": True,
+        "word_count": 236,
+        "language": "bn",
+        "trained_at": "2026-01-05T00:00:00.000Z",
+        "text": """রাত আড়াইটায় ফার্মগেটের ওভারব্রিজের ওপর দাঁড়ালে পুরো ঢাকাকে সম্পূর্ণ ভিন্ন এক শহর বলে মনে হয়। দিনের বেলার তীব্র ধুলো, বাসের তীব্র হর্ন আর মানুষের ক্লান্ত পদচারণার কোনো চিহ্ন এখন আর নেই। সোডিয়াম বাতির একঘেয়ে হলুদ আলোয় ভিজে থাকা পিচঢালা রাজপথটি যেন এক নিঃশব্দ দীর্ঘশ্বাস।
+
+ব্রিজের রেলিং ধরে ঠান্ডা বাতাসে দাঁড়িয়েছিল ফারহান। পকেটে রাখা ল্যাপটপের ব্যাগে তার গত ছয় মাসের অক্লান্ত পরিশ্রমের তৈরি সফটওয়্যারের ব্লুপ্রিন্ট। দিনে একটি সামান্য বেতনের কাজ আর রাতে না ঘুমিয়ে নিজের স্বপ্নের প্রজেক্ট তৈরি করা—গত দুটি বছর এভাবেই কেটে গেছে তার। অনেকেই তাকে পাগল বলেছে, অনেকেই হাল ছেড়ে দিতে বলেছে।
+
+কিন্তু এই সুবিশাল কংক্রিটের শহরটি যেমন কঠিন, তেমনই এর গভীরে লুকিয়ে আছে অজস্র লড়াকু মানুষের স্বপ্ন। দূরের তেজগাঁও রেললাইনের ওপর দিয়ে হুইসেল বাজিয়ে একটি মালবাহী ট্রেন ছুটে চলে গেল রাতের অন্ধকারের বুক চিরে। ফারহান পকেট থেকে এক চিলতে হাসিমুখ নিয়ে ফোনটা বের করল। ভোরের আলো ফুটতে আর মাত্র দুই ঘণ্টা বাকি। প্রতিটি অন্ধকার রাতের শেষেই এক নতুন বিজয়ের সোনালী প্রভাত অপেক্ষা করে।""",
+    },
+    {
+        "id": "default_story_6",
+        "title": "কালবৈশাখীর মেঘ ও নীল খামের শেষ পাতা",
+        "genre": "কাব্যিক প্রেম ও মানবিক পুনর্মিলন",
+        "author_style": "আবেগময় আকুলতা, ঝড়ো হাওয়া ও হৃদয়ের স্পন্দন",
+        "is_default": True,
+        "word_count": 228,
+        "language": "bn",
+        "trained_at": "2026-01-06T00:00:00.000Z",
+        "text": """বৈশাখী বিকেলের আকাশ হঠাৎ করেই কালচে সিঁদুরে মেঘে ঢেকে গেল। উত্তর-পশ্চিম কোণ থেকে ধেয়ে আসা মাতাল বাতাসের প্রথম ঝাপটাতেই বারান্দার টবের রজনীগন্ধাগুলো নত হয়ে পড়ল। ঘরের কাঁচের জানালায় এসে আছড়ে পড়তে লাগল প্রথম ঝোড়ো বৃষ্টির ফোঁটা।
+
+টেবিলের ওপর ছড়িয়ে থাকা কাগজপত্রের মাঝ থেকে হঠাৎ খসে পড়ল একটি নীল খাম। এই খামটি গত সাত বছর ধরে স্পর্শ করার সাহস হয়নি তনয়ার। খামের ভেতরে রাখা শুকনো বকুল ফুলের পাপড়িগুলো আজ ধুলো হয়ে গেছে, কিন্তু চিঠির শেষ পঙক্তিটি আজও তেমনি স্পষ্ট—"যেখানে সীমানা শেষ হয়, সেখানেই আমাদের অপেক্ষার শুরু।"
+
+বিদ্যুতের তীব্র চমকে ঘরটি এক পলকের জন্য আলোয় ভেসে উঠল। তনয়া জানালার কাছে এসে দাঁড়াল। শীতল বৃষ্টির ছাঁট তার মুখে এসে লাগতেই চোখ দিয়ে গড়িয়ে পড়ল বহুদিনের রুদ্ধ অশ্রু। ঠিক তখনই কলিং বেলের পরিচিত একটানা ছন্দ বাজল। দরজা খুলে তনয়া দেখল, ভেজা ছাতা হাতে ঠিক তেমনিভাবে দাঁড়িয়ে আছে সেই হারিয়ে যাওয়া মানুষটি। দীর্ঘ বিরহের পর কালবৈশাখীর ঝড়ের তোড়ে দুটি হৃদয় আবার এক শান্ত মোহনায় এসে মিলিত হলো।""",
+    },
+]
 
 
 class AIStoryEngine:
-    """A lightweight, self-learning AI story engine that learns from user story data
-
-    and continuously auto-trains itself on newly generated outputs.
+    """A lightweight, self-learning AI story engine with curated master Bengali literature
+    and isolated, account-specific personal training memory.
     """
 
     def __init__(self) -> None:
-        self.memory_file = MEMORY_FILE
-        self._load_memory()
+        self.personal_stories: dict[str, list[dict[str, Any]]] = {}
+        self.chat_history: dict[str, list[dict[str, str]]] = {}
+        self.default_stories = DEFAULT_TRAINED_STORIES
 
-    def _load_memory(self) -> None:
-        self.memory_file.parent.mkdir(parents=True, exist_ok=True)
-        if self.memory_file.exists():
+    def _sanitize_account_id(self, account_id: str | None) -> str:
+        if not account_id or not str(account_id).strip():
+            return DEFAULT_ACCOUNT_ID
+        return re.sub(r"[^a-zA-Z0-9_-]", "_", str(account_id).strip())[:80] or DEFAULT_ACCOUNT_ID
+
+    def _get_account_file(self, account_id: str) -> Path:
+        safe_id = self._sanitize_account_id(account_id)
+        PERSONAL_TRAINING_DIR.mkdir(parents=True, exist_ok=True)
+        return PERSONAL_TRAINING_DIR / f"{safe_id}.json"
+
+    def _load_account_memory(self, account_id: str) -> None:
+        safe_id = self._sanitize_account_id(account_id)
+        if safe_id in self.personal_stories:
+            return
+
+        file_path = self._get_account_file(safe_id)
+        if file_path.exists():
             try:
-                data = json.loads(self.memory_file.read_text(encoding="utf-8"))
-                self.trained_stories: list[dict[str, Any]] = data.get("trained_stories", [])
-                self.chat_history: list[dict[str, str]] = data.get("chat_history", [])
-                self.auto_train_enabled: bool = data.get("auto_train_enabled", True)
+                data = json.loads(file_path.read_text(encoding="utf-8"))
+                self.personal_stories[safe_id] = data.get("trained_stories", [])
+                self.chat_history[safe_id] = data.get("chat_history", [])
                 return
             except Exception:
                 pass
-        self.trained_stories = []
-        self.chat_history = []
-        self.auto_train_enabled = True
-        self._save_memory()
 
-    def _save_memory(self) -> None:
+        self.personal_stories[safe_id] = []
+        self.chat_history[safe_id] = []
+
+    def _save_account_memory(self, account_id: str) -> None:
+        safe_id = self._sanitize_account_id(account_id)
         try:
-            self.memory_file.parent.mkdir(parents=True, exist_ok=True)
+            PERSONAL_TRAINING_DIR.mkdir(parents=True, exist_ok=True)
+            file_path = self._get_account_file(safe_id)
             data = {
-                "trained_stories": self.trained_stories,
-                "chat_history": self.chat_history[-50:],  # keep last 50
-                "auto_train_enabled": self.auto_train_enabled,
+                "account_id": safe_id,
+                "trained_stories": self.personal_stories.get(safe_id, []),
+                "chat_history": (self.chat_history.get(safe_id, []))[-50:],
                 "last_updated": datetime.now().isoformat(),
             }
-            self.memory_file.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            file_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception as e:
-            print("Failed to save AI memory:", e)
+            print(f"Failed to save personal training memory for {safe_id}:", e)
 
-    def train_on_text(self, text: str, title: str = "Trained Story") -> dict[str, Any]:
-        """Trains/feeds new story data into the model."""
+    def train_on_text(self, text: str, title: str = "Trained Story", account_id: str = DEFAULT_ACCOUNT_ID) -> dict[str, Any]:
+        """Trains and feeds new personal story data into the model for this specific user account."""
+        safe_id = self._sanitize_account_id(account_id)
+        self._load_account_memory(safe_id)
+
         clean_text = text.strip()
         if not clean_text:
             return {"success": False, "message": "No text provided for training"}
 
         words = clean_text.split()
         word_count = len(words)
-
-        # Detect language
         has_bengali = bool(re.search(r"[\u0980-\u09FF]", clean_text))
         language = "bn" if has_bengali else "en"
 
+        account_list = self.personal_stories.setdefault(safe_id, [])
         record = {
-            "id": f"story_{len(self.trained_stories) + 1}",
-            "title": title or f"Trained Story #{len(self.trained_stories) + 1}",
+            "id": f"personal_{safe_id}_{len(account_list) + 1}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "title": title or f"Trained Story #{len(account_list) + 1}",
             "text": clean_text,
             "word_count": word_count,
             "language": language,
+            "is_default": False,
             "trained_at": datetime.now().isoformat(),
         }
-        self.trained_stories.append(record)
-        self._save_memory()
+        account_list.append(record)
+        self._save_account_memory(safe_id)
+
+        personal_words = sum(s.get("word_count", 0) for s in account_list)
+        default_words = sum(s.get("word_count", 0) for s in self.default_stories)
 
         return {
             "success": True,
-            "message": f"Successfully trained AI on '{record['title']}' ({word_count} words).",
-            "total_trained_stories": len(self.trained_stories),
-            "total_words": sum(s.get("word_count", 0) for s in self.trained_stories),
+            "message": f"আপনার অ্যাকাউন্ট ({safe_id})-এ '{record['title']}' ({word_count} শব্দ) সফলভাবে ট্রেইন করা হয়েছে।",
+            "account_id": safe_id,
+            "personal_trained_stories": len(account_list),
+            "personal_words": personal_words,
+            "total_trained_stories": len(self.default_stories) + len(account_list),
+            "total_words": default_words + personal_words,
         }
 
-    def generate_and_chat(self, user_prompt: str, auto_train: bool = True) -> dict[str, Any]:
-        """Generates a new story based on the prompt and trained data,
-
-        then optionally auto-trains itself on the new story!
+    def generate_and_chat(
+        self,
+        user_prompt: str,
+        auto_train: bool = True,
+        training_scope: str = "hybrid",
+        account_id: str = DEFAULT_ACCOUNT_ID,
+    ) -> dict[str, Any]:
+        """Generates a new story based on the chosen training scope and prompt,
+        then optionally auto-trains itself back into the account's personal store!
         """
+        safe_id = self._sanitize_account_id(account_id)
+        self._load_account_memory(safe_id)
+
         user_prompt_clean = user_prompt.strip()
-        # Unless user explicitly commands English, ALWAYS write in rich literary Bengali (বাংলা)
         is_english_explicit = bool(
             re.search(r"\b(in english|only english|write in english|english story)\b", user_prompt_clean, re.I)
         )
         is_bengali = not is_english_explicit
 
-        # Sample from trained stories for stylistic patterns
+        # Sample style snippets based on training_scope
         style_snippets = []
-        if self.trained_stories:
-            for s in self.trained_stories[-3:]:
-                style_snippets.append(s["text"][:200])
+        personal_list = self.personal_stories.get(safe_id, [])
+
+        if training_scope == "personal":
+            if personal_list:
+                for s in personal_list[-4:]:
+                    style_snippets.append(s["text"][:350])
+            else:
+                for s in self.default_stories[:2]:
+                    style_snippets.append(s["text"][:350])
+        elif training_scope == "default":
+            for s in self.default_stories[:4]:
+                style_snippets.append(s["text"][:350])
+        else:  # hybrid
+            if personal_list:
+                for s in personal_list[-2:]:
+                    style_snippets.append(f"[ব্যক্তিগত স্বর]: {s['text'][:350]}")
+            needed = 2 if personal_list else 4
+            for s in self.default_stories[:needed]:
+                style_snippets.append(f"[ডিফল্ট সাহিত্য]: {s['text'][:350]}")
 
         # Check for Google Gemini API Key
         gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -118,28 +263,33 @@ class AIStoryEngine:
         else:
             generated_story = self._compose_story(user_prompt_clean, is_bengali, style_snippets)
 
-        # Save to chat history
-        self.chat_history.append({"role": "user", "content": user_prompt_clean})
-        self.chat_history.append({"role": "assistant", "content": generated_story})
+        # Save to chat history for this account
+        chat_list = self.chat_history.setdefault(safe_id, [])
+        chat_list.append({"role": "user", "content": user_prompt_clean})
+        chat_list.append({"role": "assistant", "content": generated_story})
 
         auto_trained_info = None
         if auto_train:
-            # Auto-retrain: feed this newly generated story back into model training!
             first_line = generated_story.split("\n")[0].replace("#", "").strip()[:40]
             auto_trained_info = self.train_on_text(
                 text=generated_story,
                 title=f"Auto-Trained: {first_line or 'New Tale'}",
+                account_id=safe_id,
             )
 
-        self._save_memory()
+        self._save_account_memory(safe_id)
+
+        total_stories = len(self.default_stories) + len(personal_list)
 
         return {
             "story": generated_story,
             "prompt": user_prompt_clean,
             "auto_trained": auto_train,
             "auto_trained_info": auto_trained_info,
-            "total_trained_count": len(self.trained_stories),
+            "total_trained_count": total_stories,
             "model": active_model,
+            "training_scope": training_scope,
+            "account_id": safe_id,
         }
 
     def _generate_with_gemini(
@@ -372,22 +522,70 @@ class AIStoryEngine:
 
         return f"# {title}\n\n{p1}\n\n{p2}\n\n{p3}\n\n{p4}"
 
-    def get_status(self) -> dict[str, Any]:
+    def get_status(self, account_id: str = DEFAULT_ACCOUNT_ID) -> dict[str, Any]:
+        safe_id = self._sanitize_account_id(account_id)
+        self._load_account_memory(safe_id)
+
+        personal_list = self.personal_stories.get(safe_id, [])
+        default_words = sum(s.get("word_count", 0) for s in self.default_stories)
+        personal_words = sum(s.get("word_count", 0) for s in personal_list)
+
+        recent_stories = [
+            {
+                "id": s["id"],
+                "title": s["title"],
+                "word_count": s["word_count"],
+                "trained_at": s.get("trained_at", ""),
+                "is_default": False,
+                "text": s.get("text", ""),
+                "language": s.get("language", "bn"),
+            }
+            for s in personal_list
+        ] + [
+            {
+                "id": s["id"],
+                "title": s["title"],
+                "word_count": s["word_count"],
+                "trained_at": s.get("trained_at", ""),
+                "is_default": True,
+                "text": s.get("text", ""),
+                "language": s.get("language", "bn"),
+                "genre": s.get("genre", ""),
+            }
+            for s in self.default_stories
+        ]
+
         return {
-            "total_trained_stories": len(self.trained_stories),
-            "total_words": sum(s.get("word_count", 0) for s in self.trained_stories),
-            "auto_train_enabled": self.auto_train_enabled,
-            "recent_stories": [
-                {"id": s["id"], "title": s["title"], "word_count": s["word_count"], "trained_at": s.get("trained_at", "")}
-                for s in self.trained_stories[-5:]
-            ],
-            "chat_count": len(self.chat_history),
+            "total_trained_stories": len(self.default_stories) + len(personal_list),
+            "total_words": default_words + personal_words,
+            "default_stories": self.default_stories,
+            "personal_stories": personal_list,
+            "default_words": default_words,
+            "personal_words": personal_words,
+            "account_id": safe_id,
+            "auto_train_enabled": True,
+            "recent_stories": recent_stories,
+            "trained_stories": personal_list if personal_list else self.default_stories,
+            "chat_count": len(self.chat_history.get(safe_id, [])),
         }
 
-    def clear_memory(self) -> None:
-        self.trained_stories = []
-        self.chat_history = []
-        self._save_memory()
+    def delete_story(self, story_id: str, account_id: str = DEFAULT_ACCOUNT_ID) -> dict[str, Any]:
+        safe_id = self._sanitize_account_id(account_id)
+        self._load_account_memory(safe_id)
+
+        if any(s["id"] == story_id for s in self.default_stories):
+            raise ValueError("ডিফল্ট মাস্টার সাহিত্য গল্পগুলো সিস্টেম প্রটেক্টেড, এগুলো মোছা যাবে না।")
+
+        current_list = self.personal_stories.get(safe_id, [])
+        self.personal_stories[safe_id] = [s for s in current_list if s["id"] != story_id]
+        self._save_account_memory(safe_id)
+        return self.get_status(safe_id)
+
+    def clear_memory(self, account_id: str = DEFAULT_ACCOUNT_ID) -> None:
+        safe_id = self._sanitize_account_id(account_id)
+        self.personal_stories[safe_id] = []
+        self.chat_history[safe_id] = []
+        self._save_account_memory(safe_id)
 
 
 # Global singleton instance
