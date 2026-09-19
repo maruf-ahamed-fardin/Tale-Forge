@@ -35,6 +35,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { simpleAiApi, storiesApi, type AIStatus } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 interface ChatMessage {
   id: string;

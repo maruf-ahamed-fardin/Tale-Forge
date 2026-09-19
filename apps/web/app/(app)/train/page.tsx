@@ -30,8 +30,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { getAccountId, simpleAiApi, type AIStatus, type TrainedStoryItem } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
+import { useLanguage } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export default function SimpleTrainPage() {
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<"personal" | "default">("personal");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -64,9 +67,9 @@ export default function SimpleTrainPage() {
   };
 
   useEffect(() => {
-    const user = getStoredUser();
-    setCurrentUser(user);
     loadStatus();
+    const u = getStoredUser();
+    if (u) setCurrentUser(u);
   }, []);
 
   const handleTrain = async (e: React.FormEvent) => {
@@ -85,7 +88,7 @@ export default function SimpleTrainPage() {
     } catch (err: unknown) {
       setMsg({
         type: "error",
-        text: err instanceof Error ? err.message : "ব্যক্তিগত AI প্রশিক্ষণ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+        text: err instanceof Error ? err.message : t("common.error", undefined, "Training failed. Please try again."),
       });
     } finally {
       setTraining(false);
@@ -106,7 +109,7 @@ export default function SimpleTrainPage() {
     } catch (err: unknown) {
       setMsg({
         type: "error",
-        text: err instanceof Error ? err.message : "ফাইল থেকে প্রশিক্ষণ ব্যর্থ হয়েছে।",
+        text: err instanceof Error ? err.message : t("common.error", undefined, "File upload training failed."),
       });
     } finally {
       setTraining(false);
@@ -125,7 +128,7 @@ export default function SimpleTrainPage() {
       await simpleAiApi().deleteTrainedStory(id, currentAccountId);
       setMsg({
         type: "success",
-        text: "গল্পটি সফলভাবে আপনার অ্যাকাউন্টের মেমোরি থেকে মুছে ফেলা হয়েছে।",
+        text: t("train.trainingSuccess", undefined, "Story deleted from training memory."),
       });
       setConfirmDeleteId(null);
       if (expandedStoryId === id) setExpandedStoryId(null);
@@ -133,7 +136,7 @@ export default function SimpleTrainPage() {
     } catch (err: unknown) {
       setMsg({
         type: "error",
-        text: err instanceof Error ? err.message : "গল্প মুছতে ব্যর্থ হয়েছে।",
+        text: err instanceof Error ? err.message : t("common.error", undefined, "Failed to delete story."),
       });
     } finally {
       setDeletingId(null);
@@ -178,7 +181,7 @@ export default function SimpleTrainPage() {
   const accountDisplay =
     currentUser?.display_name ||
     currentUser?.email ||
-    (currentAccountId !== "default_local_author" ? `Account: ${currentAccountId}` : "আমার লোকাল স্পেস");
+    (currentAccountId !== "default_local_author" ? `Account: ${currentAccountId}` : "Local Author");
 
   return (
     <section className="max-w-4xl mx-auto space-y-6">
@@ -186,9 +189,9 @@ export default function SimpleTrainPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-border">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-extrabold text-[#1f1b2d] flex items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2">
               <GraduationCap className="h-6 w-6 text-primary" />
-              AI Training Center (AI মডেল প্রশিক্ষণ কেন্দ্র)
+              {t("train.title", undefined, "Train AI on Your Stories")}
             </h1>
             <Badge variant="primary" className="text-xs px-2.5 py-0.5">
               <User className="h-3 w-3 mr-1" />
@@ -196,14 +199,18 @@ export default function SimpleTrainPage() {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            ডিফল্ট সাহিত্য ভাণ্ডারের পাশাপাশি আপনার বর্তমান অ্যাকাউন্টের জন্য নিজস্ব টেক্সট দিয়ে আলাদাভাবে AI কে ট্রেইন করুন।
+            {t(
+              "train.subtitle",
+              undefined,
+              "Upload your personal literature, essays, and stories to fine-tune the AI's vocabulary, dialogue style, and narrative cadence."
+            )}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Link href="/chat" className={buttonVariants()}>
             <MessageSquare className="h-4 w-4 mr-1.5" />
-            Go to Story Chat
+            {t("nav.chat", undefined, "Go to Story Chat")}
           </Link>
         </div>
       </div>
@@ -212,11 +219,12 @@ export default function SimpleTrainPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Personal Account Training Stats */}
         <Card
-          className={`cursor-pointer transition-all ${
+          className={cn(
+            "cursor-pointer transition-all bg-surface",
             activeTab === "personal"
-              ? "border-primary bg-indigo-50/40 ring-2 ring-primary/20 shadow-sm"
-              : "border-border hover:border-primary/40 bg-white"
-          }`}
+              ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
+              : "border-border hover:border-primary/40"
+          )}
           onClick={() => setActiveTab("personal")}
         >
           <CardContent className="flex items-center gap-4 p-5">
@@ -226,22 +234,22 @@ export default function SimpleTrainPage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                  Personal AI (ব্যক্তিগত)
+                  {t("train.tabPersonal", undefined, "Personal Stories")}
                 </span>
                 <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                  শুধুমাত্র এই অ্যাকাউন্টে
+                  {accountDisplay}
                 </span>
               </div>
-              <div className="text-2xl font-black text-[#1f1b2d] mt-0.5">
-                {personalStories.length} <span className="text-sm font-normal text-muted-foreground">গল্প</span>
+              <div className="text-2xl font-black text-foreground mt-0.5">
+                {personalStories.length} <span className="text-sm font-normal text-muted-foreground">{t("nav.stories", undefined, "Stories")}</span>
                 <span className="text-muted-foreground mx-1.5 font-light">|</span>
-                <span className="text-lg font-bold text-[#1f1b2d]">
+                <span className="text-lg font-bold text-foreground">
                   {(status?.personal_words || 0).toLocaleString()}
                 </span>{" "}
-                <span className="text-xs font-normal text-muted-foreground">শব্দ</span>
+                <span className="text-xs font-normal text-muted-foreground">{t("common.words", undefined, "words")}</span>
               </div>
               <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">
-                আপনার নিজস্ব আপলোড করা গল্প ও লেখার স্টাইল
+                {language === "bn" ? "আপনার নিজস্ব আপলোড করা গল্প ও লেখার স্টাইল" : "Your personal voice and trained vocabulary"}
               </p>
             </div>
           </CardContent>
@@ -249,11 +257,12 @@ export default function SimpleTrainPage() {
 
         {/* Default Master Literature Stats */}
         <Card
-          className={`cursor-pointer transition-all ${
+          className={cn(
+            "cursor-pointer transition-all bg-surface",
             activeTab === "default"
-              ? "border-amber-500 bg-amber-50/30 ring-2 ring-amber-500/20 shadow-sm"
-              : "border-border hover:border-amber-500/40 bg-white"
-          }`}
+              ? "border-amber-500 bg-amber-50/20 dark:bg-amber-950/20 ring-2 ring-amber-500/20 shadow-xs"
+              : "border-border hover:border-amber-500/40"
+          )}
           onClick={() => setActiveTab("default")}
         >
           <CardContent className="flex items-center gap-4 p-5">
@@ -262,23 +271,23 @@ export default function SimpleTrainPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
-                  Default AI (ডিফল্ট সাহিত্য)
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  {t("train.tabDefault", undefined, "Default Curated Library")}
                 </span>
-                <span className="text-[11px] bg-amber-500/10 text-amber-800 px-2 py-0.5 rounded-full font-medium">
-                  সবার জন্য সক্রিয়
+                <span className="text-[11px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full font-medium">
+                  Core AI
                 </span>
               </div>
-              <div className="text-2xl font-black text-[#1f1b2d] mt-0.5">
-                {defaultStories.length} <span className="text-sm font-normal text-muted-foreground">গল্প</span>
+              <div className="text-2xl font-black text-foreground mt-0.5">
+                {defaultStories.length} <span className="text-sm font-normal text-muted-foreground">{t("nav.stories", undefined, "Stories")}</span>
                 <span className="text-muted-foreground mx-1.5 font-light">|</span>
-                <span className="text-lg font-bold text-[#1f1b2d]">
+                <span className="text-lg font-bold text-foreground">
                   {(status?.default_words || 0).toLocaleString()}
                 </span>{" "}
-                <span className="text-xs font-normal text-muted-foreground">শব্দ</span>
+                <span className="text-xs font-normal text-muted-foreground">{t("common.words", undefined, "words")}</span>
               </div>
               <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">
-                হুমায়ূন, সত্যজিৎ ও রবীন্দ্র ধারার ক্লাসিক সাহিত্যিক গল্প
+                {language === "bn" ? "হুমায়ূন, সত্যজিৎ ও রবীন্দ্র ধারার ক্লাসিক সাহিত্যিক গল্প" : "Classic literary benchmark stories"}
               </p>
             </div>
           </CardContent>
@@ -286,17 +295,18 @@ export default function SimpleTrainPage() {
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex items-center gap-2 p-1 bg-neutral-100 rounded-xl border border-border">
+      <div className="flex items-center gap-2 p-1 bg-surface-hover/80 rounded-xl border border-border">
         <button
           onClick={() => setActiveTab("personal")}
-          className={`flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
+          className={cn(
+            "flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2",
             activeTab === "personal"
-              ? "bg-white text-primary shadow-sm border border-border"
+              ? "bg-surface text-primary shadow-xs border border-border"
               : "text-muted-foreground hover:text-foreground"
-          }`}
+          )}
         >
           <User className="h-4 w-4 shrink-0" />
-          <span>ব্যক্তিগত AI <span className="hidden sm:inline">প্রশিক্ষণ (Personal AI)</span></span>
+          <span>{t("train.tabPersonal", undefined, "Personal Stories")}</span>
           {personalStories.length > 0 && (
             <span className="bg-primary/10 text-primary text-[11px] px-1.5 py-0.2 rounded-full font-medium">
               {personalStories.length}
@@ -306,61 +316,68 @@ export default function SimpleTrainPage() {
 
         <button
           onClick={() => setActiveTab("default")}
-          className={`flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
+          className={cn(
+            "flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2",
             activeTab === "default"
-              ? "bg-white text-amber-700 shadow-sm border border-border"
+              ? "bg-surface text-amber-600 dark:text-amber-400 shadow-xs border border-border"
               : "text-muted-foreground hover:text-foreground"
-          }`}
+          )}
         >
           <BookOpen className="h-4 w-4 shrink-0" />
-          <span>ডিফল্ট সাহিত্য <span className="hidden sm:inline">ভাণ্ডার (Master Stories)</span></span>
-          <span className="bg-amber-500/10 text-amber-700 text-[11px] px-1.5 py-0.2 rounded-full font-medium">
+          <span>{t("train.tabDefault", undefined, "Default Curated Library")}</span>
+          <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] px-1.5 py-0.2 rounded-full font-medium">
             {defaultStories.length}
           </span>
         </button>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          TAB 1: PERSONAL AI TRAINING (MY ACCOUNT ONLY)
-      ───────────────────────────────────────────────────────────── */}
+      {/* TAB 1: PERSONAL AI TRAINING */}
       {activeTab === "personal" && (
         <div className="space-y-6">
           {/* Account Isolation Notice */}
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
             <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div className="text-xs text-[#292524] leading-relaxed">
+            <div className="text-xs text-foreground/90 leading-relaxed">
               <strong className="font-semibold text-primary block text-sm mb-0.5">
-                শুধুমাত্র আপনার এই অ্যাকাউন্টের জন্য ব্যক্তিগত প্রশিক্ষণ
+                {language === "bn"
+                  ? "শুধুমাত্র আপনার এই অ্যাকাউন্টের জন্য ব্যক্তিগত প্রশিক্ষণ"
+                  : "Private Training for Your Account"}
               </strong>
-              এখানে আপনি যে লেখা বা ফাইল দেবেন, তা সম্পূর্ণ সুরক্ষিতভাবে কেবল আপনার এই অ্যাকাউন্টে
-              ({accountDisplay}) AI মডেলকে শেখাবে। অন্য কোনো ব্যবহারকারীর কাছে এটি যাবে না।
-              গল্প লেখার সময় <strong>'Personal AI'</strong> বা <strong>'Hybrid Mode'</strong> নির্বাচন করলেই AI আপনার
-              অনন্য বাচনভঙ্গি ব্যবহার করবে।
+              {language === "bn"
+                ? `এখানে আপনি যে লেখা বা ফাইল দেবেন, তা সম্পূর্ণ সুরক্ষিতভাবে কেবল আপনার এই অ্যাকাউন্টে (${accountDisplay}) AI মডেলকে শেখাবে।`
+                : `Stories and files uploaded here are isolated to your workspace account (${accountDisplay}) and will not be exposed to other users.`}
             </div>
           </div>
 
           {/* Training Input Form */}
-          <Card className="border-border">
+          <Card className="border-border bg-surface">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Zap className="h-5 w-5 text-primary" />
-                আপনার নিজস্ব টেক্সট বা ফাইল দিয়ে ট্রেইন করুন
+                {t("train.manualTitle", undefined, "Manual Story Entry & File Upload")}
               </CardTitle>
               <CardDescription>
-                নিচের বক্সে আপনার লেখা পেস্ট করুন অথবা সরাসরি <strong>.docx</strong>, <strong>.doc</strong>,{" "}
-                <strong>.pdf</strong> বা <strong>.txt</strong> ফাইল (বই, পাণ্ডুলিপি বা ওয়ার্ড ডকুমেন্ট) আপলোড করুন।
+                {t(
+                  "train.manualSubtitle",
+                  undefined,
+                  "Paste a story directly or upload .docx, .pdf, or .txt documents to train the model."
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleTrain} className="space-y-4">
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase">
-                    Story Title (গল্পের শিরোনাম)
+                    {t("train.storyTitleLabel", undefined, "Story Title")}
                   </label>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="যেমন: আমার প্রথম উপন্যাস / একটি বৃষ্টির রাত (ফাইল আপলোড করলে নাম স্বয়ংক্রিয়ভাবে নেবে)"
+                    placeholder={t(
+                      "train.storyTitlePlaceholder",
+                      undefined,
+                      "e.g., A Forgotten Afternoon in Rajshahi"
+                    )}
                     className="mt-1.5"
                   />
                 </div>
@@ -368,33 +385,40 @@ export default function SimpleTrainPage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-muted-foreground uppercase">
-                      Story Content (গল্পের মূল লেখা পেস্ট করুন)
+                      {t("train.storyContentLabel", undefined, "Story Content")}
                     </label>
                     <div className="text-xs text-muted-foreground">
-                      {text.trim() ? `${text.trim().split(/\s+/).length} শব্দ` : "০ শব্দ"}
+                      {text.trim()
+                        ? `${text.trim().split(/\s+/).length} ${t("common.words", undefined, "words")}`
+                        : `0 ${t("common.words", undefined, "words")}`}
                     </div>
                   </div>
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="এখানে আপনার সম্পূর্ণ গল্প, উপন্যাস বা নিজস্ব শৈলীর প্যারাগ্রাফ পেস্ট করুন..."
-                    className="mt-1.5 min-h-[160px] w-full rounded-lg border border-border p-4 text-sm font-serif leading-relaxed text-[#292524] outline-none focus:border-primary"
+                    placeholder={t(
+                      "train.storyContentPlaceholder",
+                      undefined,
+                      "Paste your story text here in Bangla or English..."
+                    )}
+                    className="mt-1.5 min-h-[160px] w-full rounded-lg border border-border bg-surface p-4 text-sm font-serif leading-relaxed text-foreground outline-none focus:border-primary"
                     required
                   />
                 </div>
 
                 {msg && (
                   <div
-                    className={`flex items-center gap-2 rounded-lg p-3 text-sm ${
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg p-3 text-sm border",
                       msg.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                    }`}
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                        : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900"
+                    )}
                   >
                     {msg.type === "success" ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
                     )}
                     <span>{msg.text}</span>
                   </div>
@@ -418,10 +442,10 @@ export default function SimpleTrainPage() {
                       className="border-primary/40 hover:bg-primary/5"
                     >
                       <Upload className="h-4 w-4 mr-1.5 text-primary" />
-                      Upload .docx / .doc / .pdf / .txt (ফাইল আপলোড)
+                      {t("train.uploadTitle", undefined, "Upload Document (.txt, .pdf, .docx)")}
                     </Button>
                     <span className="text-[11px] text-muted-foreground">
-                      সাপোর্ট: Word ফাইল (.docx, .doc), PDF (.pdf) ও টেক্সট (.txt)
+                      {t("train.supportedFormats", undefined, "Supports TXT, PDF, DOCX (up to 25MB)")}
                     </span>
                   </div>
 
@@ -429,12 +453,12 @@ export default function SimpleTrainPage() {
                     {training ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
-                        AI Training in Progress…
+                        {t("train.trainingProgress", undefined, "Training in progress...")}
                       </>
                     ) : (
                       <>
                         <Zap className="h-4 w-4 mr-1.5" />
-                        Train Personal AI (ব্যক্তিগত AI ট্রেইন করুন)
+                        {t("train.trainButton", undefined, "Train AI on this Story")}
                       </>
                     )}
                   </Button>
@@ -444,37 +468,42 @@ export default function SimpleTrainPage() {
           </Card>
 
           {/* Personal Trained Stories List */}
-          <Card className="border-border">
+          <Card className="border-border bg-surface">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
                   <User className="h-4 w-4 text-primary" />
-                  My Account&apos;s Trained Stories (এই অ্যাকাউন্টে ট্রেইন করা গল্পসমূহ)
+                  {t("train.trainedStoriesList", undefined, "Your Trained Stories")}
                 </CardTitle>
                 <CardDescription className="mt-0.5">
                   {personalStories.length > 0
-                    ? `আপনার অ্যাকাউন্টে মোট ${personalStories.length} টি ব্যক্তিগত গল্প সংরক্ষিত রয়েছে।`
-                    : "আপনার অ্যাকাউন্টে এখনও কোনো ব্যক্তিগত গল্প যোগ করা হয়নি।"}
+                    ? `${personalStories.length} ${t("nav.stories", undefined, "stories saved")}`
+                    : t("train.noPersonalStories", undefined, "No personal stories trained yet.")}
                 </CardDescription>
               </div>
 
               {personalStories.length > 0 && (
                 <div className="text-xs text-muted-foreground">
-                  মোট {(status?.personal_words || 0).toLocaleString()} শব্দ শেখা হয়েছে
+                  {(status?.personal_words || 0).toLocaleString()} {t("common.words", undefined, "words learned")}
                 </div>
               )}
             </CardHeader>
 
             <CardContent className="space-y-4 pt-1">
               {personalStories.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border p-8 text-center bg-neutral-50/50">
+                <div className="rounded-xl border border-dashed border-border p-8 text-center bg-surface-hover/50">
                   <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
                     <User className="h-6 w-6" />
                   </div>
-                  <h3 className="text-sm font-semibold text-[#1f1b2d]">কোনো ব্যক্তিগত গল্প নেই</h3>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {t("train.noPersonalStories", undefined, "No personal stories yet")}
+                  </h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                    আপনার লেখার স্টাইল, চরিত্র বা প্রিয় ভাষা AI-কে শেখাতে উপরের বক্সে টেক্সট পেস্ট করুন অথবা যেকোনো
-                    বই/ফাইল আপলোড করুন।
+                    {t(
+                      "train.manualSubtitle",
+                      undefined,
+                      "Paste a story above or upload a document to train the AI with your personal style."
+                    )}
                   </p>
                 </div>
               ) : (
@@ -484,21 +513,21 @@ export default function SimpleTrainPage() {
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         className="pl-8 h-9 text-xs"
-                        placeholder="আপনার ট্রেইন করা গল্প খুঁজুন..."
+                        placeholder={t("stories.searchPlaceholder", undefined, "Search trained stories...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
                   )}
 
-                  <div className="divide-y divide-border border rounded-lg overflow-hidden bg-white">
+                  <div className="divide-y divide-border border border-border rounded-lg overflow-hidden bg-surface">
                     {filteredStories.map((story) => {
                       const isExpanded = expandedStoryId === story.id;
                       const isConfirming = confirmDeleteId === story.id;
                       const isDeleting = deletingId === story.id;
 
                       const trainedDate = story.trained_at
-                        ? new Date(story.trained_at).toLocaleDateString("bn-BD", {
+                        ? new Date(story.trained_at).toLocaleDateString(language === "bn" ? "bn-BD" : "en-US", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -506,7 +535,7 @@ export default function SimpleTrainPage() {
                         : "";
 
                       return (
-                        <div key={story.id} className="p-3.5 transition-colors hover:bg-neutral-50/50">
+                        <div key={story.id} className="p-3.5 transition-colors hover:bg-surface-hover/50">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             {/* Title & Info */}
                             <div
@@ -518,15 +547,15 @@ export default function SimpleTrainPage() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-semibold text-sm text-[#292524] truncate">
+                                  <span className="font-semibold text-sm text-foreground truncate">
                                     {story.title}
                                   </span>
                                   <Badge variant="primary" className="text-[10px] px-1.5 py-0">
-                                    ব্যক্তিগত
+                                    {t("train.tabPersonal", undefined, "Personal")}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                  <span>{story.word_count.toLocaleString()} শব্দ</span>
+                                  <span>{story.word_count.toLocaleString()} {t("common.words", undefined, "words")}</span>
                                   {trainedDate && (
                                     <>
                                       <span>•</span>
@@ -548,12 +577,12 @@ export default function SimpleTrainPage() {
                                 {isExpanded ? (
                                   <>
                                     <ChevronUp className="h-3.5 w-3.5 mr-1" />
-                                    Hide
+                                    {t("common.close", undefined, "Hide")}
                                   </>
                                 ) : (
                                   <>
                                     <ChevronDown className="h-3.5 w-3.5 mr-1" />
-                                    Read
+                                    {t("train.readStory", undefined, "Read")}
                                   </>
                                 )}
                               </Button>
@@ -563,10 +592,10 @@ export default function SimpleTrainPage() {
                                 size="sm"
                                 className="h-8 text-xs font-medium"
                                 onClick={() => handleCopy(story.id, story.text)}
-                                title="লেখা কপি করুন"
+                                title={t("common.copy", undefined, "Copy")}
                               >
                                 {copiedId === story.id ? (
-                                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                                 ) : (
                                   <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                                 )}
@@ -577,7 +606,7 @@ export default function SimpleTrainPage() {
                                 size="sm"
                                 className="h-8 text-xs font-medium"
                                 onClick={() => handleDownload(story)}
-                                title="টেক্সট ফাইল ডাউনলোড করুন"
+                                title={t("common.download", undefined, "Download")}
                               >
                                 <Download className="h-3.5 w-3.5 text-muted-foreground" />
                               </Button>
@@ -585,19 +614,20 @@ export default function SimpleTrainPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`h-8 text-xs font-medium transition-colors ${
+                                className={cn(
+                                  "h-8 text-xs font-medium transition-colors",
                                   isConfirming
-                                    ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                                    ? "bg-red-50 dark:bg-red-950/40 text-red-600 border border-red-200 dark:border-red-900 hover:bg-red-100"
                                     : "text-muted-foreground hover:text-red-600"
-                                }`}
+                                )}
                                 onClick={() => handleDeleteStory(story.id)}
                                 disabled={isDeleting}
-                                title="গল্পটি মেমোরি থেকে মুছুন"
+                                title={t("common.delete", undefined, "Delete")}
                               >
                                 {isDeleting ? (
                                   <RefreshCw className="h-3.5 w-3.5 animate-spin text-red-600" />
                                 ) : isConfirming ? (
-                                  <span className="text-[11px] font-bold">Confirm?</span>
+                                  <span className="text-[11px] font-bold">{t("common.confirm", undefined, "Confirm?")}</span>
                                 ) : (
                                   <Trash2 className="h-3.5 w-3.5" />
                                 )}
@@ -608,8 +638,8 @@ export default function SimpleTrainPage() {
                           {/* Expanded Text Preview */}
                           {isExpanded && (
                             <div className="mt-3 pt-3 border-t border-border">
-                              <div className="max-h-60 overflow-y-auto rounded bg-neutral-50 p-3.5 text-xs font-serif leading-relaxed text-[#292524] whitespace-pre-wrap select-text">
-                                {story.text || "লেখার কোনো কনটেন্ট পাওয়া যায়নি।"}
+                              <div className="max-h-60 overflow-y-auto rounded bg-surface-hover/60 p-3.5 text-xs font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text">
+                                {story.text || "(No content)"}
                               </div>
                             </div>
                           )}
@@ -624,21 +654,19 @@ export default function SimpleTrainPage() {
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────
-          TAB 2: DEFAULT AI MASTER STORIES (TALEFORGE CORE)
-      ───────────────────────────────────────────────────────────── */}
+      {/* TAB 2: DEFAULT AI MASTER STORIES */}
       {activeTab === "default" && (
         <div className="space-y-6">
           {/* Default Collection Banner */}
-          <div className="rounded-xl border border-amber-500/20 bg-amber-50/40 p-4 flex items-start gap-3">
-            <BookOpen className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="text-xs text-[#292524] leading-relaxed">
-              <strong className="font-semibold text-amber-800 block text-sm mb-0.5">
-                TaleForge ডিফল্ট সাহিত্য ভাণ্ডার (সবার জন্য সর্বদা সক্রিয়)
+          <div className="rounded-xl border border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20 p-4 flex items-start gap-3">
+            <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-foreground/90 leading-relaxed">
+              <strong className="font-semibold text-amber-700 dark:text-amber-300 block text-sm mb-0.5">
+                {t("train.defaultStoriesList", undefined, "Pre-trained Classic Bengali Stories")}
               </strong>
-              আমাদের AI মডেল ইতিমধ্যে নিচে দেওয়া এই ৬টি চমৎকার, সাহিত্যধর্মী মাস্টারপিস গল্প দিয়ে উচ্চপর্যায়ে
-              প্রশিক্ষিত। এটি বাংলা ব্যাকরণ, সাহিত্যরস, উপমা, দৃশ্যপট ও ডায়ালগের জন্য মূল মানদণ্ড হিসেবে কাজ করে।
-              এগুলো সিস্টেম-প্রটেক্টেড এবং সবসময় সক্রিয় থাকে।
+              {language === "bn"
+                ? "আমাদের AI মডেল ইতিমধ্যে নিচে দেওয়া সাহিত্যধর্মী মাস্টারপিস গল্প দিয়ে উচ্চপর্যায়ে প্রশিক্ষিত। এটি ব্যাকরণ, সাহিত্যরস, উপমা ও ডায়ালগের জন্য মূল ভিত্তি।"
+                : "The core AI engine comes pre-trained with these classic literary masterpieces, setting the foundation for storytelling style, prose cadence, and vocabulary."}
             </div>
           </div>
 
@@ -647,7 +675,7 @@ export default function SimpleTrainPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="pl-8 h-9 text-xs"
-              placeholder="ডিফল্ট সাহিত্য গল্প খুঁজুন (শিরোনাম বা সাহিত্যের ধারা দিয়ে)..."
+              placeholder={t("stories.searchPlaceholder", undefined, "Search default stories...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -657,38 +685,38 @@ export default function SimpleTrainPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {filteredStories.map((story) => {
               return (
-                <Card key={story.id} className="border-border hover:border-amber-500/40 transition-all bg-white flex flex-col justify-between">
+                <Card key={story.id} className="border-border hover:border-amber-500/40 transition-all bg-surface flex flex-col justify-between">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {story.genre && (
-                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px] px-2 py-0 font-medium">
+                          <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 text-[10px] px-2 py-0 font-medium">
                             {story.genre}
                           </Badge>
                         )}
                         <Badge variant="neutral" className="text-[10px] text-muted-foreground">
                           <Lock className="h-2.5 w-2.5 mr-1" />
-                          ডিফল্ট কোর
+                          Core
                         </Badge>
                       </div>
                       <span className="text-[11px] text-muted-foreground font-medium shrink-0">
-                        {story.word_count} শব্দ
+                        {story.word_count} {t("common.words", undefined, "words")}
                       </span>
                     </div>
 
-                    <CardTitle className="text-base mt-2 font-bold text-[#1f1b2d]">
+                    <CardTitle className="text-base mt-2 font-bold text-foreground">
                       {story.title}
                     </CardTitle>
 
                     {story.author_style && (
                       <CardDescription className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                        বৈশিষ্ট্য: {story.author_style}
+                        {story.author_style}
                       </CardDescription>
                     )}
                   </CardHeader>
 
                   <CardContent className="pt-0 space-y-3">
-                    <div className="text-xs font-serif text-neutral-600 line-clamp-4 bg-neutral-50 p-2.5 rounded-lg leading-relaxed">
+                    <div className="text-xs font-serif text-muted-foreground line-clamp-4 bg-surface-hover/60 p-2.5 rounded-lg leading-relaxed">
                       {story.text}
                     </div>
 
@@ -696,11 +724,11 @@ export default function SimpleTrainPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs font-medium border-amber-500/30 text-amber-800 hover:bg-amber-50"
+                        className="h-8 text-xs font-medium border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
                         onClick={() => setModalStory(story)}
                       >
-                        <Eye className="h-3.5 w-3.5 mr-1 text-amber-600" />
-                        সম্পূর্ণ গল্প পড়ুন
+                        <Eye className="h-3.5 w-3.5 mr-1 text-amber-600 dark:text-amber-400" />
+                        {t("train.readStory", undefined, "Read Full Story")}
                       </Button>
 
                       <div className="flex items-center gap-1">
@@ -709,10 +737,10 @@ export default function SimpleTrainPage() {
                           size="sm"
                           className="h-8 text-xs font-medium"
                           onClick={() => handleCopy(story.id, story.text)}
-                          title="গল্পটি কপি করুন"
+                          title={t("common.copy", undefined, "Copy")}
                         >
                           {copiedId === story.id ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                           ) : (
                             <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                           )}
@@ -723,7 +751,7 @@ export default function SimpleTrainPage() {
                           size="sm"
                           className="h-8 text-xs font-medium"
                           onClick={() => handleDownload(story)}
-                          title="ডাউনলোড করুন"
+                          title={t("common.download", undefined, "Download")}
                         >
                           <Download className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
@@ -740,26 +768,26 @@ export default function SimpleTrainPage() {
       {/* Full Story Modal */}
       {modalStory && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setModalStory(null)}
         >
           <div
-            className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-border overflow-hidden"
+            className="bg-surface rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-border overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 border-b border-border flex items-center justify-between bg-neutral-50/50">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-surface-hover/40">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   {modalStory.genre && (
-                    <Badge className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0">
+                    <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-[10px] px-2 py-0">
                       {modalStory.genre}
                     </Badge>
                   )}
                   <span className="text-xs text-muted-foreground font-medium">
-                    {modalStory.word_count} শব্দ • বাংলা সাহিত্য
+                    {modalStory.word_count} {t("common.words", undefined, "words")}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-[#1f1b2d]">{modalStory.title}</h3>
+                <h3 className="text-lg font-bold text-foreground">{modalStory.title}</h3>
               </div>
 
               <Button
@@ -772,11 +800,11 @@ export default function SimpleTrainPage() {
               </Button>
             </div>
 
-            <div className="p-6 overflow-y-auto text-sm font-serif leading-relaxed text-[#292524] whitespace-pre-wrap select-text space-y-4">
+            <div className="p-6 overflow-y-auto text-sm font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text space-y-4 story-paper">
               {modalStory.text}
             </div>
 
-            <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-neutral-50/30">
+            <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-surface-hover/30">
               <span className="text-xs text-muted-foreground truncate">
                 TaleForge Master Stories Collection
               </span>
@@ -788,7 +816,7 @@ export default function SimpleTrainPage() {
                   onClick={() => handleCopy(modalStory.id, modalStory.text)}
                 >
                   <Copy className="h-3.5 w-3.5 mr-1.5" />
-                  {copiedId === modalStory.id ? "কপি হয়েছে!" : "কপি করুন"}
+                  {copiedId === modalStory.id ? t("common.copied", undefined, "Copied!") : t("common.copy", undefined, "Copy")}
                 </Button>
 
                 <Button
@@ -797,7 +825,7 @@ export default function SimpleTrainPage() {
                   onClick={() => handleDownload(modalStory)}
                 >
                   <Download className="h-3.5 w-3.5 mr-1.5" />
-                  ডাউনলোড
+                  {t("common.download", undefined, "Download")}
                 </Button>
               </div>
             </div>

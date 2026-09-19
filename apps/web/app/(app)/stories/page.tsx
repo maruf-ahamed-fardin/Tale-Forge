@@ -7,8 +7,6 @@ import {
   Copy,
   Download,
   Filter,
-  Grid2X2,
-  List,
   MessageSquare,
   RefreshCw,
   Search,
@@ -24,8 +22,11 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { storiesApi, type StoryListItem, type StoryOut } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export default function StoriesPage() {
+  const { t, language } = useLanguage();
   const [stories, setStories] = useState<StoryListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -138,17 +139,21 @@ export default function StoriesPage() {
   return (
     <section className="space-y-6">
       <PageHeader
-        eyebrow="Story Library"
-        title="My Saved Stories (আমার সংরক্ষিত গল্প)"
-        description={`${total} saved ${total === 1 ? "story" : "stories"}`}
+        eyebrow={t("nav.stories", undefined, "Story Library")}
+        title={t("stories.title", undefined, "Story Library")}
+        description={
+          language === "bn"
+            ? `${total}টি সংরক্ষিত গল্প`
+            : `${total} saved ${total === 1 ? "story" : "stories"}`
+        }
       >
         <Link href="/chat" className={buttonVariants({ variant: "outline", size: "sm" })}>
           <MessageSquare className="h-4 w-4 mr-1.5" />
-          AI Story Chat
+          {t("nav.chat", undefined, "AI Story Chat")}
         </Link>
         <Link href="/train" className={buttonVariants({ size: "sm" })}>
           <Sparkles className="h-4 w-4 mr-1.5" />
-          Train AI
+          {t("nav.train", undefined, "Train AI")}
         </Link>
       </PageHeader>
 
@@ -157,8 +162,8 @@ export default function StoriesPage() {
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="pl-9 bg-white"
-            placeholder="Search saved stories (শিরোনাম বা বিষয় দিয়ে খুঁজুন)..."
+            className="pl-9"
+            placeholder={t("stories.searchPlaceholder", undefined, "Search stories by title or snippet...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -173,7 +178,9 @@ export default function StoriesPage() {
             <Star
               className={`h-4 w-4 ${onlyFavorites ? "fill-white text-white" : "text-amber-500"}`}
             />
-            {onlyFavorites ? "Showing Favorites" : "Favorites Only"}
+            {onlyFavorites
+              ? t("stories.favoritesFilter", undefined, "Favorites")
+              : t("stories.allFilter", undefined, "All Stories")}
           </Button>
         </div>
       </div>
@@ -185,34 +192,34 @@ export default function StoriesPage() {
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-4 py-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </p>
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <div className="flex min-h-56 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-[#fbfaf7] p-8 text-center">
+        <div className="flex min-h-56 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface p-8 text-center">
           <BookOpen className="h-10 w-10 text-muted-foreground/60 mb-3" />
-          <p className="font-semibold text-[#292524] text-base">
+          <p className="font-semibold text-foreground text-base">
             {search
-              ? "কোনো সংরক্ষিত গল্প পাওয়া যায়নি"
-              : onlyFavorites
-                ? "কোনো প্রিয় (Favorite) গল্প নেই"
-                : "এখনও কোনো গল্প সেভ করা হয়নি"}
+              ? t("stories.noStoriesFound", undefined, "No stories found in your library.")
+              : t("stories.noStoriesFound", undefined, "No stories found in your library.")}
           </p>
           <p className="mt-1 text-sm text-muted-foreground max-w-md">
-            {search
-              ? "অন্য কোনো শিরোনাম বা শব্দ দিয়ে খুঁজে দেখুন।"
-              : "AI Chat-এ গিয়ে গল্প তৈরি করুন এবং 'Save Story' বাটনে ক্লিক করে এখানে সেভ করে রাখুন।"}
+            {t(
+              "stories.startCrafting",
+              undefined,
+              "Start creating in the AI Chat or Story Studio!"
+            )}
           </p>
           {!search && (
             <div className="mt-5 flex gap-3">
               <Link href="/chat" className={buttonVariants({ size: "sm" })}>
                 <MessageSquare className="h-4 w-4 mr-1.5" />
-                Open AI Chat
+                {t("nav.chat", undefined, "Open AI Chat")}
               </Link>
               <Link href="/studio" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                Open Studio
+                {t("nav.studio", undefined, "Open Studio")}
               </Link>
             </div>
           )}
@@ -226,7 +233,7 @@ export default function StoriesPage() {
           return (
             <Card
               key={story.id}
-              className="flex flex-col justify-between transition-all hover:shadow-md border-border bg-white"
+              className="flex flex-col justify-between transition-all hover:shadow-md border-border bg-surface"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
@@ -243,7 +250,7 @@ export default function StoriesPage() {
                     </div>
                     <CardTitle
                       onClick={() => handleOpenReader(story.id)}
-                      className="mt-2.5 text-base font-bold text-[#1f1b2d] leading-snug cursor-pointer hover:text-primary transition line-clamp-2"
+                      className="mt-2.5 text-base font-bold text-foreground leading-snug cursor-pointer hover:text-primary transition line-clamp-2"
                     >
                       {story.title}
                     </CardTitle>
@@ -252,8 +259,8 @@ export default function StoriesPage() {
                   <button
                     type="button"
                     onClick={(e) => handleToggleFavorite(e, story)}
-                    className="p-1 rounded-md hover:bg-neutral-100 transition"
-                    title={story.is_favorite ? "Remove from favorites" : "Add to favorites"}
+                    className="p-1 rounded-md hover:bg-surface-hover transition"
+                    title={story.is_favorite ? t("stories.unfavorite", undefined, "Unfavorite") : t("stories.favorite", undefined, "Favorite")}
                   >
                     <Star
                       className={`h-5 w-5 shrink-0 ${
@@ -266,18 +273,17 @@ export default function StoriesPage() {
                 </div>
 
                 <CardDescription className="text-xs text-muted-foreground mt-1.5">
-                  {new Date(story.updated_at || story.created_at).toLocaleDateString("en-US", {
+                  {new Date(story.updated_at || story.created_at).toLocaleDateString(language === "bn" ? "bn-BD" : "en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
                   })}
-                  <span> · {story.word_count.toLocaleString()} words</span>
+                  <span> · {story.word_count.toLocaleString()} {t("common.words", undefined, "words")}</span>
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-0 border-t border-border/60 mt-3 py-3 flex items-center justify-between gap-2">
+              <CardContent className="pt-0 border-t border-border mt-3 py-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
-                  {/* Quick Read Modal Button */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -285,10 +291,9 @@ export default function StoriesPage() {
                     onClick={() => handleOpenReader(story.id)}
                   >
                     <BookOpen className="h-3.5 w-3.5 mr-1" />
-                    Read
+                    {t("train.readStory", undefined, "Read")}
                   </Button>
 
-                  {/* Full Story Page Link */}
                   <Link
                     href={`/stories/${story.id}`}
                     className={buttonVariants({ variant: "ghost", size: "sm", className: "h-8 text-xs" })}
@@ -299,32 +304,28 @@ export default function StoriesPage() {
 
                 {/* Card Action Icons */}
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant={isConfirming ? "destructive" : "ghost"}
-                    size="sm"
-                    className={`h-8 text-xs ${
-                      isConfirming
-                        ? ""
-                        : "text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                    }`}
-                    onClick={(e) => handleDeleteStory(e, story.id)}
-                    title="Delete saved story"
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadTxt(story, story.snippet)}
+                    className="p-1.5 rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground transition"
+                    title={t("common.download", undefined, "Download TXT")}
                   >
-                    {isConfirming ? "Confirm?" : <Trash2 className="h-3.5 w-3.5" />}
-                  </Button>
-                  {isConfirming && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs text-muted-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmDeleteId(null);
-                      }}
-                    >
-                      X
-                    </Button>
-                  )}
+                    <Download className="h-3.5 w-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteStory(e, story.id)}
+                    className={cn(
+                      "p-1.5 rounded-md transition",
+                      isConfirming
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600",
+                    )}
+                    title={isConfirming ? t("common.confirm", undefined, "Click again to delete") : t("common.delete", undefined, "Delete story")}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </CardContent>
             </Card>
@@ -334,20 +335,21 @@ export default function StoriesPage() {
 
       {/* Quick Reading Modal */}
       {readingStory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-fade-in">
-          <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border border-border bg-white shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs"
+          onClick={() => setReadingStory(null)}
+        >
+          <div
+            className="flex flex-col w-full max-w-2xl max-h-[85vh] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6 sm:py-4">
-              <div className="min-w-0 flex-1 pr-2 sm:pr-4">
-                <div className="flex items-center gap-2">
-                  <Badge variant="primary" className="text-[10px] sm:text-xs">
-                    {readingStory.genre || "Story"}
-                  </Badge>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground">
-                    {readingStory.word_count.toLocaleString()} words
-                  </span>
-                </div>
-                <h2 className="mt-1 text-base sm:text-lg font-bold text-[#1f1b2d] truncate">
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <div className="min-w-0 pr-4">
+                <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                  {t("stories.readerModalTitle", undefined, "Story Reader")}
+                </span>
+                <h2 className="mt-1 text-base sm:text-lg font-bold text-foreground truncate">
                   {readingStory.title}
                 </h2>
               </div>
@@ -366,7 +368,7 @@ export default function StoriesPage() {
                 >
                   <Copy className="h-3.5 w-3.5 sm:mr-1" />
                   <span className="hidden sm:inline">
-                    {copiedId === readingStory.id ? "Copied!" : "Copy"}
+                    {copiedId === readingStory.id ? t("common.copied", undefined, "Copied!") : t("common.copy", undefined, "Copy")}
                   </span>
                 </Button>
                 <Button
@@ -376,14 +378,14 @@ export default function StoriesPage() {
                   className="h-8 px-2 sm:px-3 text-xs"
                 >
                   <Download className="h-3.5 w-3.5 sm:mr-1" />
-                  <span className="hidden sm:inline">Download</span>
+                  <span className="hidden sm:inline">{t("common.download", undefined, "Download")}</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setReadingStory(null)}
                   className="h-8 w-8 p-0"
-                  aria-label="Close reader"
+                  aria-label={t("common.close", undefined, "Close")}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -391,14 +393,14 @@ export default function StoriesPage() {
             </div>
 
             {/* Modal Body: Manuscript */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
-              <div className="whitespace-pre-wrap font-serif text-base leading-relaxed text-[#292524]">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 story-paper">
+              <div className="whitespace-pre-wrap font-serif text-base leading-relaxed text-foreground">
                 {readingStory.content || "(No content available)"}
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between border-t border-border px-6 py-3 bg-[#fcfbf9] rounded-b-2xl text-xs">
+            <div className="flex items-center justify-between border-t border-border px-6 py-3 bg-surface-hover/50 rounded-b-2xl text-xs">
               <span className="text-muted-foreground">
                 Saved in TaleForge Library
               </span>
@@ -410,7 +412,7 @@ export default function StoriesPage() {
                   Open Full Page
                 </Link>
                 <Button size="sm" onClick={() => setReadingStory(null)}>
-                  Close
+                  {t("common.close", undefined, "Close")}
                 </Button>
               </div>
             </div>

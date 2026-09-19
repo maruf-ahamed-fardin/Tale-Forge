@@ -7,13 +7,8 @@ import {
   Copy,
   Download,
   FilePlus,
-  FileText,
-  Plus,
-  Redo2,
   RefreshCw,
   Save,
-  SlidersHorizontal,
-  Undo2,
   Wand2,
 } from "lucide-react";
 
@@ -23,12 +18,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { generateApi, storiesApi } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 const genres = ["Romance", "Horror", "Thriller", "Mystery", "Fantasy", "Drama"];
 const moods = ["Dark", "Emotional", "Mysterious", "Romantic", "Hopeful", "Melancholic"];
 const lengths = ["Short", "Medium", "Long", "Custom"];
 
 function StudioContent() {
+  const { t, language: globalLanguage } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const storyIdFromUrl = searchParams.get("id");
@@ -41,7 +39,7 @@ function StudioContent() {
   const [mood, setMood] = useState("Emotional");
   const [setting, setSetting] = useState("");
   const [lengthPreset, setLengthPreset] = useState("Medium");
-  const [language, setLanguage] = useState("bn");
+  const [language, setLanguage] = useState(globalLanguage || "bn");
   const [characterName, setCharacterName] = useState("");
   const [characterRole, setCharacterRole] = useState("");
   const [characterTraits, setCharacterTraits] = useState("");
@@ -157,7 +155,7 @@ function StudioContent() {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content).then(() => {
-      setSaveMsg("Copied to clipboard!");
+      setSaveMsg(t("common.copied", undefined, "Copied to clipboard!"));
       setTimeout(() => setSaveMsg(""), 3000);
     });
   };
@@ -186,23 +184,29 @@ function StudioContent() {
   return (
     <section>
       <PageHeader
-        eyebrow="Story Studio"
-        title={editingId ? `Editing: ${title}` : "Shape a new story."}
-        description={
+        eyebrow={t("nav.studio", undefined, "Story Studio")}
+        title={
           editingId
-            ? "Revise, expand, or refine your saved story."
-            : "Choose the creative direction, then write and revise from a focused editor."
+            ? t("studio.editingTitle", { title }, `Editing: ${title}`)
+            : t("studio.newStoryTitle", undefined, "Shape a New Story")
         }
+        description={t(
+          "studio.subtitle",
+          undefined,
+          "Choose creative direction, characters, and plot, then write and refine in a focused editor."
+        )}
       >
         {editingId && (
           <Button variant="outline" onClick={handleNewStory}>
             <FilePlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
-            New Blank Story
+            {t("studio.newBlankStory", undefined, "New Blank Story")}
           </Button>
         )}
         <Button id="generate-story-btn" onClick={handleGenerate} disabled={generating}>
           <Wand2 className={`h-4 w-4 mr-1.5 ${generating ? "animate-spin" : ""}`} aria-hidden="true" />
-          {generating ? "Crafting Story…" : actionFromUrl === "continue" ? "Continue Story" : "Generate Story"}
+          {generating
+            ? t("studio.generatingButton", undefined, "Crafting Story…")
+            : t("studio.generateButton", undefined, "Generate Story")}
         </Button>
       </PageHeader>
 
@@ -211,31 +215,33 @@ function StudioContent() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Direction</CardTitle>
+              <CardTitle>{t("studio.directionHeader", undefined, "Story Direction")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div>
-                <label className="text-sm font-semibold text-[#292524]">Language / ভাষা</label>
+                <label className="text-sm font-semibold text-foreground">{t("common.language", undefined, "Language / ভাষা")}</label>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setLanguage("bn")}
-                    className={`rounded-lg border px-3 py-2 text-center text-sm font-semibold transition-colors ${
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-center text-sm font-semibold transition-colors",
                       language === "bn"
-                        ? "border-primary bg-[#eef2ff] text-primary"
-                        : "border-border bg-white text-[#44403c] hover:bg-[#f7f4ef]"
-                    }`}
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-surface text-foreground hover:bg-surface-hover"
+                    )}
                   >
                     বাংলা (Bangla)
                   </button>
                   <button
                     type="button"
                     onClick={() => setLanguage("en")}
-                    className={`rounded-lg border px-3 py-2 text-center text-sm font-semibold transition-colors ${
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-center text-sm font-semibold transition-colors",
                       language === "en"
-                        ? "border-primary bg-[#eef2ff] text-primary"
-                        : "border-border bg-white text-[#44403c] hover:bg-[#f7f4ef]"
-                    }`}
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-surface text-foreground hover:bg-surface-hover"
+                    )}
                   >
                     English
                   </button>
@@ -243,18 +249,19 @@ function StudioContent() {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#292524]">Genre</label>
+                <label className="text-sm font-semibold text-foreground">Genre</label>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {genres.map((g) => (
                     <button
                       type="button"
                       key={g}
                       onClick={() => setGenre(g === genre ? "" : g)}
-                      className={`rounded-lg border px-3 py-2 text-left text-sm font-semibold transition-colors ${
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left text-sm font-semibold transition-colors",
                         genre === g
-                          ? "border-primary bg-[#eef2ff] text-primary"
-                          : "border-border bg-white text-[#44403c] hover:bg-[#f7f4ef]"
-                      }`}
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-surface text-foreground hover:bg-surface-hover"
+                      )}
                     >
                       {g}
                     </button>
@@ -263,7 +270,7 @@ function StudioContent() {
               </div>
 
               <div>
-                <label htmlFor="theme" className="text-sm font-semibold text-[#292524]">
+                <label htmlFor="theme" className="text-sm font-semibold text-foreground">
                   Setting / Premise
                 </label>
                 <Input
@@ -276,7 +283,7 @@ function StudioContent() {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#292524]">Mood</label>
+                <label className="text-sm font-semibold text-foreground">Mood</label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {moods.map((m) => (
                     <button
@@ -291,18 +298,19 @@ function StudioContent() {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#292524]">Length</label>
+                <label className="text-sm font-semibold text-foreground">Length</label>
                 <div className="mt-2 grid grid-cols-4 gap-2">
                   {lengths.map((l) => (
                     <button
                       type="button"
                       key={l}
                       onClick={() => setLengthPreset(l)}
-                      className={`rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors ${
+                      className={cn(
+                        "rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors",
                         lengthPreset === l
-                          ? "border-primary bg-[#eef2ff] text-primary"
-                          : "border-border bg-white text-[#44403c] hover:bg-[#f7f4ef]"
-                      }`}
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-surface text-foreground hover:bg-surface-hover"
+                      )}
                     >
                       {l}
                     </button>
@@ -314,7 +322,7 @@ function StudioContent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Characters</CardTitle>
+              <CardTitle>{t("studio.charactersHeader", undefined, "Characters & Roles")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Input
@@ -337,7 +345,7 @@ function StudioContent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Title</CardTitle>
+              <CardTitle>{t("studio.storyTitle", undefined, "Story Title")}</CardTitle>
             </CardHeader>
             <CardContent>
               <Input
@@ -356,7 +364,7 @@ function StudioContent() {
               <div>
                 <CardTitle className="text-xl font-serif">{title}</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {wordCount.toLocaleString()} words · {charCount.toLocaleString()} characters · {paraCount} paragraphs
+                  {wordCount.toLocaleString()} {t("common.words", undefined, "words")} · {charCount.toLocaleString()} {t("common.characters", undefined, "characters")} · {paraCount} {t("common.paragraphs", undefined, "paragraphs")}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -364,23 +372,27 @@ function StudioContent() {
                   <span
                     className={`text-sm font-medium ${
                       saveMsg.includes("saved") || saveMsg.includes("created") || saveMsg.includes("Copied")
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {saveMsg}
                   </span>
                 )}
-                <Button variant="ghost" size="icon" aria-label="Copy" onClick={handleCopy}>
+                <Button variant="ghost" size="icon" aria-label={t("common.copy", undefined, "Copy")} onClick={handleCopy}>
                   <Copy className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleExport}>
                   <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  Export TXT
+                  {t("common.exportTxt", undefined, "Export TXT")}
                 </Button>
                 <Button size="sm" onClick={handleSave} disabled={saving} id="studio-save">
                   <Save className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  {saving ? "Saving…" : editingId ? "Update Story" : "Save Story"}
+                  {saving
+                    ? t("common.saving", undefined, "Saving…")
+                    : editingId
+                    ? t("studio.updateStory", undefined, "Update Story")
+                    : t("studio.saveStory", undefined, "Save Story")}
                 </Button>
               </div>
             </div>
@@ -389,8 +401,12 @@ function StudioContent() {
             <div className="story-paper min-h-[620px] rounded-lg border border-border p-5 sm:p-8">
               <textarea
                 aria-label="Story editor"
-                className="min-h-[560px] w-full resize-none bg-transparent font-serif text-base leading-8 text-[#292524] outline-none"
-                placeholder="Your generated story will appear here. You can also write freely in Bangla or English."
+                className="min-h-[560px] w-full resize-none bg-transparent font-serif text-base leading-8 text-foreground outline-none"
+                placeholder={t(
+                  "studio.editorPlaceholder",
+                  undefined,
+                  "Your generated story will appear here. You can also write freely in Bangla or English."
+                )}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
               />
