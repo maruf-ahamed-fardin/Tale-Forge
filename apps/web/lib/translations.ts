@@ -25,6 +25,8 @@ export const translations = {
       autoRetrainActive: "Auto-Retrain Active",
       memoryCount: "{personal} Personal / {defaults} Default Stories",
       goToTraining: "Go to AI Training Hub",
+      collapseSidebar: "Collapse sidebar",
+      expandSidebar: "Expand sidebar",
     },
 
     // Common
@@ -325,6 +327,8 @@ export const translations = {
       autoRetrainActive: "অটো-রিট্রেন চালু",
       memoryCount: "{personal} নিজস্ব / {defaults} ডিফল্ট গল্প",
       goToTraining: "এআই প্রশিক্ষণ কেন্দ্রে যান",
+      collapseSidebar: "সাইডবার লুকান",
+      expandSidebar: "সাইডবার খুলুন",
     },
 
     // Common
