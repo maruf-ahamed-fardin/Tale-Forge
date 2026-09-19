@@ -13,7 +13,6 @@ import {
   Heart,
   PenLine,
   RefreshCw,
-  Sparkles,
   Trash2,
   Wand2,
 } from "lucide-react";
@@ -23,8 +22,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { storiesApi, type StoryOut } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
 
 export default function StoryDetailPage() {
+  const { t, language } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const storyId = Array.isArray(params?.id) ? params.id[0] : (params?.id as string);
@@ -43,10 +44,10 @@ export default function StoryDetailPage() {
       .get(storyId)
       .then((data) => setStory(data))
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Story not found");
+        setError(err instanceof Error ? err.message : t("storyDetail.storyNotFound", undefined, "Story not found"));
       })
       .finally(() => setLoading(false));
-  }, [storyId]);
+  }, [storyId, t]);
 
   const toggleFavorite = async () => {
     if (!story) return;
@@ -63,7 +64,7 @@ export default function StoryDetailPage() {
   const handleCopy = () => {
     if (!story) return;
     navigator.clipboard.writeText(`${story.title}\n\n${story.content}`).then(() => {
-      setCopyMsg("Copied to clipboard!");
+      setCopyMsg(t("storyDetail.copiedToClipboard", undefined, "Copied to clipboard!"));
       setTimeout(() => setCopyMsg(""), 3000);
     });
   };
@@ -76,7 +77,8 @@ export default function StoryDetailPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const cleanTitle = story.title.trim().toLowerCase().replace(/[^a-z0-9_-]+/gi, "_") || "story";
+    const cleanTitle =
+      story.title.trim().toLowerCase().replace(/[^a-z0-9\u0980-\u09FF_-]+/gi, "_") || "story";
     a.download = `${cleanTitle}.txt`;
     a.click();
     URL.revokeObjectURL(url);
@@ -115,19 +117,19 @@ export default function StoryDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Stories
+          {t("storyDetail.backToLibrary", undefined, "Back to Stories")}
         </Link>
-        <Card>
+        <Card className="bg-surface border-border">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="h-10 w-10 text-red-500/70" />
-            <h3 className="mt-4 text-base font-semibold text-[#292524]">
-              {error || "Story not found"}
+            <h3 className="mt-4 text-base font-semibold text-foreground">
+              {error || t("storyDetail.storyNotFound", undefined, "Story not found")}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              This story may have been deleted or moved.
+              {t("storyDetail.storyNotFoundDesc", undefined, "This story may have been deleted or moved.")}
             </p>
             <Link href="/stories" className={`${buttonVariants({ variant: "outline" })} mt-4`}>
-              Return to Library
+              {t("storyDetail.returnToLibrary", undefined, "Return to Library")}
             </Link>
           </CardContent>
         </Card>
@@ -135,11 +137,14 @@ export default function StoryDetailPage() {
     );
   }
 
-  const formattedDate = new Date(story.created_at).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = new Date(story.created_at).toLocaleDateString(
+    language === "bn" ? "bn-BD" : "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }
+  );
 
   return (
     <section>
@@ -149,39 +154,39 @@ export default function StoryDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Library
+          {t("storyDetail.backToLibrary", undefined, "Back to Library")}
         </Link>
       </div>
 
       <PageHeader
-        eyebrow="Story Detail"
+        eyebrow={t("storyDetail.eyebrow", undefined, "Story Detail")}
         title={story.title || "Untitled Story"}
-        description={`${story.genre || "Uncategorized"} · ${story.word_count.toLocaleString()} words · Created on ${formattedDate}`}
+        description={`${story.genre || "Uncategorized"} · ${story.word_count.toLocaleString(language === "bn" ? "bn-BD" : "en-US")} ${t("common.words", undefined, "words")} · ${t("storyDetail.created", undefined, "Created on")} ${formattedDate}`}
       >
         <Link
           href={`/studio?id=${story.id}`}
           className={buttonVariants({ variant: "outline" })}
         >
           <PenLine className="h-4 w-4 mr-1.5" aria-hidden="true" />
-          Edit in Studio
+          {t("storyDetail.editInStudio", undefined, "Edit in Studio")}
         </Link>
         <Link
           href={`/studio?id=${story.id}&action=continue`}
           className={buttonVariants()}
         >
           <Wand2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
-          Continue Story
+          {t("storyDetail.continueStory", undefined, "Continue Story")}
         </Link>
       </PageHeader>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Story Text Area */}
-        <Card className="min-w-0">
+        <Card className="min-w-0 bg-surface border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-lg">Manuscript</CardTitle>
+            <CardTitle className="text-lg text-foreground">{t("storyDetail.manuscript", undefined, "Manuscript")}</CardTitle>
             <div className="flex items-center gap-2">
               {copyMsg && (
-                <span className="text-xs font-medium text-green-600 animate-fade-in">
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 animate-fade-in">
                   {copyMsg}
                 </span>
               )}
@@ -192,7 +197,7 @@ export default function StoryDetailPage() {
                 aria-label="Copy story text"
               >
                 <Copy className="h-4 w-4 mr-1.5" />
-                Copy
+                {t("storyDetail.copy", undefined, "Copy")}
               </Button>
               <Button
                 variant="outline"
@@ -201,19 +206,23 @@ export default function StoryDetailPage() {
                 aria-label="Export story"
               >
                 <Download className="h-4 w-4 mr-1.5" />
-                Export TXT
+                {t("storyDetail.exportTxt", undefined, "Export TXT")}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="story-paper min-h-[560px] rounded-xl border border-border p-6 sm:p-10">
               {story.content ? (
-                <div className="whitespace-pre-wrap font-serif text-base leading-8 text-[#292524]">
+                <div className="whitespace-pre-wrap font-serif text-base leading-8 text-foreground">
                   {story.content}
                 </div>
               ) : (
                 <p className="italic text-muted-foreground">
-                  This story does not have any written content yet. Click &quot;Edit in Studio&quot; to begin writing or generating.
+                  {t(
+                    "storyDetail.noContentYet",
+                    undefined,
+                    "This story does not have any written content yet. Click 'Edit in Studio' to begin writing or generating."
+                  )}
                 </p>
               )}
             </div>
@@ -221,15 +230,15 @@ export default function StoryDetailPage() {
         </Card>
 
         {/* Story Metadata & Actions Sidebar */}
-        <div className="space-y-4">
-          <Card>
+        <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          <Card className="bg-surface border-border">
             <CardHeader>
-              <CardTitle className="text-base">Story Details</CardTitle>
+              <CardTitle className="text-base text-foreground">{t("storyDetail.details", undefined, "Story Details")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Creative Direction
+                  {t("storyDetail.creativeDirection", undefined, "Creative Direction")}
                 </label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {story.genre && <Badge variant="primary">{story.genre}</Badge>}
@@ -241,9 +250,9 @@ export default function StoryDetailPage() {
               {story.setting && (
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Setting / Premise
+                    {t("storyDetail.settingPremise", undefined, "Setting / Premise")}
                   </label>
-                  <p className="mt-1 text-sm text-[#44403c] rounded-md bg-[#faf8f5] p-3 border border-border">
+                  <p className="mt-1 text-sm text-foreground/90 rounded-md bg-surface-hover/50 p-3 border border-border">
                     {story.setting}
                   </p>
                 </div>
@@ -253,14 +262,16 @@ export default function StoryDetailPage() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    Word Count
+                    {t("storyDetail.wordCount", undefined, "Word Count")}
                   </span>
-                  <span className="font-semibold text-[#292524]">{story.word_count.toLocaleString()}</span>
+                  <span className="font-semibold text-foreground">
+                    {story.word_count.toLocaleString(language === "bn" ? "bn-BD" : "en-US")}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
-                    Created
+                    {t("storyDetail.created", undefined, "Created")}
                   </span>
                   <span>{formattedDate}</span>
                 </div>
@@ -277,17 +288,21 @@ export default function StoryDetailPage() {
                       story.is_favorite ? "fill-white text-white" : ""
                     }`}
                   />
-                  {story.is_favorite ? "Favorited" : "Add to Favorites"}
+                  {story.is_favorite
+                    ? t("storyDetail.favorited", undefined, "Favorited")
+                    : t("storyDetail.addToFavorites", undefined, "Add to Favorites")}
                 </Button>
 
                 <Button
                   variant={confirmDelete ? "destructive" : "ghost"}
-                  className={`w-full justify-center ${confirmDelete ? "" : "text-red-600 hover:bg-red-50 hover:text-red-700"}`}
+                  className={`w-full justify-center ${confirmDelete ? "" : "text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700"}`}
                   disabled={deleting}
                   onClick={handleDelete}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  {confirmDelete ? "Confirm Delete?" : "Delete Story"}
+                  {confirmDelete
+                    ? t("storyDetail.confirmDelete", undefined, "Confirm Delete?")
+                    : t("storyDetail.deleteStory", undefined, "Delete Story")}
                 </Button>
                 {confirmDelete && (
                   <Button
@@ -296,7 +311,7 @@ export default function StoryDetailPage() {
                     className="w-full text-xs text-muted-foreground"
                     onClick={() => setConfirmDelete(false)}
                   >
-                    Cancel
+                    {t("common.cancel", undefined, "Cancel")}
                   </Button>
                 )}
               </div>

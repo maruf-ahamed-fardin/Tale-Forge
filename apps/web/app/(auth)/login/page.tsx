@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { login } from "@/lib/auth";
+import { useLanguage } from "@/lib/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,17 +33,17 @@ export default function LoginPage() {
   }
 
   return (
-    <Card>
+    <Card className="bg-surface border-border">
       <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Sign in to continue writing with TaleForge.</CardDescription>
+        <CardTitle className="text-foreground">{t("auth.welcomeBack", undefined, "Welcome back")}</CardTitle>
+        <CardDescription>{t("auth.signInDesc", undefined, "Sign in to continue writing with TaleForge.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             id="login-email"
             type="email"
-            placeholder="Email"
+            placeholder={t("auth.email", undefined, "Email")}
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -50,26 +52,26 @@ export default function LoginPage() {
           <Input
             id="login-password"
             type="password"
-            placeholder="Password"
+            placeholder={t("auth.password", undefined, "Password")}
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
           {error && (
-            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p role="alert" className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 px-3 py-2 text-sm text-red-700 dark:text-red-300">
               {error}
             </p>
           )}
           <Button id="login-submit" type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in…" : "Log in"}
+            {loading ? t("auth.signingIn", undefined, "Signing in…") : t("auth.logIn", undefined, "Log in")}
           </Button>
           <div className="flex items-center justify-between text-sm">
-            <Link href="/forgot-password" className="font-semibold text-primary">
-              Forgot password?
+            <Link href="/forgot-password" className="font-semibold text-primary hover:underline">
+              {t("auth.forgotPassword", undefined, "Forgot password?")}
             </Link>
-            <Link href="/register" className="font-semibold text-primary">
-              Create account
+            <Link href="/register" className="font-semibold text-primary hover:underline">
+              {t("auth.createAccount", undefined, "Create account")}
             </Link>
           </div>
         </form>

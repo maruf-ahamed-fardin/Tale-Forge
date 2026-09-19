@@ -1,32 +1,103 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-background: #fbfaf7;
-  --color-foreground: #201a2b;
-  --color-surface: #ffffff;
-  --color-muted: #f4f1ec;
-  --color-muted-foreground: #68615b;
-  --color-border: #e5ded6;
-  --color-primary: #4f46e5;
+  --color-background: var(--tf-background);
+  --color-foreground: var(--tf-foreground);
+  --color-surface: var(--tf-surface);
+  --color-surface-hover: var(--tf-surface-hover);
+  --color-muted: var(--tf-muted);
+  --color-muted-foreground: var(--tf-muted-foreground);
+  --color-border: var(--tf-border);
+  --color-card: var(--tf-surface);
+  --color-card-foreground: var(--tf-foreground);
+  --color-primary: var(--tf-primary);
   --color-primary-foreground: #ffffff;
   --color-accent: #b45309;
   --color-accent-foreground: #ffffff;
   --font-sans: "Inter", "Segoe UI", Arial, sans-serif;
 }
 
+:root {
+  --tf-background: #fbfaf7;
+  --tf-foreground: #201a2b;
+  --tf-surface: #ffffff;
+  --tf-surface-hover: #f7f4ef;
+  --tf-muted: #f4f1ec;
+  --tf-muted-foreground: #68615b;
+  --tf-border: #e5ded6;
+  --tf-primary: #4f46e5;
+}
+
+.dark {
+  --tf-background: #0b0f17;
+  --tf-foreground: #f1f5f9;
+  --tf-surface: #131823;
+  --tf-surface-hover: #1e2433;
+  --tf-muted: #1c2230;
+  --tf-muted-foreground: #94a3b8;
+  --tf-border: #273042;
+  --tf-primary: #6366f1;
+}
+
 * {
   box-sizing: border-box;
 }
 
+/* ── Hide Default Browser Scrollbars (Sleek Modern UI) ───────────────────── */
+html,
+body,
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera, Edge */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* ── Smooth Theme & Color Transitions ───────────────────────────────────────── */
+html,
+body,
+header,
+nav,
+aside,
+main,
+section,
+footer,
+.story-paper,
+[class*="bg-surface"],
+[class*="bg-background"],
+[class*="border-border"] {
+  transition:
+    background-color 380ms cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 380ms cubic-bezier(0.25, 1, 0.5, 1),
+    color 280ms cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 380ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Native View Transitions cross-fade (Chromium, Edge, Chrome) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
 html {
-  background: #fbfaf7;
+  background: var(--tf-background);
+  color: var(--tf-foreground);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: #fbfaf7;
-  color: #201a2b;
+  background: var(--tf-background);
+  color: var(--tf-foreground);
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
   letter-spacing: 0;
   text-rendering: optimizeLegibility;
@@ -42,13 +113,58 @@ select {
 }
 
 ::selection {
-  background: #ddd6fe;
-  color: #1f1b2d;
+  background: #c7d2fe;
+  color: #1e1b4b;
 }
 
+.dark ::selection {
+  background: #4338ca;
+  color: #e0e7ff;
+}
+
+/* ── Story Paper Textures ─────────────────────────────────────────────────── */
 .story-paper {
   background:
     linear-gradient(90deg, rgba(79, 70, 229, 0.08) 1px, transparent 1px) 0 0 / 28px 28px,
     linear-gradient(rgba(120, 113, 108, 0.09) 1px, transparent 1px) 0 0 / 28px 28px,
     #fffdfa;
+}
+
+.dark .story-paper {
+  background:
+    linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px) 0 0 / 28px 28px,
+    #0f131d;
+  color: #f1f5f9;
+}
+
+/* ── Micro-animations for Toggle Icons & Text ─────────────────────────────── */
+@keyframes sunSpin {
+  0% {
+    transform: rotate(-90deg) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes moonPop {
+  0% {
+    transform: rotate(90deg) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-sun {
+  animation: sunSpin 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-moon {
+  animation: moonPop 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

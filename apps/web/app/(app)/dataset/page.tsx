@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { datasetsApi, type DatasetOut } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
 
 const statusVariants: Record<string, "neutral" | "primary" | "warm"> = {
   raw: "neutral",
@@ -28,6 +29,7 @@ const statusVariants: Record<string, "neutral" | "primary" | "warm"> = {
 };
 
 export default function DatasetPage() {
+  const { t, language } = useLanguage();
   const [datasets, setDatasets] = useState<DatasetOut[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -60,7 +62,11 @@ export default function DatasetPage() {
     const validExtensions = [".docx", ".pdf", ".txt"];
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
     if (!validExtensions.includes(ext)) {
-      setError(`Invalid file format '${ext}'. Only DOCX, PDF, and TXT are supported.`);
+      setError(
+        language === "bn"
+          ? `ফাইল ফরম্যাট '${ext}' সমর্থিত নয়। শুধু DOCX, PDF, ও TXT ব্যবহার করুন।`
+          : `Invalid file format '${ext}'. Only DOCX, PDF, and TXT are supported.`
+      );
       return;
     }
 
@@ -70,7 +76,11 @@ export default function DatasetPage() {
 
     try {
       const newDataset = await datasetsApi().upload(file);
-      setUploadSuccess(`Successfully uploaded "${newDataset.original_name}"!`);
+      setUploadSuccess(
+        language === "bn"
+          ? `"${newDataset.original_name}" সফলভাবে আপলোড হয়েছে!`
+          : `Successfully uploaded "${newDataset.original_name}"!`
+      );
       await loadDatasets();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
@@ -119,9 +129,13 @@ export default function DatasetPage() {
   return (
     <section>
       <PageHeader
-        eyebrow="Dataset"
-        title="Training Data & Stories"
-        description="Upload and manage private Bangla story manuscripts, novel excerpts, and documents for style fine-tuning."
+        eyebrow={language === "bn" ? "ডেটাসেট" : "Dataset"}
+        title={language === "bn" ? "ট্রেনিং ডেটা ও গল্পভাণ্ডার" : "Training Data & Stories"}
+        description={
+          language === "bn"
+            ? "ব্যক্তিগত বাংলা গল্পের পাণ্ডুলিপি, উপন্যাসের অংশ ও নথি আপলোড ও পরিচালনা করুন।"
+            : "Upload and manage private Bangla story manuscripts, novel excerpts, and documents for style fine-tuning."
+        }
       >
         <Button
           variant="outline"
@@ -130,56 +144,74 @@ export default function DatasetPage() {
           aria-label="Refresh datasets"
         >
           <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
-          Refresh
+          {t("common.refresh", undefined, "Refresh")}
         </Button>
       </PageHeader>
 
       {/* Stats Cards */}
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Card>
+        <Card className="bg-surface border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Source Files</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {language === "bn" ? "সোর্স ফাইলসমূহ" : "Source Files"}
+            </CardTitle>
             <Database className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{total}</div>
-            <p className="text-xs text-muted-foreground mt-1">Uploaded manuscripts & docs</p>
+            <div className="text-2xl font-bold text-foreground">{total}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {language === "bn" ? "আপলোডকৃত পাণ্ডুলিপি ও নথি" : "Uploaded manuscripts & docs"}
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-surface border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Words</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {language === "bn" ? "মোট শব্দসংখ্যা" : "Total Words"}
+            </CardTitle>
             <FileText className="h-4 w-4 text-warm" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalWords.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">Extracted vocabulary tokens</p>
+            <div className="text-2xl font-bold text-foreground">
+              {totalWords.toLocaleString(language === "bn" ? "bn-BD" : "en-US")}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {language === "bn" ? "সংগৃহীত শব্দ ও টোকেন" : "Extracted vocabulary tokens"}
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-surface border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pipeline Stage</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {language === "bn" ? "পাইপলাইন অবস্থা" : "Pipeline Stage"}
+            </CardTitle>
             <Layers className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {datasets.filter((d) => d.status === "training_ready").length} Ready
+            <div className="text-2xl font-bold text-foreground">
+              {datasets.filter((d) => d.status === "training_ready").length}{" "}
+              {language === "bn" ? "প্রস্তুত" : "Ready"}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {datasets.filter((d) => d.status === "raw").length} raw pending validation
+              {datasets.filter((d) => d.status === "raw").length}{" "}
+              {language === "bn" ? "যাচাইয়ের অপেক্ষমান" : "raw pending validation"}
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Upload Zone */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-surface border-border">
         <CardHeader>
-          <CardTitle>Upload Story Documents</CardTitle>
+          <CardTitle className="text-foreground">
+            {language === "bn" ? "গল্পের নথি আপলোড করুন" : "Upload Story Documents"}
+          </CardTitle>
           <CardDescription>
-            Supported formats: DOCX, PDF, and UTF-8 TXT files up to 25 MB.
+            {language === "bn"
+              ? "সমর্থিত ফরম্যাট: DOCX, PDF, এবং UTF-8 TXT ফাইল (সর্বোচ্চ ২৫ মেগাবাইট)।"
+              : "Supported formats: DOCX, PDF, and UTF-8 TXT files up to 25 MB."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -189,8 +221,8 @@ export default function DatasetPage() {
             onDragLeave={handleDragLeave}
             className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all ${
               dragActive
-                ? "border-primary bg-indigo-50/50"
-                : "border-border bg-[#faf8f5] hover:bg-[#f4efe8]"
+                ? "border-primary bg-primary/10"
+                : "border-border bg-surface-hover/40 hover:bg-surface-hover/70"
             }`}
           >
             <input
@@ -201,33 +233,43 @@ export default function DatasetPage() {
               onChange={onFileInputChange}
               id="dataset-file-input"
             />
-            <div className="rounded-full bg-white p-3 shadow-sm ring-1 ring-border">
+            <div className="rounded-full bg-surface p-3 shadow-xs ring-1 ring-border">
               <UploadCloud className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="mt-4 text-base font-semibold text-[#292524]">
-              Drag & drop manuscripts or browse files
+            <h3 className="mt-4 text-base font-semibold text-foreground">
+              {language === "bn"
+                ? "পাণ্ডুলিপি এখানে টেনে আনুন অথবা ব্রাউজ করুন"
+                : "Drag & drop manuscripts or browse files"}
             </h3>
             <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              Your source documents remain private and are kept intact in cold storage.
+              {language === "bn"
+                ? "আপনার মূল নথিগুলো সম্পূর্ণ ব্যক্তিগত ও সুরক্ষিত থাকে।"
+                : "Your source documents remain private and are kept intact in cold storage."}
             </p>
             <Button
               className="mt-4"
               disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
             >
-              {uploading ? "Uploading & Processing…" : "Select Document"}
+              {uploading
+                ? language === "bn"
+                  ? "আপলোড ও প্রসেসিং হচ্ছে…"
+                  : "Uploading & Processing…"
+                : language === "bn"
+                ? "ডকুমেন্ট নির্বাচন করুন"
+                : "Select Document"}
             </Button>
           </div>
 
           {error && (
-            <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 p-3 text-sm text-red-700 dark:text-red-300">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {uploadSuccess && (
-            <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+            <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3 text-sm text-emerald-800 dark:text-emerald-300">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>{uploadSuccess}</span>
             </div>
@@ -241,7 +283,11 @@ export default function DatasetPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Search datasets by filename or status…"
+            placeholder={
+              language === "bn"
+                ? "ফাইলের নাম বা স্ট্যাটাস দিয়ে খুঁজুন…"
+                : "Search datasets by filename or status…"
+            }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -253,15 +299,25 @@ export default function DatasetPage() {
           <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : filtered.length === 0 ? (
-        <Card>
+        <Card className="bg-surface border-border">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="h-10 w-10 text-muted-foreground/50" />
-            <h3 className="mt-4 text-base font-semibold text-[#292524]">
-              {search ? "No matching documents found" : "No dataset documents yet"}
+            <h3 className="mt-4 text-base font-semibold text-foreground">
+              {search
+                ? language === "bn"
+                  ? "কোনো মিল পাওয়া যায়নি"
+                  : "No matching documents found"
+                : language === "bn"
+                ? "এখনো কোনো ডেটাসেট নেই"
+                : "No dataset documents yet"}
             </h3>
             <p className="mt-1 max-w-md text-sm text-muted-foreground">
               {search
-                ? `No files matched "${search}". Try searching with a different term.`
+                ? language === "bn"
+                  ? `"${search}" এর সাথে কোনো ফাইল মেলেনি।`
+                  : `No files matched "${search}". Try searching with a different term.`
+                : language === "bn"
+                ? "আপনার নিজস্ব লেখার স্টাইলে এআই ট্রেইন করতে গল্প বা বইয়ের ফাইল আপলোড করুন।"
                 : "Upload your existing Bangla stories, drafts, or books to prepare your customized training dataset."}
             </p>
           </CardContent>
@@ -269,24 +325,32 @@ export default function DatasetPage() {
       ) : (
         <div className="grid gap-3">
           {filtered.map((item) => {
-            const date = new Date(item.created_at).toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            });
+            const date = new Date(item.created_at).toLocaleDateString(
+              language === "bn" ? "bn-BD" : "en-US",
+              {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              }
+            );
             return (
-              <Card key={item.id} className="transition hover:border-primary/40">
+              <Card key={item.id} className="bg-surface border-border transition hover:border-primary/40">
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-indigo-50 p-2.5 text-primary">
+                    <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
                       <FileCheck className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-[#292524]">{item.original_name}</h4>
+                      <h4 className="font-semibold text-foreground">{item.original_name}</h4>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span>{item.word_count.toLocaleString()} words</span>
+                        <span>
+                          {item.word_count.toLocaleString(language === "bn" ? "bn-BD" : "en-US")}{" "}
+                          {t("common.words", undefined, "words")}
+                        </span>
                         <span>•</span>
-                        <span>Uploaded on {date}</span>
+                        <span>
+                          {language === "bn" ? "আপলোডের তারিখ:" : "Uploaded on"} {date}
+                        </span>
                       </div>
                     </div>
                   </div>
