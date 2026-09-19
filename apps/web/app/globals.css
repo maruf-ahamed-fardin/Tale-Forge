@@ -45,10 +45,36 @@
   box-sizing: border-box;
 }
 
+/* ── Smooth Theme & Color Transitions ───────────────────────────────────────── */
+html,
+body,
+header,
+nav,
+aside,
+main,
+section,
+footer,
+.story-paper,
+[class*="bg-surface"],
+[class*="bg-background"],
+[class*="border-border"] {
+  transition:
+    background-color 380ms cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 380ms cubic-bezier(0.25, 1, 0.5, 1),
+    color 280ms cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 380ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Native View Transitions cross-fade (Chromium, Edge, Chrome) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
 html {
   background: var(--tf-background);
   color: var(--tf-foreground);
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
@@ -80,6 +106,7 @@ select {
   color: #e0e7ff;
 }
 
+/* ── Story Paper Textures ─────────────────────────────────────────────────── */
 .story-paper {
   background:
     linear-gradient(90deg, rgba(79, 70, 229, 0.08) 1px, transparent 1px) 0 0 / 28px 28px,
@@ -93,4 +120,35 @@ select {
     linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px) 0 0 / 28px 28px,
     #0f131d;
   color: #f1f5f9;
+}
+
+/* ── Micro-animations for Toggle Icons & Text ─────────────────────────────── */
+@keyframes sunSpin {
+  0% {
+    transform: rotate(-90deg) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes moonPop {
+  0% {
+    transform: rotate(90deg) scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-sun {
+  animation: sunSpin 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-moon {
+  animation: moonPop 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

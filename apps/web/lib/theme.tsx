@@ -24,7 +24,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setThemeState(stored);
         applyThemeClass(stored);
       } else {
-        // Default light theme
         setThemeState("light");
         applyThemeClass("light");
       }
@@ -46,12 +45,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    applyThemeClass(newTheme);
-    try {
-      localStorage.setItem("tf_theme", newTheme);
-    } catch {
-      // Ignore storage errors
+    const updateTheme = () => {
+      setThemeState(newTheme);
+      applyThemeClass(newTheme);
+      try {
+        localStorage.setItem("tf_theme", newTheme);
+      } catch {
+        // Ignore storage errors
+      }
+    };
+
+    // Use native View Transitions API for cinematic cross-fade if supported
+    if (
+      typeof document !== "undefined" &&
+      "startViewTransition" in document &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(updateTheme);
+    } else {
+      updateTheme();
     }
   };
 

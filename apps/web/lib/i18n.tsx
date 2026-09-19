@@ -32,15 +32,29 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setLanguage = (newLang: Language) => {
-    setLanguageState(newLang);
-    try {
-      localStorage.setItem("tf_lang", newLang);
-      // Also sync document lang attribute
-      if (typeof document !== "undefined") {
-        document.documentElement.lang = newLang;
+    if (newLang === language) return;
+
+    const updateLang = () => {
+      setLanguageState(newLang);
+      try {
+        localStorage.setItem("tf_lang", newLang);
+        if (typeof document !== "undefined") {
+          document.documentElement.lang = newLang;
+        }
+      } catch {
+        // Ignore storage errors
       }
-    } catch {
-      // Ignore storage errors
+    };
+
+    // Use native View Transitions API for smooth language cross-fade if supported
+    if (
+      typeof document !== "undefined" &&
+      "startViewTransition" in document &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(updateLang);
+    } else {
+      updateLang();
     }
   };
 
