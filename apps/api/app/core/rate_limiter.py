@@ -44,6 +44,11 @@ class SlidingWindowRateLimiter:
 
             self._requests[key].append(now)
 
+    def reset(self) -> None:
+        """Clear all recorded request timestamps."""
+        self._requests.clear()
+
+
 
 # Global singleton limiter instance
 limiter = SlidingWindowRateLimiter()
