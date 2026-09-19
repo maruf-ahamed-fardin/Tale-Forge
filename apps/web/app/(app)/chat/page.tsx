@@ -279,33 +279,55 @@ export default function AIChatPage() {
 
     // Close dropdowns on outside click
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
       if (
         modelDropdownRef.current &&
-        !modelDropdownRef.current.contains(e.target as Node)
+        !modelDropdownRef.current.contains(target)
       ) {
         setShowModelDropdown(false);
       }
       if (
         personaDropdownRef.current &&
-        !personaDropdownRef.current.contains(e.target as Node)
+        !personaDropdownRef.current.contains(target)
       ) {
         setShowPersonaDropdown(false);
       }
       if (
         trainingScopeDropdownRef.current &&
-        !trainingScopeDropdownRef.current.contains(e.target as Node)
+        !trainingScopeDropdownRef.current.contains(target)
       ) {
         setShowTrainingScopeDropdown(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
   }, []);
+
+  // Mutually exclusive toggle for topbar dropdowns
+  const toggleDropdown = (
+    dropdown: "model" | "persona" | "scope",
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    if (dropdown === "model") {
+      setShowModelDropdown((prev) => !prev);
+      setShowPersonaDropdown(false);
+      setShowTrainingScopeDropdown(false);
+    } else if (dropdown === "persona") {
+      setShowPersonaDropdown((prev) => !prev);
+      setShowModelDropdown(false);
+      setShowTrainingScopeDropdown(false);
+    } else if (dropdown === "scope") {
+      setShowTrainingScopeDropdown((prev) => !prev);
+      setShowModelDropdown(false);
+      setShowPersonaDropdown(false);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -575,14 +597,14 @@ export default function AIChatPage() {
   return (
     <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
-      <header className="shrink-0 flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b border-border/70 bg-surface/60 backdrop-blur-xl">
+      <header className="shrink-0 relative z-30 flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-visible">
           {/* Model Selector Dropdown */}
           <div className="relative shrink-0" ref={modelDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowModelDropdown((prev) => !prev)}
+              onClick={(e) => toggleDropdown("model", e)}
               className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title={t("chat.modelSelector", undefined, "Change AI Model")}
             >
@@ -594,7 +616,10 @@ export default function AIChatPage() {
             </button>
 
             {showModelDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-32px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+              >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
                 </p>
@@ -647,7 +672,7 @@ export default function AIChatPage() {
           <div className="relative shrink-0" ref={personaDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowPersonaDropdown((prev) => !prev)}
+              onClick={(e) => toggleDropdown("persona", e)}
               className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title={t("chat.personaSelector", undefined, "Select Literary Style")}
             >
@@ -659,7 +684,10 @@ export default function AIChatPage() {
             </button>
 
             {showPersonaDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-32px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+              >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
                 </p>
@@ -697,7 +725,7 @@ export default function AIChatPage() {
           <div className="relative shrink-0" ref={trainingScopeDropdownRef}>
             <button
               type="button"
-              onClick={() => setShowTrainingScopeDropdown((prev) => !prev)}
+              onClick={(e) => toggleDropdown("scope", e)}
               className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title="Knowledge Scope"
             >
@@ -709,7 +737,10 @@ export default function AIChatPage() {
             </button>
 
             {showTrainingScopeDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-32px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+              >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Knowledge Scope / জ্ঞান পরিসীমা
                 </p>
