@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from pydantic import BaseModel, Field
 
 from ai.story_engine import ai_engine
+from app.core.rate_limiter import rate_limit
 from app.models.user import User
 from app.services.auth import get_current_user
 
@@ -35,7 +36,7 @@ class TrainRequest(BaseModel):
     account_id: str = Field(default="default_local_author")
 
 
-@router.post("/chat")
+@router.post("/chat", dependencies=[Depends(rate_limit(max_requests=30, window_seconds=60))])
 async def chat_and_generate(
     req: ChatRequest,
     current_user: User = Depends(get_current_user),
@@ -54,7 +55,7 @@ async def chat_and_generate(
     return res
 
 
-@router.post("/train")
+@router.post("/train", dependencies=[Depends(rate_limit(max_requests=15, window_seconds=60))])
 async def train_story(
     req: TrainRequest,
     current_user: User = Depends(get_current_user),
@@ -65,7 +66,7 @@ async def train_story(
     return res
 
 
-@router.post("/train-file")
+@router.post("/train-file", dependencies=[Depends(rate_limit(max_requests=10, window_seconds=60))])
 async def train_with_file(
     file: UploadFile = File(...),
     title: str = Form(""),

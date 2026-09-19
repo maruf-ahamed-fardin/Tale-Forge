@@ -87,3 +87,22 @@ async def test_malformed_token_rejected(client: AsyncClient) -> None:
     )
     assert res.status_code == 401
 
+
+@pytest.mark.asyncio
+async def test_rate_limiting_on_login(client: AsyncClient) -> None:
+    # 10 attempts allowed per minute; 11th must trigger 429
+    last_status = 200
+    for i in range(11):
+        res = await client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": f"brute_force_{i}@example.com",
+                "password": "WrongPassword123",
+            },
+        )
+        last_status = res.status_code
+
+    assert last_status == 429
+    assert "retry-after" in res.headers
+
+
