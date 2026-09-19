@@ -4,20 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  ArrowRight,
   BookOpen,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Clock,
   Copy,
   Download,
   Eye,
+  FileCheck,
   FileText,
+  FileUp,
   GraduationCap,
   Info,
   Lock,
   MessageSquare,
+  PenTool,
   RefreshCw,
   Search,
+  ShieldCheck,
+  Sparkles,
   Trash2,
   Upload,
   User,
@@ -36,11 +44,13 @@ import { cn } from "@/lib/utils";
 export default function SimpleTrainPage() {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<"personal" | "default">("personal");
+  const [inputMode, setInputMode] = useState<"write" | "file">("write");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [training, setTraining] = useState(false);
   const [status, setStatus] = useState<AIStatus | null>(null);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Search and view states
@@ -95,10 +105,7 @@ export default function SimpleTrainPage() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     const MAX_FILE_SIZE = 20 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       setMsg({
@@ -113,8 +120,9 @@ export default function SimpleTrainPage() {
     setMsg(null);
 
     try {
-      const res = await simpleAiApi().trainFile(file, title, currentAccountId);
+      const res = await simpleAiApi().trainFile(file, title.trim() || file.name.replace(/\.[^/.]+$/, ""), currentAccountId);
       setMsg({ type: "success", text: res.message });
+      setTitle("");
       loadStatus();
     } catch (err: unknown) {
       setMsg({
@@ -124,6 +132,31 @@ export default function SimpleTrainPage() {
     } finally {
       setTraining(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
     }
   };
 
@@ -191,24 +224,35 @@ export default function SimpleTrainPage() {
   const accountDisplay =
     currentUser?.display_name ||
     currentUser?.email ||
-    (currentAccountId !== "default_local_author" ? `Account: ${currentAccountId}` : "Local Author");
+    (currentAccountId !== "default_local_author" ? currentAccountId : "Local Author");
+
+  const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const charCount = text.length;
+  const readEstimateMin = Math.max(1, Math.ceil(wordCount / 180));
 
   return (
-    <section className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-border">
-        <div>
+    <section className="max-w-4xl mx-auto space-y-6 pb-12">
+      {/* ── 1. Modern Atmospheric Header ── */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-border/70">
+        <div className="space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-extrabold text-foreground flex items-center gap-2">
-              <GraduationCap className="h-6 w-6 text-primary" />
-              {t("train.title", undefined, "Train AI on Your Stories")}
-            </h1>
-            <Badge variant="primary" className="text-xs px-2.5 py-0.5">
-              <User className="h-3 w-3 mr-1" />
-              {accountDisplay}
-            </Badge>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold">
+              <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" />
+              {language === "bn" ? "এআই সাহিত্য ও স্টাইল প্রশিক্ষণ" : "AI Style & Vocabulary Forge"}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border/80 text-[11px] text-muted-foreground font-medium shadow-2xs">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              <span className="truncate max-w-[160px] font-mono font-semibold">{accountDisplay}</span>
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
+
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground font-display tracking-tight flex items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant">
+              <GraduationCap className="h-5 w-5" />
+            </span>
+            {t("train.title", undefined, "Train AI on Your Stories")}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
             {t(
               "train.subtitle",
               undefined,
@@ -217,298 +261,534 @@ export default function SimpleTrainPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link href="/chat" className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all">
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/chat"
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-radiant px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+          >
             <MessageSquare className="h-4 w-4" />
-            {t("nav.chat", undefined, "Go to Story Chat")}
+            <span>{t("nav.chat", undefined, "Story Chat")}</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>
 
-      {/* Overview Stats Cards */}
-      <div className="grid gap-5 sm:grid-cols-2">
-        {/* Personal Account Training Stats */}
-        <Card
-          className={cn(
-            "cursor-pointer transition-all rounded-3xl backdrop-blur-xl shadow-card-elevated",
-            activeTab === "personal"
-              ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-radiant"
-              : "border-border/80 bg-surface/85 hover:border-primary/40 hover:-translate-y-0.5"
-          )}
+      {/* ── 2. Interactive Telemetry Cards & Primary Tab Selectors ── */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Personal Account Training Card */}
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => setActiveTab("personal")}
-        >
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-2xl bg-gradient-radiant p-3.5 text-white shrink-0 shadow-radiant">
-              <User className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                  {t("train.tabPersonal", undefined, "Personal Stories")}
-                </span>
-                <span className="text-[11px] bg-primary/15 text-primary px-2.5 py-0.5 rounded-full font-bold border border-primary/20">
-                  {accountDisplay}
-                </span>
-              </div>
-              <div className="text-2xl font-black text-foreground mt-1 font-display">
-                {personalStories.length} <span className="text-sm font-normal text-muted-foreground">{t("nav.stories", undefined, "Stories")}</span>
-                <span className="text-muted-foreground mx-1.5 font-light">|</span>
-                <span className="text-xl font-bold text-foreground">
-                  {(status?.personal_words || 0).toLocaleString()}
-                </span>{" "}
-                <span className="text-xs font-normal text-muted-foreground">{t("common.words", undefined, "words")}</span>
-              </div>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">
-                {language === "bn" ? "আপনার নিজস্ব আপলোড করা গল্প ও লেখার স্টাইল" : "Your personal voice and trained vocabulary"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Default Master Literature Stats */}
-        <Card
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveTab("personal")}
           className={cn(
-            "cursor-pointer transition-all rounded-3xl backdrop-blur-xl shadow-card-elevated",
-            activeTab === "default"
-              ? "border-amber-500 bg-amber-50/25 dark:bg-amber-950/25 ring-2 ring-amber-500/30"
-              : "border-border/80 bg-surface/85 hover:border-amber-500/40 hover:-translate-y-0.5"
+            "group relative p-5 rounded-3xl border transition-all cursor-pointer backdrop-blur-xl text-left overflow-hidden",
+            activeTab === "personal"
+              ? "border-primary/80 bg-surface/90 ring-2 ring-primary/30 shadow-card-elevated"
+              : "border-border/80 bg-surface/60 hover:bg-surface/85 hover:border-primary/40 hover:-translate-y-0.5"
           )}
-          onClick={() => setActiveTab("default")}
         >
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-3.5 text-white shrink-0 shadow-sm">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  {t("train.tabDefault", undefined, "Default Curated Library")}
-                </span>
-                <span className="text-[11px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full font-medium">
-                  Core AI
-                </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all",
+                  activeTab === "personal"
+                    ? "bg-gradient-radiant text-white shadow-radiant scale-105"
+                    : "bg-surface-hover text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
+                )}
+              >
+                <User className="h-5 w-5" />
               </div>
-              <div className="text-2xl font-black text-foreground mt-0.5">
-                {defaultStories.length} <span className="text-sm font-normal text-muted-foreground">{t("nav.stories", undefined, "Stories")}</span>
-                <span className="text-muted-foreground mx-1.5 font-light">|</span>
-                <span className="text-lg font-bold text-foreground">
-                  {(status?.default_words || 0).toLocaleString()}
-                </span>{" "}
-                <span className="text-xs font-normal text-muted-foreground">{t("common.words", undefined, "words")}</span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+                    {t("train.tabPersonal", undefined, "Personal Stories")}
+                  </h2>
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Model Active" />
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate max-w-[170px] font-mono">
+                  {accountDisplay}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">
-                {language === "bn" ? "হুমায়ূন, সত্যজিৎ ও রবীন্দ্র ধারার ক্লাসিক সাহিত্যিক গল্প" : "Classic literary benchmark stories"}
-              </p>
             </div>
-          </CardContent>
-        </Card>
+
+            {activeTab === "personal" ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold border border-primary/25">
+                <Check className="h-3 w-3" /> Active
+              </span>
+            ) : (
+              <span className="text-[11px] text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-surface-hover">
+                Select
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 flex items-baseline gap-4 pt-3 border-t border-border/60">
+            <div>
+              <span className="text-2xl sm:text-3xl font-black text-foreground font-display">
+                {personalStories.length}
+              </span>
+              <span className="text-xs text-muted-foreground ml-1.5 font-semibold">
+                {language === "bn" ? "টি গল্প" : personalStories.length === 1 ? "Story" : "Stories"}
+              </span>
+            </div>
+            <span className="text-muted-foreground/40 text-lg">•</span>
+            <div>
+              <span className="text-xl sm:text-2xl font-bold text-foreground font-display">
+                {(status?.personal_words || 0).toLocaleString()}
+              </span>
+              <span className="text-xs text-muted-foreground ml-1.5">
+                {t("common.words", undefined, "words")}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
+            {language === "bn"
+              ? "আপনার নিজস্ব আপলোড করা গল্প ও লেখার স্টাইল"
+              : "Personal writing style, tone, and character voice"}
+          </p>
+        </div>
+
+        {/* Default Master Literature Stats Card */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setActiveTab("default")}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveTab("default")}
+          className={cn(
+            "group relative p-5 rounded-3xl border transition-all cursor-pointer backdrop-blur-xl text-left overflow-hidden",
+            activeTab === "default"
+              ? "border-amber-500/80 bg-surface/90 ring-2 ring-amber-500/30 shadow-card-elevated"
+              : "border-border/80 bg-surface/60 hover:bg-surface/85 hover:border-amber-500/40 hover:-translate-y-0.5"
+          )}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all",
+                  activeTab === "default"
+                    ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-sm scale-105"
+                    : "bg-surface-hover text-muted-foreground group-hover:text-amber-500 group-hover:bg-amber-500/10"
+                )}
+              >
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                    {t("train.tabDefault", undefined, "Default Curated Library")}
+                  </h2>
+                  <span className="flex h-2 w-2 rounded-full bg-amber-500" title="Core Benchmark" />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Bengali Classics Benchmark
+                </p>
+              </div>
+            </div>
+
+            {activeTab === "default" ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-amber-500/25">
+                <Check className="h-3 w-3" /> Active
+              </span>
+            ) : (
+              <span className="text-[11px] text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-surface-hover">
+                Select
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 flex items-baseline gap-4 pt-3 border-t border-border/60">
+            <div>
+              <span className="text-2xl sm:text-3xl font-black text-foreground font-display">
+                {defaultStories.length}
+              </span>
+              <span className="text-xs text-muted-foreground ml-1.5 font-semibold">
+                {language === "bn" ? "টি মাস্টারপিস" : "Master Stories"}
+              </span>
+            </div>
+            <span className="text-muted-foreground/40 text-lg">•</span>
+            <div>
+              <span className="text-xl sm:text-2xl font-bold text-foreground font-display">
+                {(status?.default_words || 0).toLocaleString()}
+              </span>
+              <span className="text-xs text-muted-foreground ml-1.5">
+                {t("common.words", undefined, "words")}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
+            {language === "bn"
+              ? "হুমায়ূন, সত্যজিৎ ও রবীন্দ্র ধারার ক্লাসিক সাহিত্যিক গল্প"
+              : "Foundational prose cadence, dialogue, and Bengali vocabulary"}
+          </p>
+        </div>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className="flex items-center gap-2 p-1 bg-surface-hover/80 rounded-xl border border-border">
+      {/* ── 3. Sleek Segmented Pill Switcher ── */}
+      <div className="flex items-center p-1.5 bg-surface/80 backdrop-blur-xl rounded-2xl border border-border/80 shadow-xs">
         <button
+          type="button"
           onClick={() => setActiveTab("personal")}
           className={cn(
-            "flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2",
+            "flex-1 py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2",
             activeTab === "personal"
-              ? "bg-surface text-primary shadow-xs border border-border"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-primary text-white shadow-radiant"
+              : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/60"
           )}
         >
           <User className="h-4 w-4 shrink-0" />
           <span>{t("train.tabPersonal", undefined, "Personal Stories")}</span>
-          {personalStories.length > 0 && (
-            <span className="bg-primary/10 text-primary text-[11px] px-1.5 py-0.2 rounded-full font-medium">
-              {personalStories.length}
-            </span>
-          )}
+          <span
+            className={cn(
+              "text-[11px] px-2 py-0.2 rounded-full font-bold",
+              activeTab === "personal" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+            )}
+          >
+            {personalStories.length}
+          </span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("default")}
           className={cn(
-            "flex-1 py-2.5 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2",
+            "flex-1 py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2",
             activeTab === "default"
-              ? "bg-surface text-amber-600 dark:text-amber-400 shadow-xs border border-border"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+              : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/60"
           )}
         >
           <BookOpen className="h-4 w-4 shrink-0" />
           <span>{t("train.tabDefault", undefined, "Default Curated Library")}</span>
-          <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] px-1.5 py-0.2 rounded-full font-medium">
+          <span
+            className={cn(
+              "text-[11px] px-2 py-0.2 rounded-full font-bold",
+              activeTab === "default" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+            )}
+          >
             {defaultStories.length}
           </span>
         </button>
       </div>
 
-      {/* TAB 1: PERSONAL AI TRAINING */}
+      {/* ── TAB 1: PERSONAL AI TRAINING ── */}
       {activeTab === "personal" && (
         <div className="space-y-6">
-          {/* Account Isolation Notice */}
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
-            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div className="text-xs text-foreground/90 leading-relaxed">
-              <strong className="font-semibold text-primary block text-sm mb-0.5">
-                {language === "bn"
-                  ? "শুধুমাত্র আপনার এই অ্যাকাউন্টের জন্য ব্যক্তিগত প্রশিক্ষণ"
-                  : "Private Training for Your Account"}
-              </strong>
-              {language === "bn"
-                ? `এখানে আপনি যে লেখা বা ফাইল দেবেন, তা সম্পূর্ণ সুরক্ষিতভাবে কেবল আপনার এই অ্যাকাউন্টে (${accountDisplay}) AI মডেলকে শেখাবে।`
-                : `Stories and files uploaded here are isolated to your workspace account (${accountDisplay}) and will not be exposed to other users.`}
+          {/* Account Isolation & Privacy Glass Banner */}
+          <div className="rounded-2xl border border-border/80 bg-surface/70 backdrop-blur-xl p-4 sm:p-4.5 flex items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-primary border border-primary/20 shadow-2xs">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground">
+                    {language === "bn"
+                      ? "নিরাপদ ও ব্যক্তিগত অ্যাকাউন্ট আইসোলেশন"
+                      : "Private Account Model Isolation"}
+                  </h3>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    Encrypted
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  {language === "bn"
+                    ? `আপনার আপলোড করা লেখা কেবল আপনার এই অ্যাকাউন্টে (${accountDisplay}) সীমাবদ্ধ এবং সম্পূর্ণ ব্যক্তিগত।`
+                    : `Training data is strictly isolated to your author workspace (${accountDisplay}) and never exposed to other users.`}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Training Input Form */}
-          <Card className="border-border bg-surface">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                {t("train.manualTitle", undefined, "Manual Story Entry & File Upload")}
-              </CardTitle>
-              <CardDescription>
-                {t(
-                  "train.manualSubtitle",
-                  undefined,
-                  "Paste a story directly or upload .docx, .pdf, or .txt documents to train the model."
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleTrain} className="space-y-4">
+          {/* Training Studio Input Card */}
+          <Card className="border-border/80 bg-surface/90 backdrop-blur-xl shadow-card-elevated rounded-3xl overflow-hidden">
+            <CardHeader className="pb-3 border-b border-border/60">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">
-                    {t("train.storyTitleLabel", undefined, "Story Title")}
-                  </label>
-                  <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={t(
-                      "train.storyTitlePlaceholder",
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2 font-display">
+                    <Zap className="h-5 w-5 text-primary" />
+                    {t("train.manualTitle", undefined, "Ingest New Story into AI Memory")}
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm mt-0.5">
+                    {t(
+                      "train.manualSubtitle",
                       undefined,
-                      "e.g., A Forgotten Afternoon in Rajshahi"
+                      "Paste a story directly or drop document files (.txt, .pdf, .docx) to fine-tune the model."
                     )}
-                    className="mt-1.5"
-                  />
+                  </CardDescription>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase">
-                      {t("train.storyContentLabel", undefined, "Story Content")}
-                    </label>
-                    <div className="text-xs text-muted-foreground">
-                      {text.trim()
-                        ? `${text.trim().split(/\s+/).length} ${t("common.words", undefined, "words")}`
-                        : `0 ${t("common.words", undefined, "words")}`}
-                    </div>
-                  </div>
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder={t(
-                      "train.storyContentPlaceholder",
-                      undefined,
-                      "Paste your story text here in Bangla or English..."
-                    )}
-                    className="mt-1.5 min-h-[160px] w-full rounded-lg border border-border bg-surface p-4 text-sm font-serif leading-relaxed text-foreground outline-none focus:border-primary"
-                    required
-                  />
-                </div>
-
-                {msg && (
-                  <div
+                {/* Input Mode Toggle: Write vs File */}
+                <div className="flex items-center p-1 rounded-xl bg-surface-hover/80 border border-border text-xs font-semibold self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setInputMode("write")}
                     className={cn(
-                      "flex items-center gap-2 rounded-lg p-3 text-sm border",
-                      msg.type === "success"
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                        : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900"
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all",
+                      inputMode === "write"
+                        ? "bg-surface text-primary shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {msg.type === "success" ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                    <PenTool className="h-3.5 w-3.5" />
+                    <span>{language === "bn" ? "লিখুন বা পেস্ট করুন" : "Write / Paste"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInputMode("file")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all",
+                      inputMode === "file"
+                        ? "bg-surface text-primary shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
-                    <span>{msg.text}</span>
-                  </div>
-                )}
+                  >
+                    <FileUp className="h-3.5 w-3.5" />
+                    <span>{language === "bn" ? "ডকুমেন্ট ফাইল" : "Upload File"}</span>
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-border">
-                  <div className="flex flex-col gap-1">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".txt,.pdf,.docx,.doc"
-                      className="hidden"
-                      onChange={handleFileUpload}
+            <CardContent className="pt-5 space-y-4">
+              {/* Optional Story Title */}
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t("train.storyTitleLabel", undefined, "Story Title")}
+                </label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t(
+                    "train.storyTitlePlaceholder",
+                    undefined,
+                    "e.g., A Forgotten Afternoon in Rajshahi / একটি বৃষ্টির অলস দুপুর"
+                  )}
+                  className="mt-1.5 rounded-xl border-border/80 bg-surface/70 focus:border-primary text-sm h-10"
+                />
+              </div>
+
+              {/* Mode A: Write or Paste */}
+              {inputMode === "write" ? (
+                <form onSubmit={handleTrain} className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        {t("train.storyContentLabel", undefined, "Story Content")}
+                      </label>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{wordCount.toLocaleString()}</span> {t("common.words", undefined, "words")}
+                        <span>•</span>
+                        <span>{charCount.toLocaleString()} {t("common.characters", undefined, "chars")}</span>
+                        {wordCount > 50 && (
+                          <>
+                            <span>•</span>
+                            <span className="inline-flex items-center gap-1 text-primary">
+                              <Clock className="h-3 w-3" />
+                              {readEstimateMin} min read
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder={t(
+                        "train.storyContentPlaceholder",
+                        undefined,
+                        "Paste your story text here in Bangla or English (dialogues, descriptions, narrative rhythm)..."
+                      )}
+                      className="w-full min-h-[180px] rounded-2xl border border-border/80 bg-surface/60 p-4 text-sm sm:text-base font-serif leading-relaxed text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-y shadow-2xs"
+                      required
                     />
+                  </div>
+
+                  {/* Feedback Message */}
+                  {msg && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 rounded-2xl p-3.5 text-xs sm:text-sm border animate-in fade-in-50",
+                        msg.type === "success"
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                          : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900"
+                      )}
+                    >
+                      {msg.type === "success" ? (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                      )}
+                      <span className="font-medium">{msg.text}</span>
+                    </div>
+                  )}
+
+                  {/* Action Bar */}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-border/60">
+                    <button
+                      type="button"
+                      onClick={() => setInputMode("file")}
+                      className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-primary" />
+                      <span>{language === "bn" ? "ফাইল হিসেবে আপলোড করতে চান? এখানে ক্লিক করুন" : "Prefer uploading a file document (.docx, .pdf, .txt)?"}</span>
+                    </button>
+
+                    <Button
+                      type="submit"
+                      disabled={training || !text.trim()}
+                      className="rounded-2xl bg-gradient-radiant px-6 py-2.5 font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all self-end sm:self-auto border-0"
+                    >
+                      {training ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          {t("train.trainingProgress", undefined, "Training in progress...")}
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-4 w-4 mr-2" />
+                          {t("train.trainButton", undefined, "Train AI on this Story")}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                /* Mode B: Modern File Dropzone */
+                <div className="space-y-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".txt,.pdf,.docx,.doc"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "border-2 border-dashed rounded-3xl p-8 sm:p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-3",
+                      isDragging
+                        ? "border-primary bg-primary/10 ring-4 ring-primary/20 scale-[1.01]"
+                        : "border-border/80 bg-surface/50 hover:border-primary/50 hover:bg-surface-hover/50"
+                    )}
+                  >
+                    <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-sm">
+                      <FileUp className={cn("h-7 w-7 transition-transform", isDragging && "scale-110 animate-bounce")} />
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm sm:text-base font-bold text-foreground">
+                        {language === "bn"
+                          ? "ফাইলটি এখানে টেনে এনে ছাড়ুন অথবা নির্বাচন করুন"
+                          : "Drag & drop manuscript document here, or browse"}
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t("train.supportedFormats", undefined, "Supports TXT, PDF, DOCX, DOC (up to 20MB)")}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                        .TXT
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                        .PDF
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                        .DOCX
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                        .DOC
+                      </span>
+                    </div>
+
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => fileInputRef.current?.click()}
                       disabled={training}
-                      className="border-primary/40 hover:bg-primary/5"
+                      className="mt-2 rounded-xl border-primary/40 text-primary hover:bg-primary/10"
                     >
-                      <Upload className="h-4 w-4 mr-1.5 text-primary" />
-                      {t("train.uploadTitle", undefined, "Upload Document (.txt, .pdf, .docx)")}
+                      {training ? (
+                        <>
+                          <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                          Processing File...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-3.5 w-3.5 mr-1.5" />
+                          Browse Files
+                        </>
+                      )}
                     </Button>
-                    <span className="text-[11px] text-muted-foreground">
-                      {t("train.supportedFormats", undefined, "Supports TXT, PDF, DOCX (up to 25MB)")}
-                    </span>
                   </div>
 
-                  <Button type="submit" disabled={training || !text.trim()}>
-                    {training ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" />
-                        {t("train.trainingProgress", undefined, "Training in progress...")}
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="h-4 w-4 mr-1.5" />
-                        {t("train.trainButton", undefined, "Train AI on this Story")}
-                      </>
-                    )}
-                  </Button>
+                  {/* Feedback Message */}
+                  {msg && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 rounded-2xl p-3.5 text-xs sm:text-sm border animate-in fade-in-50",
+                        msg.type === "success"
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                          : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900"
+                      )}
+                    >
+                      {msg.type === "success" ? (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                      )}
+                      <span className="font-medium">{msg.text}</span>
+                    </div>
+                  )}
                 </div>
-              </form>
+              )}
             </CardContent>
           </Card>
 
-          {/* Personal Trained Stories List */}
-          <Card className="border-border bg-surface">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3">
+          {/* Personal Trained Stories Showcase List */}
+          <Card className="border-border/80 bg-surface/90 backdrop-blur-xl shadow-card-elevated rounded-3xl overflow-hidden">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border/60">
               <div>
-                <CardTitle className="text-base flex items-center gap-2">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2 font-display">
                   <User className="h-4 w-4 text-primary" />
                   {t("train.trainedStoriesList", undefined, "Your Trained Stories")}
                 </CardTitle>
-                <CardDescription className="mt-0.5">
+                <CardDescription className="mt-0.5 text-xs">
                   {personalStories.length > 0
-                    ? `${personalStories.length} ${t("nav.stories", undefined, "stories saved")}`
+                    ? `${personalStories.length} ${language === "bn" ? "টি গল্প এআই মেমোরিতে সক্রিয়" : "stories active in your AI memory"}`
                     : t("train.noPersonalStories", undefined, "No personal stories trained yet.")}
                 </CardDescription>
               </div>
 
               {personalStories.length > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  {(status?.personal_words || 0).toLocaleString()} {t("common.words", undefined, "words learned")}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground px-2.5 py-1 rounded-xl bg-surface-hover border border-border/70">
+                    {(status?.personal_words || 0).toLocaleString()} {t("common.words", undefined, "words learned")}
+                  </span>
                 </div>
               )}
             </CardHeader>
 
-            <CardContent className="space-y-4 pt-1">
+            <CardContent className="space-y-4 pt-4">
               {personalStories.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border p-8 text-center bg-surface-hover/50">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
+                <div className="rounded-3xl border border-dashed border-border/80 p-8 sm:p-10 text-center bg-surface/40">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 shadow-xs">
                     <User className="h-6 w-6" />
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground">
                     {t("train.noPersonalStories", undefined, "No personal stories yet")}
                   </h3>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
                     {t(
                       "train.manualSubtitle",
                       undefined,
@@ -520,17 +800,17 @@ export default function SimpleTrainPage() {
                 <>
                   {personalStories.length > 2 && (
                     <div className="relative">
-                      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        className="pl-8 h-9 text-xs"
-                        placeholder={t("stories.searchPlaceholder", undefined, "Search trained stories...")}
+                        className="pl-9 h-10 text-xs rounded-xl border-border/80 bg-surface/70"
+                        placeholder={t("stories.searchPlaceholder", undefined, "Search trained stories by title or content...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
                   )}
 
-                  <div className="divide-y divide-border border border-border rounded-lg overflow-hidden bg-surface">
+                  <div className="space-y-2.5">
                     {filteredStories.map((story) => {
                       const isExpanded = expandedStoryId === story.id;
                       const isConfirming = confirmDeleteId === story.id;
@@ -545,27 +825,32 @@ export default function SimpleTrainPage() {
                         : "";
 
                       return (
-                        <div key={story.id} className="p-3.5 transition-colors hover:bg-surface-hover/50">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div
+                          key={story.id}
+                          className="p-4 rounded-2xl border border-border/80 bg-surface/75 hover:bg-surface hover:border-primary/40 transition-all shadow-2xs"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             {/* Title & Info */}
                             <div
-                              className="flex items-start gap-2.5 cursor-pointer flex-1 min-w-0"
+                              className="flex items-start gap-3 cursor-pointer flex-1 min-w-0"
                               onClick={() => setExpandedStoryId(isExpanded ? null : story.id)}
                             >
-                              <div className="rounded-md bg-primary/10 p-1.5 text-primary mt-0.5 shrink-0">
+                              <div className="rounded-xl bg-primary/10 p-2 text-primary mt-0.5 shrink-0 shadow-2xs">
                                 <FileText className="h-4 w-4" />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-semibold text-sm text-foreground truncate">
+                                  <span className="font-bold text-sm text-foreground truncate">
                                     {story.title}
                                   </span>
-                                  <Badge variant="primary" className="text-[10px] px-1.5 py-0">
-                                    {t("train.tabPersonal", undefined, "Personal")}
+                                  <Badge variant="primary" className="text-[10px] px-2 py-0.2 rounded-md">
+                                    Personal
                                   </Badge>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                  <span>{story.word_count.toLocaleString()} {t("common.words", undefined, "words")}</span>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                  <span className="font-semibold text-foreground/80">
+                                    {story.word_count.toLocaleString()} {t("common.words", undefined, "words")}
+                                  </span>
                                   {trainedDate && (
                                     <>
                                       <span>•</span>
@@ -581,7 +866,7 @@ export default function SimpleTrainPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 text-xs font-medium text-muted-foreground hover:text-foreground"
+                                className="h-8 text-xs font-semibold text-muted-foreground hover:text-foreground rounded-xl"
                                 onClick={() => setExpandedStoryId(isExpanded ? null : story.id)}
                               >
                                 {isExpanded ? (
@@ -592,7 +877,7 @@ export default function SimpleTrainPage() {
                                 ) : (
                                   <>
                                     <ChevronDown className="h-3.5 w-3.5 mr-1" />
-                                    {t("train.readStory", undefined, "Read")}
+                                    {t("train.readStory", undefined, "Preview")}
                                   </>
                                 )}
                               </Button>
@@ -600,7 +885,17 @@ export default function SimpleTrainPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 text-xs font-medium"
+                                className="h-8 w-8 p-0 rounded-xl"
+                                onClick={() => setModalStory(story)}
+                                title="Full screen reader"
+                              >
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-xl"
                                 onClick={() => handleCopy(story.id, story.text)}
                                 title={t("common.copy", undefined, "Copy")}
                               >
@@ -614,7 +909,7 @@ export default function SimpleTrainPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 text-xs font-medium"
+                                className="h-8 w-8 p-0 rounded-xl"
                                 onClick={() => handleDownload(story)}
                                 title={t("common.download", undefined, "Download")}
                               >
@@ -625,9 +920,9 @@ export default function SimpleTrainPage() {
                                 variant="ghost"
                                 size="sm"
                                 className={cn(
-                                  "h-8 text-xs font-medium transition-colors",
+                                  "h-8 px-2 text-xs font-semibold rounded-xl transition-colors",
                                   isConfirming
-                                    ? "bg-red-50 dark:bg-red-950/40 text-red-600 border border-red-200 dark:border-red-900 hover:bg-red-100"
+                                    ? "bg-red-500/10 text-red-600 border border-red-500/30 hover:bg-red-500/20"
                                     : "text-muted-foreground hover:text-red-600"
                                 )}
                                 onClick={() => handleDeleteStory(story.id)}
@@ -637,7 +932,9 @@ export default function SimpleTrainPage() {
                                 {isDeleting ? (
                                   <RefreshCw className="h-3.5 w-3.5 animate-spin text-red-600" />
                                 ) : isConfirming ? (
-                                  <span className="text-[11px] font-bold">{t("common.confirm", undefined, "Confirm?")}</span>
+                                  <span className="text-[11px] font-bold text-red-600">
+                                    {t("common.confirm", undefined, "Confirm?")}
+                                  </span>
                                 ) : (
                                   <Trash2 className="h-3.5 w-3.5" />
                                 )}
@@ -647,8 +944,8 @@ export default function SimpleTrainPage() {
 
                           {/* Expanded Text Preview */}
                           {isExpanded && (
-                            <div className="mt-3 pt-3 border-t border-border">
-                              <div className="max-h-60 overflow-y-auto rounded bg-surface-hover/60 p-3.5 text-xs font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text">
+                            <div className="mt-3 pt-3 border-t border-border/70 animate-in fade-in-50">
+                              <div className="max-h-64 overflow-y-auto rounded-xl bg-surface-hover/70 p-4 text-xs sm:text-sm font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text border border-border/60">
                                 {story.text || "(No content)"}
                               </div>
                             </div>
@@ -664,80 +961,85 @@ export default function SimpleTrainPage() {
         </div>
       )}
 
-      {/* TAB 2: DEFAULT AI MASTER STORIES */}
+      {/* ── TAB 2: DEFAULT AI MASTER STORIES ── */}
       {activeTab === "default" && (
         <div className="space-y-6">
           {/* Default Collection Banner */}
-          <div className="rounded-xl border border-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20 p-4 flex items-start gap-3">
-            <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-foreground/90 leading-relaxed">
-              <strong className="font-semibold text-amber-700 dark:text-amber-300 block text-sm mb-0.5">
-                {t("train.defaultStoriesList", undefined, "Pre-trained Classic Bengali Stories")}
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 backdrop-blur-xl p-4 sm:p-5 flex items-start gap-3 shadow-xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed">
+              <strong className="font-bold text-amber-700 dark:text-amber-300 block mb-0.5">
+                {t("train.defaultStoriesList", undefined, "Pre-trained Classic Bengali Masterpieces")}
               </strong>
               {language === "bn"
-                ? "আমাদের AI মডেল ইতিমধ্যে নিচে দেওয়া সাহিত্যধর্মী মাস্টারপিস গল্প দিয়ে উচ্চপর্যায়ে প্রশিক্ষিত। এটি ব্যাকরণ, সাহিত্যরস, উপমা ও ডায়ালগের জন্য মূল ভিত্তি।"
-                : "The core AI engine comes pre-trained with these classic literary masterpieces, setting the foundation for storytelling style, prose cadence, and vocabulary."}
+                ? "আমাদের AI ইঞ্জিন নিচে উল্লেখিত অমর সাহিত্যিক গল্পসমূহ দ্বারা উচ্চপর্যায়ে প্রশিক্ষিত। এটি নিখুঁত ব্যাকরণ, সাহিত্যরস, উপমা ও চরিত্র নির্মাণের ভিত্তি।"
+                : "The core AI engine comes pre-trained with these classic literary masterpieces, setting the benchmark for storytelling cadence, metaphor richness, and Bengali prose."}
             </div>
           </div>
 
           {/* Search default stories */}
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="pl-8 h-9 text-xs"
-              placeholder={t("stories.searchPlaceholder", undefined, "Search default stories...")}
+              className="pl-9 h-10 text-xs rounded-xl border-border/80 bg-surface/70"
+              placeholder={t("stories.searchPlaceholder", undefined, "Search classic stories by title, author, or genre...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          {/* Stories Grid */}
+          {/* Master Stories Grid */}
           <div className="grid gap-4 sm:grid-cols-2">
             {filteredStories.map((story) => {
               return (
-                <Card key={story.id} className="border-border hover:border-amber-500/40 transition-all bg-surface flex flex-col justify-between">
+                <Card
+                  key={story.id}
+                  className="border-border/80 hover:border-amber-500/50 transition-all bg-surface/85 backdrop-blur-xl rounded-3xl flex flex-col justify-between shadow-card-elevated group"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {story.genre && (
-                          <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 text-[10px] px-2 py-0 font-medium">
+                          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] px-2 py-0.5 font-bold border border-amber-500/25 rounded-md">
                             {story.genre}
                           </Badge>
                         )}
-                        <Badge variant="neutral" className="text-[10px] text-muted-foreground">
+                        <Badge variant="neutral" className="text-[10px] text-muted-foreground rounded-md">
                           <Lock className="h-2.5 w-2.5 mr-1" />
-                          Core
+                          Core Model
                         </Badge>
                       </div>
-                      <span className="text-[11px] text-muted-foreground font-medium shrink-0">
-                        {story.word_count} {t("common.words", undefined, "words")}
+                      <span className="text-[11px] text-muted-foreground font-semibold shrink-0">
+                        {story.word_count.toLocaleString()} {t("common.words", undefined, "words")}
                       </span>
                     </div>
 
-                    <CardTitle className="text-base mt-2 font-bold text-foreground">
+                    <CardTitle className="text-base mt-2.5 font-bold text-foreground font-display group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                       {story.title}
                     </CardTitle>
 
                     {story.author_style && (
-                      <CardDescription className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      <CardDescription className="text-xs text-muted-foreground mt-1 line-clamp-1">
                         {story.author_style}
                       </CardDescription>
                     )}
                   </CardHeader>
 
                   <CardContent className="pt-0 space-y-3">
-                    <div className="text-xs font-serif text-muted-foreground line-clamp-4 bg-surface-hover/60 p-2.5 rounded-lg leading-relaxed">
-                      {story.text}
+                    <div className="text-xs font-serif text-muted-foreground line-clamp-4 bg-surface-hover/70 p-3.5 rounded-2xl leading-relaxed border border-border/50">
+                      &ldquo;{story.text}&rdquo;
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-border/70">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs font-medium border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                        className="h-8 text-xs font-semibold rounded-xl border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
                         onClick={() => setModalStory(story)}
                       >
-                        <Eye className="h-3.5 w-3.5 mr-1 text-amber-600 dark:text-amber-400" />
+                        <Eye className="h-3.5 w-3.5 mr-1.5 text-amber-600 dark:text-amber-400" />
                         {t("train.readStory", undefined, "Read Full Story")}
                       </Button>
 
@@ -745,7 +1047,7 @@ export default function SimpleTrainPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 text-xs font-medium"
+                          className="h-8 w-8 p-0 rounded-xl"
                           onClick={() => handleCopy(story.id, story.text)}
                           title={t("common.copy", undefined, "Copy")}
                         >
@@ -759,7 +1061,7 @@ export default function SimpleTrainPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 text-xs font-medium"
+                          className="h-8 w-8 p-0 rounded-xl"
                           onClick={() => handleDownload(story)}
                           title={t("common.download", undefined, "Download")}
                         >
@@ -775,54 +1077,55 @@ export default function SimpleTrainPage() {
         </div>
       )}
 
-      {/* Full Story Modal */}
+      {/* ── 4. Elegant Full-Screen Reading Modal ── */}
       {modalStory && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in-50"
           onClick={() => setModalStory(null)}
         >
           <div
-            className="bg-surface rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-border overflow-hidden"
+            className="bg-surface rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-border/80 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 border-b border-border flex items-center justify-between bg-surface-hover/40">
+            <div className="p-5 border-b border-border/70 flex items-center justify-between bg-surface-hover/40">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   {modalStory.genre && (
-                    <Badge className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-[10px] px-2 py-0">
+                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-md font-bold">
                       {modalStory.genre}
                     </Badge>
                   )}
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {modalStory.word_count} {t("common.words", undefined, "words")}
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    {modalStory.word_count.toLocaleString()} {t("common.words", undefined, "words")}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-foreground">{modalStory.title}</h3>
+                <h3 className="text-lg font-bold text-foreground font-display">{modalStory.title}</h3>
               </div>
 
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 rounded-full"
+                className="h-8 w-8 p-0 rounded-full text-muted-foreground hover:text-foreground"
                 onClick={() => setModalStory(null)}
               >
                 ✕
               </Button>
             </div>
 
-            <div className="p-6 overflow-y-auto text-sm font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text space-y-4 story-paper">
+            <div className="p-6 overflow-y-auto text-sm sm:text-base font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text space-y-4 story-paper">
               {modalStory.text}
             </div>
 
-            <div className="p-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-surface-hover/30">
+            <div className="p-4 border-t border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-surface-hover/30">
               <span className="text-xs text-muted-foreground truncate">
-                TaleForge Master Stories Collection
+                TaleForge Literary Repository
               </span>
 
               <div className="flex items-center gap-2 self-end sm:self-auto">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="rounded-xl"
                   onClick={() => handleCopy(modalStory.id, modalStory.text)}
                 >
                   <Copy className="h-3.5 w-3.5 mr-1.5" />
@@ -832,6 +1135,7 @@ export default function SimpleTrainPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="rounded-xl"
                   onClick={() => handleDownload(modalStory)}
                 >
                   <Download className="h-3.5 w-3.5 mr-1.5" />
