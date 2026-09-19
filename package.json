@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "Personal AI storytelling platform for Bangla style adaptation.",
-  "packageManager": "npm@11.6.2",
   "workspaces": [
     "apps/web"
   ],
