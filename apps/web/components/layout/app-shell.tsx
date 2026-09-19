@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from "lucide-react";
 
 import { SidebarNav } from "@/components/navigation/sidebar-nav";
@@ -14,6 +15,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useLanguage();
+  const pathname = usePathname();
+  const isChat = pathname === "/chat" || pathname === "/" || pathname?.startsWith("/chat");
 
   useEffect(() => {
     try {
@@ -39,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground lg:flex relative overflow-hidden">
+    <div className="h-screen h-[100dvh] max-h-screen max-h-[100dvh] w-full overflow-hidden bg-background text-foreground flex relative">
       {/* Ambient Glow Lights for rich atmospheric feel */}
       <div className="ambient-glow-mesh pointer-events-none" />
       <div className="ambient-glow-mesh-2 pointer-events-none" />
@@ -47,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Permanent Desktop Sticky Sidebar - Collapsible with smooth transition */}
       <aside
         className={cn(
-          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block lg:sticky lg:top-0 lg:h-screen z-20 transition-all duration-300 ease-in-out relative group/sidebar",
+          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block h-full max-h-full z-20 transition-all duration-300 ease-in-out relative group/sidebar",
           collapsed ? "w-[72px]" : "w-[270px]"
         )}
       >
@@ -71,9 +74,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </button>
       </aside>
 
-      <div className="min-w-0 flex-1 flex flex-col min-h-screen relative z-10">
+      <div className="min-w-0 flex-1 flex flex-col h-full max-h-full overflow-hidden relative z-10">
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/70 bg-surface/80 px-4 backdrop-blur-xl lg:hidden">
+        <header className="shrink-0 z-30 flex h-16 items-center justify-between border-b border-border/70 bg-surface/80 px-4 backdrop-blur-xl lg:hidden">
           <Link href="/" className="flex items-center gap-2.5">
             <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
               <img
@@ -128,8 +131,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {/* Sticky Desktop Header */}
-        <header className="sticky top-0 z-10 hidden h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-6 backdrop-blur-xl lg:flex">
+        {/* Desktop Header */}
+        <header className="shrink-0 z-10 hidden h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-6 backdrop-blur-xl lg:flex">
           <div className="flex items-center gap-4">
 
             {/* Quick Spotlight Search Bar */}
@@ -168,8 +171,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Scrollable Main Content Area */}
-        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        {/* Workspace Main Content Area */}
+        <main
+          className={cn(
+            "flex-1 min-h-0 min-w-0 flex flex-col",
+            isChat
+              ? "overflow-hidden p-0"
+              : "overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

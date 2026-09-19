@@ -573,7 +573,7 @@ export default function AIChatPage() {
   const ScopeIcon = currentScopeInfo.icon;
 
   return (
-    <div className="relative flex flex-col h-[calc(100dvh-100px)] sm:h-[calc(100vh-115px)] w-full max-w-4xl mx-auto overflow-hidden">
+    <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
       <header className="shrink-0 flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b border-border/70 bg-surface/60 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
@@ -807,7 +807,7 @@ export default function AIChatPage() {
       )}
 
       {/* ─── Center Body: Either Empty Hero State or Conversation Stream ─── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 sm:py-6 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:py-6 space-y-4">
         {messages.length === 0 ? (
           /* ─── Clean, Focused Welcome State ─── */
           <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto my-auto py-6 sm:py-10">
@@ -1089,7 +1089,7 @@ export default function AIChatPage() {
       </div>
 
       {/* ─── Bottom Floating Capsule Input ─── */}
-      <div className="shrink-0 pb-4 pt-2 px-3 sm:px-4">
+      <div className="shrink-0 pb-3 pt-2 px-3 sm:px-4 sm:pb-4">
         <div className="max-w-3xl mx-auto">
           {/* Image Attachment Preview Badge */}
           {attachedImage && (
@@ -1128,7 +1128,7 @@ export default function AIChatPage() {
                     : "Add notes about this image (or click Send)..."
                   : t("chat.inputPlaceholder", undefined, "Describe your story premise (Bangla or English)...")
               }
-              className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 pb-2 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
+              className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 pb-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
               disabled={loading}
             />
 
