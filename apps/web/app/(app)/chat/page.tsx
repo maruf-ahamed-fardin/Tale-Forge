@@ -574,226 +574,222 @@ export default function AIChatPage() {
 
   return (
     <div className="relative flex flex-col h-[calc(100dvh-125px)] sm:h-[calc(100vh-135px)] w-full max-w-5xl mx-auto overflow-hidden">
-      {/* ─── Top Bar / Header: Model Selector & Actions ─── */}
-      <header className="shrink-0 flex items-center justify-between pb-3 px-2 border-b border-border">
-        <div className="flex items-center gap-2">
-          {/* Model Selector Dropdown */}
-          <div className="relative" ref={modelDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setShowModelDropdown((prev) => !prev)}
-              className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-bold text-foreground bg-surface border border-border shadow-xs hover:bg-surface-hover transition"
-              title={t("chat.modelSelector", undefined, "Change AI Model")}
-            >
-              <ModelIcon className={`h-4 w-4 ${currentModelInfo.color}`} />
-              <span className="truncate max-w-[130px] sm:max-w-[200px]">
-                {currentModelInfo.name}
-              </span>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-
-            {showModelDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
-                </p>
-                <div className="space-y-1">
-                  {availableModels.map((m) => {
-                    const Icon = m.icon;
-                    const isSelected = m.id === selectedModel;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => handleSelectModel(m.id)}
-                        className={cn(
-                          "w-full flex items-start gap-3 rounded-xl p-2.5 text-left transition",
-                          isSelected
-                            ? "bg-primary/10 text-primary"
-                            : "hover:bg-surface-hover text-foreground"
-                        )}
-                      >
-                        <div className={`p-1.5 rounded-lg bg-surface shadow-xs mt-0.5 ${m.color}`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-xs font-bold truncate">{m.name}</span>
-                            <span
-                              className={cn(
-                                "text-[10px] font-semibold px-1.5 py-0.2 rounded-full",
-                                isSelected
-                                  ? "bg-primary text-white"
-                                  : "bg-surface-hover text-muted-foreground"
-                              )}
-                            >
-                              {m.badge}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
-                            {m.desc}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Persona / Style Selector Dropdown */}
-          <div className="relative" ref={personaDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setShowPersonaDropdown((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border hover:bg-surface-hover transition"
-              title={t("chat.personaSelector", undefined, "Select Literary Style")}
-            >
-              <span>{currentPersonaInfo.emoji}</span>
-              <span className="hidden md:inline truncate max-w-[140px]">
-                {currentPersonaInfo.name.split(" ")[0]}
-              </span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </button>
-
-            {showPersonaDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
-                </p>
-                <div className="space-y-1">
-                  {availablePersonas.map((p) => {
-                    const isSelected = p.id === selectedPersona;
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => handleSelectPersona(p.id)}
-                        className={cn(
-                          "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
-                          isSelected
-                            ? "bg-primary/10 text-primary"
-                            : "hover:bg-surface-hover text-foreground"
-                        )}
-                      >
-                        <span className="text-base">{p.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold leading-snug">{p.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
-                            {p.desc}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Training Scope Selector Dropdown */}
-          <div className="relative" ref={trainingScopeDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setShowTrainingScopeDropdown((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border hover:bg-surface-hover transition"
-              title="Knowledge Scope"
-            >
-              <ScopeIcon className={`h-3.5 w-3.5 ${currentScopeInfo.color}`} />
-              <span className="hidden md:inline truncate max-w-[130px]">
-                {currentScopeInfo.shortName}
-              </span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </button>
-
-            {showTrainingScopeDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Knowledge Scope / জ্ঞান পরিসীমা
-                </p>
-                <div className="space-y-1">
-                  {availableScopes.map((s) => {
-                    const SIcon = s.icon;
-                    const isSelected = s.id === selectedTrainingScope;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => handleSelectTrainingScope(s.id)}
-                        className={cn(
-                          "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
-                          isSelected
-                            ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 font-medium"
-                            : "hover:bg-surface-hover text-foreground"
-                        )}
-                      >
-                        <div className={`p-1 rounded-lg bg-surface shadow-2xs mt-0.5 ${s.color}`}>
-                          <SIcon className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <p className="text-xs font-bold leading-snug">{s.name}</p>
-                            <span
-                              className={cn(
-                                "text-[9px] font-semibold px-1.5 py-0.2 rounded-full",
-                                isSelected
-                                  ? "bg-amber-600 text-white"
-                                  : "bg-surface-hover text-muted-foreground"
-                              )}
-                            >
-                              {s.badge}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
-                            {s.desc}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Header: New Chat & Library Links */}
-        <div className="flex items-center gap-2">
-          {aiStatus && (
-            <Link
-              href="/train"
-              className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition"
-              title={t("nav.goToTraining", undefined, "View personal and default training stories")}
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>
-                {aiStatus.personal_trained_stories ?? 0} {language === "bn" ? "নিজস্ব" : "Personal"} / {aiStatus.default_stories_count ?? 6} {language === "bn" ? "ডিফল্ট" : "Default"}
-              </span>
-            </Link>
-          )}
-
-          <Button
+      {/* ─── Top Bar / Header: Model Selector & Actions (Left-aligned row-wise) ─── */}
+      <header className="shrink-0 flex items-center justify-start gap-2 flex-wrap pb-3 px-2 border-b border-border">
+        {/* Model Selector Dropdown */}
+        <div className="relative shrink-0" ref={modelDropdownRef}>
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleNewChat}
-            className="flex items-center gap-1.5 rounded-xl text-xs font-semibold hover:bg-surface-hover text-foreground"
-            title={t("chat.newStoryButton", undefined, "New Story")}
+            onClick={() => setShowModelDropdown((prev) => !prev)}
+            className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border shadow-2xs hover:bg-surface-hover transition"
+            title={t("chat.modelSelector", undefined, "Change AI Model")}
           >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
-          </Button>
+            <ModelIcon className={`h-4 w-4 ${currentModelInfo.color}`} />
+            <span className="truncate max-w-[130px] sm:max-w-[200px]">
+              {currentModelInfo.name}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
 
-          <Link
-            href="/stories"
-            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold bg-surface border border-border hover:bg-surface-hover text-foreground transition shadow-2xs"
-            title={t("nav.stories", undefined, "Open Saved Stories Library")}
-          >
-            <Library className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden sm:inline">{t("nav.stories", undefined, "Library")}</span>
-          </Link>
+          {showModelDropdown && (
+            <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
+              </p>
+              <div className="space-y-1">
+                {availableModels.map((m) => {
+                  const Icon = m.icon;
+                  const isSelected = m.id === selectedModel;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleSelectModel(m.id)}
+                      className={cn(
+                        "w-full flex items-start gap-3 rounded-xl p-2.5 text-left transition",
+                        isSelected
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-surface-hover text-foreground"
+                      )}
+                    >
+                      <div className={`p-1.5 rounded-lg bg-surface shadow-xs mt-0.5 ${m.color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold truncate">{m.name}</span>
+                          <span
+                            className={cn(
+                              "text-[10px] font-semibold px-1.5 py-0.2 rounded-full",
+                              isSelected
+                                ? "bg-primary text-white"
+                                : "bg-surface-hover text-muted-foreground"
+                            )}
+                          >
+                            {m.badge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                          {m.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Persona / Style Selector Dropdown */}
+        <div className="relative shrink-0" ref={personaDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setShowPersonaDropdown((prev) => !prev)}
+            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border shadow-2xs hover:bg-surface-hover transition"
+            title={t("chat.personaSelector", undefined, "Select Literary Style")}
+          >
+            <span>{currentPersonaInfo.emoji}</span>
+            <span className="truncate max-w-[140px]">
+              {currentPersonaInfo.name.split(" ")[0]}
+            </span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </button>
+
+          {showPersonaDropdown && (
+            <div className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
+              </p>
+              <div className="space-y-1">
+                {availablePersonas.map((p) => {
+                  const isSelected = p.id === selectedPersona;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPersona(p.id)}
+                      className={cn(
+                        "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
+                        isSelected
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-surface-hover text-foreground"
+                      )}
+                    >
+                      <span className="text-base">{p.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold leading-snug">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
+                          {p.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Training Scope Selector Dropdown */}
+        <div className="relative shrink-0" ref={trainingScopeDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setShowTrainingScopeDropdown((prev) => !prev)}
+            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border shadow-2xs hover:bg-surface-hover transition"
+            title="Knowledge Scope"
+          >
+            <ScopeIcon className={`h-3.5 w-3.5 ${currentScopeInfo.color}`} />
+            <span className="truncate max-w-[130px]">
+              {currentScopeInfo.shortName}
+            </span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </button>
+
+          {showTrainingScopeDropdown && (
+            <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Knowledge Scope / জ্ঞান পরিসীমা
+              </p>
+              <div className="space-y-1">
+                {availableScopes.map((s) => {
+                  const SIcon = s.icon;
+                  const isSelected = s.id === selectedTrainingScope;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleSelectTrainingScope(s.id)}
+                      className={cn(
+                        "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
+                        isSelected
+                          ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 font-medium"
+                          : "hover:bg-surface-hover text-foreground"
+                      )}
+                    >
+                      <div className={`p-1 rounded-lg bg-surface shadow-2xs mt-0.5 ${s.color}`}>
+                        <SIcon className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-xs font-bold leading-snug">{s.name}</p>
+                          <span
+                            className={cn(
+                              "text-[9px] font-semibold px-1.5 py-0.2 rounded-full",
+                              isSelected
+                                ? "bg-amber-600 text-white"
+                                : "bg-surface-hover text-muted-foreground"
+                            )}
+                          >
+                            {s.badge}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
+                          {s.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* AI Memory Status Badge */}
+        {aiStatus && (
+          <Link
+            href="/train"
+            className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition shrink-0"
+            title={t("nav.goToTraining", undefined, "View personal and default training stories")}
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span>
+              {aiStatus.personal_trained_stories ?? 0} {language === "bn" ? "নিজস্ব" : "Personal"} / {aiStatus.default_stories_count ?? 6} {language === "bn" ? "ডিফল্ট" : "Default"}
+            </span>
+          </Link>
+        )}
+
+        {/* New Conversation Button */}
+        <button
+          type="button"
+          onClick={handleNewChat}
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border text-foreground hover:bg-surface-hover transition shadow-2xs shrink-0"
+          title={t("chat.newStoryButton", undefined, "New Conversation")}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>{t("chat.newStoryButton", undefined, "New Conversation")}</span>
+        </button>
+
+        {/* Story Library Button */}
+        <Link
+          href="/stories"
+          className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border hover:bg-surface-hover text-foreground transition shadow-2xs shrink-0"
+          title={t("nav.stories", undefined, "Story Library")}
+        >
+          <Library className="h-3.5 w-3.5 text-primary" />
+          <span>{t("nav.stories", undefined, "Story Library")}</span>
+        </Link>
       </header>
 
       {/* ─── Toast Feedback Notification ─── */}
