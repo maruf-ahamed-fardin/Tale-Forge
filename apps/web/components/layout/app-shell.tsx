@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside
         className={cn(
           "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden z-20 transition-all duration-300 ease-in-out",
-          collapsed ? "w-[72px]" : "w-[270px]"
+          collapsed ? "w-[88px]" : "w-[270px]"
         )}
       >
         <SidebarNav collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
