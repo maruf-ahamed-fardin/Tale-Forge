@@ -230,7 +230,7 @@ export default function StoryDetailPage() {
         </Card>
 
         {/* Story Metadata & Actions Sidebar */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Card className="bg-surface border-border">
             <CardHeader>
               <CardTitle className="text-base text-foreground">{t("storyDetail.details", undefined, "Story Details")}</CardTitle>

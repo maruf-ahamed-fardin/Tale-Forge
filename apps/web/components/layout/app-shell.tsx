@@ -16,12 +16,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-border bg-surface lg:block">
+    <div className="min-h-screen bg-background text-foreground lg:flex">
+      {/* Permanent Desktop Sticky Sidebar - Fixed at top-0 and never scrolls */}
+      <aside className="hidden w-[280px] shrink-0 border-r border-border bg-surface lg:block lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden z-20">
         <SidebarNav />
       </aside>
 
-      <div className="min-w-0 flex flex-col min-h-screen">
+      <div className="min-w-0 flex-1 flex flex-col min-h-screen">
         {/* Mobile Header */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur lg:hidden">
           <Link href="/" className="flex items-center gap-2.5">
@@ -61,23 +62,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Mobile Drawer */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(86vw,320px)] border-r border-border bg-surface shadow-xl transition-transform duration-200 lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-[min(86vw,320px)] border-r border-border bg-surface shadow-xl transition-transform duration-200 lg:hidden flex flex-col h-full overflow-hidden",
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
           <button
             type="button"
-            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground"
             aria-label={t("nav.closeMenu", undefined, "Close navigation")}
             onClick={() => setOpen(false)}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
-          <SidebarNav onNavigate={() => setOpen(false)} />
+          <div className="flex-1 overflow-hidden h-full">
+            <SidebarNav onNavigate={() => setOpen(false)} />
+          </div>
         </aside>
 
-        {/* Desktop Header */}
-        <header className="hidden h-16 items-center justify-between border-b border-border bg-surface/85 px-8 backdrop-blur lg:flex">
+        {/* Sticky Desktop Header */}
+        <header className="sticky top-0 z-10 hidden h-16 items-center justify-between border-b border-border bg-surface/90 px-8 backdrop-blur lg:flex">
           <div>
             <p className="text-sm font-semibold text-foreground">
               {t("nav.creativeWorkspace", undefined, "Creative Workspace")}
@@ -94,12 +97,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href="/studio"
               className={buttonVariants({ size: "sm" })}
             >
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
               {t("nav.newStory", undefined, "New Story")}
             </Link>
           </div>
         </header>
 
+        {/* Scrollable Main Content Area */}
         <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>

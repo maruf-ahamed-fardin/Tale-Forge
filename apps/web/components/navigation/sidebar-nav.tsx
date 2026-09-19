@@ -53,7 +53,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-surface">
-      <Link href="/chat" className="flex items-center gap-3 px-5 py-5" onClick={onNavigate}>
+      <Link href="/chat" className="flex items-center gap-3 px-5 py-5 shrink-0" onClick={onNavigate}>
         <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-xl shadow-md border border-indigo-200/60 dark:border-indigo-800/40">
           <img
             src="/favicon.svg"
@@ -71,7 +71,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         </span>
       </Link>
 
-      <nav className="flex-1 space-y-1.5 px-3 py-3" aria-label="Main navigation">
+      <nav className="flex-1 space-y-1.5 px-3 py-3 overflow-y-auto" aria-label="Main navigation">
         {mainNavigation.map((item) => {
           const Icon = iconMap[item.icon];
           const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`));
@@ -97,7 +97,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       {/* Model Status Card */}
-      <div className="border-t border-border p-4">
+      <div className="border-t border-border p-4 shrink-0">
         <Link
           href="/train"
           onClick={onNavigate}

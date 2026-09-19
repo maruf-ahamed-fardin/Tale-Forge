@@ -212,7 +212,7 @@ function StudioContent() {
 
       <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
         {/* Left Controls Panel */}
-        <div className="space-y-4">
+        <div className="space-y-4 xl:sticky xl:top-20 xl:self-start">
           <Card>
             <CardHeader>
               <CardTitle>{t("studio.directionHeader", undefined, "Story Direction")}</CardTitle>

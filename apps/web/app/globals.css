@@ -45,6 +45,22 @@
   box-sizing: border-box;
 }
 
+/* ── Hide Default Browser Scrollbars (Sleek Modern UI) ───────────────────── */
+html,
+body,
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera, Edge */
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
 /* ── Smooth Theme & Color Transitions ───────────────────────────────────────── */
 html,
 body,
