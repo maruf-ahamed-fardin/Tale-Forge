@@ -9,15 +9,15 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-[#4338ca] focus-visible:outline-primary",
+          "bg-primary text-primary-foreground shadow-xs hover:opacity-90 focus-visible:outline-primary",
         secondary:
-          "bg-[#f4f1ec] text-[#292524] hover:bg-[#e9e2d8] focus-visible:outline-[#a8a29e]",
+          "bg-muted text-foreground hover:bg-surface-hover focus-visible:outline-primary",
         outline:
-          "border border-border bg-surface text-[#292524] hover:bg-[#f7f4ef] focus-visible:outline-[#a8a29e]",
+          "border border-border bg-surface text-foreground hover:bg-surface-hover focus-visible:outline-primary",
         ghost:
-          "text-[#44403c] hover:bg-[#f4f1ec] focus-visible:outline-[#a8a29e]",
+          "text-foreground hover:bg-surface-hover focus-visible:outline-primary",
         destructive:
-          "bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:outline-red-600",
+          "bg-red-600 text-white shadow-xs hover:bg-red-700 focus-visible:outline-red-600",
       },
       size: {
         sm: "h-9 px-3",
