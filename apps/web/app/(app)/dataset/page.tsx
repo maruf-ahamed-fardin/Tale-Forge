@@ -70,6 +70,16 @@ export default function DatasetPage() {
       return;
     }
 
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setError(
+        language === "bn"
+          ? "ফাইলের আকার ২০ মেগাবাইট (20MB) এর কম হতে হবে।"
+          : "File size must be under 20MB."
+      );
+      return;
+    }
+
     setUploading(true);
     setError("");
     setUploadSuccess("");

@@ -32,7 +32,7 @@ class ChatRequest(BaseModel):
 
 class TrainRequest(BaseModel):
     title: str = Field(default="My Story", max_length=200)
-    text: str = Field(..., min_length=10)
+    text: str = Field(..., min_length=10, max_length=2_000_000)
     account_id: str = Field(default="default_local_author")
 
 

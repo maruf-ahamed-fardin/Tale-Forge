@@ -99,6 +99,16 @@ export default function SimpleTrainPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setMsg({
+        type: "error",
+        text: language === "bn" ? "ফাইলের আকার ২০ মেগাবাইট (20MB) এর কম হতে হবে।" : "File size must be under 20MB.",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     setTraining(true);
     setMsg(null);
 
