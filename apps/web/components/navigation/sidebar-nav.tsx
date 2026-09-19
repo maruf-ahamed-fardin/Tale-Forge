@@ -7,8 +7,6 @@ import {
   GraduationCap,
   Library,
   MessageSquare,
-  PanelLeftClose,
-  PanelLeftOpen,
   Settings,
   Sparkles,
   Zap,
@@ -64,7 +62,7 @@ export function SidebarNav({ onNavigate, collapsed = false, onToggleCollapse }: 
     <div className="flex h-full flex-col bg-surface/80 backdrop-blur-xl transition-colors select-none">
       {/* Brand Header */}
       {collapsed ? (
-        <div className="flex flex-col items-center gap-2.5 px-2 py-4 shrink-0 border-b border-border/60">
+        <div className="flex items-center justify-center px-2 py-4 shrink-0 border-b border-border/60">
           <Link
             href="/chat"
             className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1.5 shadow-radiant hover:scale-105 transition-transform"
@@ -77,17 +75,6 @@ export function SidebarNav({ onNavigate, collapsed = false, onToggleCollapse }: 
               className="h-full w-full object-contain filter drop-shadow"
             />
           </Link>
-          {onToggleCollapse && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
-              title={t("nav.expandSidebar", undefined, "Expand sidebar")}
-              aria-label={t("nav.expandSidebar", undefined, "Expand sidebar")}
-            >
-              <PanelLeftOpen className="h-4 w-4" />
-            </button>
-          )}
         </div>
       ) : (
         <div className="flex items-center justify-between px-4 py-4 shrink-0 border-b border-border/60">
@@ -112,17 +99,6 @@ export function SidebarNav({ onNavigate, collapsed = false, onToggleCollapse }: 
               </span>
             </span>
           </Link>
-          {onToggleCollapse && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors ml-1"
-              title={t("nav.collapseSidebar", undefined, "Collapse sidebar")}
-              aria-label={t("nav.collapseSidebar", undefined, "Collapse sidebar")}
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </button>
-          )}
         </div>
       )}
 

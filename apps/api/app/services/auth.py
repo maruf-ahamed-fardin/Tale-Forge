@@ -39,31 +39,56 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    settings = get_settings()
+
     if credentials and credentials.credentials:
         try:
-            settings = get_settings()
-            payload = jwt.decode(credentials.credentials, settings.jwt_secret, algorithms=["HS256"])
+            payload = jwt.decode(
+                credentials.credentials,
+                settings.jwt_secret,
+                algorithms=["HS256"],
+            )
             user_id: str | None = payload.get("sub")
             if user_id:
-                result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))  # noqa: E712
+                result = await db.execute(
+                    select(User).where(User.id == user_id, User.is_active == True)  # noqa: E712
+                )
                 user = result.scalar_one_or_none()
                 if user:
                     return user
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired authentication token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         except Exception:
-            pass
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
-    # No login required! Default to local user automatically
-    result = await db.execute(select(User).where(User.id == DEFAULT_USER_ID))
-    user = result.scalar_one_or_none()
-    if not user:
-        user = User(
-            id=DEFAULT_USER_ID,
-            email="author@taleforge.local",
-            hashed_password=hash_password("localpass"),
-            display_name="Tale Author",
-            is_active=True,
-        )
-        db.add(user)
-        await db.flush()
-        await db.refresh(user)
-    return user
+    # If anonymous dev mode is explicitly enabled by configuration:
+    if settings.allow_anonymous_dev_mode:
+        result = await db.execute(select(User).where(User.id == DEFAULT_USER_ID))
+        user = result.scalar_one_or_none()
+        if not user:
+            user = User(
+                id=DEFAULT_USER_ID,
+                email="author@taleforge.local",
+                hashed_password=hash_password("localpass"),
+                display_name="Tale Author",
+                is_active=True,
+            )
+            db.add(user)
+            await db.flush()
+            await db.refresh(user)
+        return user
+
+    # Strict production default: require authentication
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required. Please log in.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

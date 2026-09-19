@@ -15,14 +15,12 @@ import {
   Image as ImageIcon,
   Library,
   MessageSquare,
-  Play,
   Plus,
   RefreshCw,
   RotateCcw,
   Send,
   Settings,
   Sparkles,
-  Square,
   Trash2,
   User,
   Volume2,
@@ -575,23 +573,24 @@ export default function AIChatPage() {
   const ScopeIcon = currentScopeInfo.icon;
 
   return (
-    <div className="relative flex flex-col h-[calc(100dvh-125px)] sm:h-[calc(100vh-135px)] w-full max-w-5xl mx-auto overflow-hidden">
-      {/* ─── Top Bar / Header: Model Selector & Actions ─── */}
-      <header className="shrink-0 flex items-center justify-between pb-3 px-2 border-b border-border">
-        <div className="flex items-center gap-2">
+    <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
+      {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
+      <header className="shrink-0 flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 border-b border-border/70 bg-surface/60 backdrop-blur-xl">
+        {/* Left: AI Generation Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
           {/* Model Selector Dropdown */}
-          <div className="relative" ref={modelDropdownRef}>
+          <div className="relative shrink-0" ref={modelDropdownRef}>
             <button
               type="button"
               onClick={() => setShowModelDropdown((prev) => !prev)}
-              className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-bold text-foreground bg-surface border border-border shadow-xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title={t("chat.modelSelector", undefined, "Change AI Model")}
             >
-              <ModelIcon className={`h-4 w-4 ${currentModelInfo.color}`} />
-              <span className="truncate max-w-[130px] sm:max-w-[200px]">
+              <ModelIcon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${currentModelInfo.color}`} />
+              <span className="truncate max-w-[110px] sm:max-w-[160px]">
                 {currentModelInfo.name}
               </span>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
             </button>
 
             {showModelDropdown && (
@@ -645,15 +644,15 @@ export default function AIChatPage() {
           </div>
 
           {/* Persona / Style Selector Dropdown */}
-          <div className="relative" ref={personaDropdownRef}>
+          <div className="relative shrink-0" ref={personaDropdownRef}>
             <button
               type="button"
               onClick={() => setShowPersonaDropdown((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border hover:bg-surface-hover transition"
+              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title={t("chat.personaSelector", undefined, "Select Literary Style")}
             >
               <span>{currentPersonaInfo.emoji}</span>
-              <span className="hidden md:inline truncate max-w-[140px]">
+              <span className="truncate max-w-[90px] sm:max-w-[120px]">
                 {currentPersonaInfo.name.split(" ")[0]}
               </span>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -695,15 +694,15 @@ export default function AIChatPage() {
           </div>
 
           {/* Training Scope Selector Dropdown */}
-          <div className="relative" ref={trainingScopeDropdownRef}>
+          <div className="relative shrink-0" ref={trainingScopeDropdownRef}>
             <button
               type="button"
               onClick={() => setShowTrainingScopeDropdown((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border hover:bg-surface-hover transition"
+              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title="Knowledge Scope"
             >
               <ScopeIcon className={`h-3.5 w-3.5 ${currentScopeInfo.color}`} />
-              <span className="hidden md:inline truncate max-w-[130px]">
+              <span className="truncate max-w-[90px] sm:max-w-[120px]">
                 {currentScopeInfo.shortName}
               </span>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -760,12 +759,13 @@ export default function AIChatPage() {
           </div>
         </div>
 
-        {/* Right Header: New Chat & Library Links */}
-        <div className="flex items-center gap-2">
+        {/* Right: Actions and Status */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* AI Memory Status Badge */}
           {aiStatus && (
             <Link
               href="/train"
-              className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition"
+              className="hidden md:flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition shrink-0"
               title={t("nav.goToTraining", undefined, "View personal and default training stories")}
             >
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -775,25 +775,25 @@ export default function AIChatPage() {
             </Link>
           )}
 
-          <Button
+          {/* New Conversation Button */}
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
             onClick={handleNewChat}
-            className="flex items-center gap-1.5 rounded-xl text-xs font-semibold hover:bg-surface-hover text-foreground"
-            title={t("chat.newStoryButton", undefined, "New Story")}
+            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 text-foreground hover:bg-surface-hover transition shadow-2xs shrink-0"
+            title={t("chat.newStoryButton", undefined, "New Conversation")}
           >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
-          </Button>
+            <Plus className="h-3.5 w-3.5 text-primary" />
+            <span className="hidden xs:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
+          </button>
 
+          {/* Story Library Button */}
           <Link
             href="/stories"
-            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold bg-surface border border-border hover:bg-surface-hover text-foreground transition shadow-2xs"
-            title={t("nav.stories", undefined, "Open Saved Stories Library")}
+            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 hover:bg-surface-hover text-foreground transition shadow-2xs shrink-0"
+            title={t("nav.stories", undefined, "Story Library")}
           >
             <Library className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden sm:inline">{t("nav.stories", undefined, "Library")}</span>
+            <span className="hidden xs:inline">{t("nav.stories", undefined, "Library")}</span>
           </Link>
         </div>
       </header>
@@ -807,21 +807,18 @@ export default function AIChatPage() {
       )}
 
       {/* ─── Center Body: Either Empty Hero State or Conversation Stream ─── */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 space-y-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:py-6 space-y-4">
         {messages.length === 0 ? (
-          /* ─── Welcome Empty State ─── */
-          <div className="flex flex-col items-center justify-center min-h-[70%] text-center max-w-2xl mx-auto py-8">
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg mb-4">
-              <Sparkles className="h-7 w-7" />
-              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
-                <Zap className="h-2.5 w-2.5 text-white" />
-              </span>
+          /* ─── Clean, Focused Welcome State ─── */
+          <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto my-auto py-6 sm:py-10">
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-radiant text-white shadow-radiant mb-4">
+              <Sparkles className="h-6 w-6" />
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               {language === "bn" ? "আজ কী গল্প সৃষ্টি করতে চান?" : "What tale shall we craft today?"}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground max-w-md">
+            <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md">
               {t(
                 "chat.subtitle",
                 undefined,
@@ -829,24 +826,24 @@ export default function AIChatPage() {
               )}
             </p>
 
-            {/* Quick Starter Suggestion Cards */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
+            {/* Compact Starter Cards */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
               {starterSuggestions.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleTriggerSuggestion(item)}
-                  className="group relative rounded-2xl border border-border bg-surface hover:bg-surface-hover p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.99]"
+                  className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-surface/80 hover:bg-surface p-3 sm:p-3.5 text-left transition-all hover:border-primary/50 hover:shadow-xs active:scale-[0.99]"
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-lg">{item.icon}</span>
-                    <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                  <span className="text-xl shrink-0 mt-0.5">{item.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
                       {item.title}
                     </h3>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 leading-relaxed">
+                      {item.desc}
+                    </p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                    {item.desc}
-                  </p>
                 </button>
               ))}
             </div>
@@ -1092,11 +1089,11 @@ export default function AIChatPage() {
       </div>
 
       {/* ─── Bottom Floating Capsule Input ─── */}
-      <div className="shrink-0 pb-3 pt-1 px-2 sm:px-4">
+      <div className="shrink-0 pb-3 pt-2 px-3 sm:px-4 sm:pb-4">
         <div className="max-w-3xl mx-auto">
           {/* Image Attachment Preview Badge */}
           {attachedImage && (
-            <div className="mb-2 inline-flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs text-primary shadow-xs animate-in fade-in-50">
+            <div className="mb-2.5 inline-flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs text-primary shadow-xs animate-in fade-in-50">
               <img
                 src={attachedImage.dataUrl}
                 alt="Attached preview"
@@ -1116,31 +1113,8 @@ export default function AIChatPage() {
             </div>
           )}
 
-          {/* Interactive Genre & Mood Pills */}
-          <div className="flex items-center gap-1.5 mb-2.5 overflow-x-auto pb-1">
-            {[
-              { id: "mystery", label: language === "bn" ? "🔮 রহস্য ও থ্রিলার" : "🔮 Mystery & Suspense", prompt: language === "bn" ? "একটি টানটান রহস্য ও রোমাঞ্চকর গল্পের সূচনা লিখুন যেখানে..." : "Write a gripping mystery prologue where..." },
-              { id: "folklore", label: language === "bn" ? "🐅 রূপকথা ও লোকগাথা" : "🐅 Bengali Folklore", prompt: language === "bn" ? "সুন্দরবনের গহীনের এক প্রাচীন লোকগাথা নিয়ে গল্প লিখুন যেখানে..." : "Craft a folklore tale rooted in the mystical Sundarbans where..." },
-              { id: "scifi", label: language === "bn" ? "🚀 সাই-ফাই সাইবারপাঙ্ক" : "🚀 Sci-Fi Cyberpunk", prompt: language === "bn" ? "২০৮৫ সালের ঢাকার নিয়ন আলোয় ঘেরা এক সাইবারপাঙ্ক থ্রিলার গল্প শুরু করুন যেখানে..." : "Start a 2085 cyberpunk sci-fi story set in neon-lit Dhaka where..." },
-              { id: "romance", label: language === "bn" ? "🌸 কাব্যিক প্রেম" : "🌸 Poetic Romance", prompt: language === "bn" ? "বৃষ্টিস্নাত এক সন্ধ্যায় পুরান ঢাকার ছাদবাগানে দুজনের আকস্মিক দেখা হওয়ার একটি কাব্যিক গল্প লিখুন..." : "Write a poetic, heartfelt romance about two strangers meeting on a rain-drenched rooftop..." },
-              { id: "historical", label: language === "bn" ? "📜 ঐতিহাসিক নাটক" : "📜 Historical Drama", prompt: language === "bn" ? "মুঘল আমলের সুবেদারি ঢাকার এক রহস্যময় রাত নিয়ে ঐতিহাসিক গল্প শুরু করুন..." : "Begin an atmospheric historical narrative set in Mughal-era Bengal..." }
-            ].map((genre) => (
-              <button
-                key={genre.id}
-                type="button"
-                onClick={() => {
-                  setInputPrompt(genre.prompt);
-                  textareaRef.current?.focus();
-                }}
-                className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-surface/80 hover:bg-surface-hover border border-border/70 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all shadow-2xs whitespace-nowrap active:scale-95"
-              >
-                {genre.label}
-              </button>
-            ))}
-          </div>
-
           {/* Floating Rounded Glass Input Pill */}
-          <div className="relative rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/25 transition-all">
+          <div className="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-xl shadow-card-elevated focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <textarea
               ref={textareaRef}
               rows={1}
@@ -1154,7 +1128,7 @@ export default function AIChatPage() {
                     : "Add notes about this image (or click Send)..."
                   : t("chat.inputPlaceholder", undefined, "Describe your story premise (Bangla or English)...")
               }
-              className="w-full resize-none bg-transparent px-5 pt-4 pb-2 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
+              className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 pb-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
               disabled={loading}
             />
 

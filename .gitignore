@@ -36,6 +36,8 @@ storage/*
 !storage/.gitkeep
 apps/api/storage/*
 !apps/api/storage/.gitkeep
+apps/web/storage/*
+!apps/web/storage/.gitkeep
 *.tsbuildinfo
 data/raw/*
 data/extracted/*

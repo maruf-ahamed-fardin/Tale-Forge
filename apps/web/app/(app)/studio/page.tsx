@@ -405,11 +405,11 @@ function StudioContent() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="story-paper min-h-[620px] rounded-2xl border border-border/70 p-6 sm:p-10 shadow-xs">
+          <CardContent className="p-3 sm:p-6">
+            <div className="story-paper min-h-[420px] sm:min-h-[620px] rounded-2xl border border-border/70 p-4 sm:p-10 shadow-xs">
               <textarea
                 aria-label="Story editor"
-                className="min-h-[560px] w-full resize-none bg-transparent font-bengali font-editorial text-[17px] leading-[2.1] text-foreground outline-none tracking-wide"
+                className="min-h-[380px] sm:min-h-[560px] w-full resize-none bg-transparent font-bengali font-editorial text-[15px] sm:text-[17px] leading-[1.85] sm:leading-[2.1] text-foreground outline-none tracking-wide"
                 placeholder={t(
                   "studio.editorPlaceholder",
                   undefined,

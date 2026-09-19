@@ -56,7 +56,14 @@
   box-sizing: border-box;
 }
 
-/* ── Hide Default Browser Scrollbars (Sleek Modern UI) ───────────────────── */
+html,
+body {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 html,
 body,
 * {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export type Theme = "light" | "dark";
 
@@ -17,6 +17,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
+  const applyThemeClass = useCallback((t: Theme) => {
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      if (t === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+    }
+  }, []);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem("tf_theme") as Theme | null;
@@ -31,48 +42,49 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // Ignore storage errors
     }
     setMounted(true);
-  }, []);
+  }, [applyThemeClass]);
 
-  const applyThemeClass = (t: Theme) => {
-    if (typeof document !== "undefined") {
-      const root = document.documentElement;
-      if (t === "dark") {
-        root.classList.add("dark");
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+    applyThemeClass(newTheme);
+    try {
+      localStorage.setItem("tf_theme", newTheme);
+    } catch {
+      // Ignore storage errors
+    }
+  }, [applyThemeClass]);
+
+  const toggleTheme = useCallback(() => {
+    setThemeState((prev) => {
+      const nextTheme = prev === "dark" ? "light" : "dark";
+
+      const updateTheme = () => {
+        applyThemeClass(nextTheme);
+        try {
+          localStorage.setItem("tf_theme", nextTheme);
+        } catch {
+          // Ignore storage errors
+        }
+      };
+
+      if (
+        typeof document !== "undefined" &&
+        "startViewTransition" in document &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(updateTheme);
       } else {
-        root.classList.remove("dark");
+        updateTheme();
       }
-    }
-  };
 
-  const setTheme = (newTheme: Theme) => {
-    const updateTheme = () => {
-      setThemeState(newTheme);
-      applyThemeClass(newTheme);
-      try {
-        localStorage.setItem("tf_theme", newTheme);
-      } catch {
-        // Ignore storage errors
-      }
-    };
+      return nextTheme;
+    });
+  }, [applyThemeClass]);
 
-    // Use native View Transitions API for cinematic cross-fade if supported
-    if (
-      typeof document !== "undefined" &&
-      "startViewTransition" in document &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(updateTheme);
-    } else {
-      updateTheme();
-    }
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+  const contextValue = useMemo(() => ({ theme, setTheme, toggleTheme }), [theme, setTheme, toggleTheme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

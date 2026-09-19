@@ -31,25 +31,25 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    origins = [o for o in settings.cors_origin_list if o != "*"]
-    has_wildcard = "*" in settings.cors_origin_list
+    # Security Headers Middleware
+    @app.middleware("http")
+    async def add_security_headers(request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        return response
 
-    if has_wildcard:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origin_regex=r"https?://.*",
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-    else:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=origins,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
+    # Strict CORS configuration (no wildcard regex when credentials are true)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],
+    )
 
     # Health endpoints (no auth required)
     @app.get("/health", tags=["health"])

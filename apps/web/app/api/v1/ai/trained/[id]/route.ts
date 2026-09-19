@@ -19,17 +19,23 @@ export async function DELETE(
     }
 
     // Try proxying to Python backend if alive
+    const authHeader = req.headers.get("authorization");
+    const pyHeaders: Record<string, string> = {};
+    if (authHeader) pyHeaders["Authorization"] = authHeader;
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1200);
       const pyRes = await fetch(
-        `http://127.0.0.1:8000/api/v1/ai/trained/${encodeURIComponent(id)}?account_id=${encodeURIComponent(accountId)}`,
+        `http://127.0.0.1:8000/api/v1/ai/trained/${encodeURIComponent(id)}`,
         {
           method: "DELETE",
+          headers: pyHeaders,
           signal: controller.signal,
         },
       );
       clearTimeout(timeoutId);
+
       if (pyRes.ok) {
         const data = await pyRes.json();
         try {

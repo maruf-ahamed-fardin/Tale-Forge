@@ -14,17 +14,20 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import StreamingResponse
 
 from ai.inference import GenerationParams, get_inference_provider
+from app.core.rate_limiter import rate_limit
 from app.models.user import User
 from app.schemas.generation import GenerateRequest, GenerateResponse
 from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/generate", tags=["generation"])
+rate_limit_generate = rate_limit(max_requests=20, window_seconds=60)
 
 
 @router.post("", response_model=GenerateResponse, status_code=status.HTTP_200_OK)
 async def generate_story(
     request: GenerateRequest,
     current_user: User = Depends(get_current_user),
+    _rate: None = Depends(rate_limit_generate),
 ) -> GenerateResponse:
     provider = get_inference_provider()
     params = GenerationParams(
@@ -53,6 +56,7 @@ async def generate_story(
 async def stream_story(
     request: GenerateRequest,
     current_user: User = Depends(get_current_user),
+    _rate: None = Depends(rate_limit_generate),
 ) -> StreamingResponse:
     provider = get_inference_provider()
     params = GenerationParams(

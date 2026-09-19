@@ -153,6 +153,13 @@ export async function POST(req: NextRequest) {
     }
 
     const fileObj = file as File;
+    if (fileObj.size && fileObj.size > 20 * 1024 * 1024) {
+      return NextResponse.json(
+        { detail: "File exceeds 20 MB size limit." },
+        { status: 413 },
+      );
+    }
+
     const fileName = fileObj.name || "uploaded_story";
     const isPdf =
       fileName.toLowerCase().endsWith(".pdf") ||
@@ -195,6 +202,7 @@ export async function POST(req: NextRequest) {
       "Uploaded Story";
 
     // Try proxying to Python backend if active
+    const authHeader = req.headers.get("authorization");
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -203,8 +211,12 @@ export async function POST(req: NextRequest) {
       forwardForm.append("title", cleanTitle);
       forwardForm.append("account_id", accountId);
 
+      const pyHeaders: Record<string, string> = {};
+      if (authHeader) pyHeaders["Authorization"] = authHeader;
+
       const pyRes = await fetch("http://127.0.0.1:8000/api/v1/ai/train-file", {
         method: "POST",
+        headers: pyHeaders,
         body: forwardForm,
         signal: controller.signal,
       });

@@ -8,6 +8,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.core.rate_limiter import limiter
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
@@ -29,11 +30,14 @@ TestingSessionLocal = async_sessionmaker(
 
 @pytest_asyncio.fixture(autouse=True)
 async def init_db() -> AsyncGenerator[None, None]:
+    limiter.reset()
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
+    limiter.reset()
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
 
 
 @pytest_asyncio.fixture
