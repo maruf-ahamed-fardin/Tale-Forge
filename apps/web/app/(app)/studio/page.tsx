@@ -197,12 +197,17 @@ function StudioContent() {
         )}
       >
         {editingId && (
-          <Button variant="outline" onClick={handleNewStory}>
+          <Button variant="outline" onClick={handleNewStory} className="rounded-xl border-border/80">
             <FilePlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
             {t("studio.newBlankStory", undefined, "New Blank Story")}
           </Button>
         )}
-        <Button id="generate-story-btn" onClick={handleGenerate} disabled={generating}>
+        <Button
+          id="generate-story-btn"
+          onClick={handleGenerate}
+          disabled={generating}
+          className="rounded-xl bg-gradient-radiant text-white shadow-radiant hover:brightness-110 active:scale-95 border-0 font-bold"
+        >
           <Wand2 className={`h-4 w-4 mr-1.5 ${generating ? "animate-spin" : ""}`} aria-hidden="true" />
           {generating
             ? t("studio.generatingButton", undefined, "Crafting Story…")
@@ -210,7 +215,7 @@ function StudioContent() {
         </Button>
       </PageHeader>
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         {/* Left Controls Panel */}
         <div className="space-y-4 xl:sticky xl:top-20 xl:self-start">
           <Card>
@@ -358,35 +363,38 @@ function StudioContent() {
         </div>
 
         {/* Right Editor Panel */}
-        <Card className="min-w-0">
-          <CardHeader>
+        <Card className="min-w-0 rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated">
+          <CardHeader className="pb-4 border-b border-border/60">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle className="text-xl font-serif">{title}</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {wordCount.toLocaleString()} {t("common.words", undefined, "words")} · {charCount.toLocaleString()} {t("common.characters", undefined, "characters")} · {paraCount} {t("common.paragraphs", undefined, "paragraphs")}
-                </p>
+                <CardTitle className="font-editorial text-2xl font-bold tracking-tight">{title}</CardTitle>
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">{wordCount.toLocaleString()}</span> {t("common.words", undefined, "words")} ·{" "}
+                  <span className="font-medium text-foreground">{charCount.toLocaleString()}</span> {t("common.characters", undefined, "chars")} ·{" "}
+                  <span className="font-medium text-foreground">{paraCount}</span> {t("common.paragraphs", undefined, "paras")} ·{" "}
+                  <span className="font-semibold text-primary">{Math.max(1, Math.ceil(wordCount / 180))} min read</span>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {saveMsg && (
                   <span
-                    className={`text-sm font-medium ${
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${
                       saveMsg.includes("saved") || saveMsg.includes("created") || saveMsg.includes("Copied")
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-red-600 dark:text-red-400"
+                        ? "text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40"
+                        : "text-red-700 bg-red-50 dark:text-red-300 dark:bg-red-950/40"
                     }`}
                   >
                     {saveMsg}
                   </span>
                 )}
-                <Button variant="ghost" size="icon" aria-label={t("common.copy", undefined, "Copy")} onClick={handleCopy}>
+                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-surface-hover" aria-label={t("common.copy", undefined, "Copy")} onClick={handleCopy}>
                   <Copy className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleExport}>
+                <Button variant="outline" size="sm" className="rounded-xl border-border/80 hover:bg-surface-hover" onClick={handleExport}>
                   <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />
                   {t("common.exportTxt", undefined, "Export TXT")}
                 </Button>
-                <Button size="sm" onClick={handleSave} disabled={saving} id="studio-save">
+                <Button size="sm" onClick={handleSave} disabled={saving} id="studio-save" className="rounded-xl bg-primary text-white shadow-sm hover:brightness-105">
                   <Save className="h-4 w-4 mr-1.5" aria-hidden="true" />
                   {saving
                     ? t("common.saving", undefined, "Saving…")
@@ -397,11 +405,11 @@ function StudioContent() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="story-paper min-h-[620px] rounded-lg border border-border p-5 sm:p-8">
+          <CardContent className="p-4 sm:p-6">
+            <div className="story-paper min-h-[620px] rounded-2xl border border-border/70 p-6 sm:p-10 shadow-xs">
               <textarea
                 aria-label="Story editor"
-                className="min-h-[560px] w-full resize-none bg-transparent font-serif text-base leading-8 text-foreground outline-none"
+                className="min-h-[560px] w-full resize-none bg-transparent font-bengali font-editorial text-[17px] leading-[2.1] text-foreground outline-none tracking-wide"
                 placeholder={t(
                   "studio.editorPlaceholder",
                   undefined,
