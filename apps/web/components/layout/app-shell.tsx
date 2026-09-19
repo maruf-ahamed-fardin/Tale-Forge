@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, Plus, Search, X } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from "lucide-react";
 
 import { SidebarNav } from "@/components/navigation/sidebar-nav";
 import { LanguageToggle } from "@/components/shared/language-toggle";
@@ -47,11 +47,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Permanent Desktop Sticky Sidebar - Collapsible with smooth transition */}
       <aside
         className={cn(
-          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden z-20 transition-all duration-300 ease-in-out",
-          collapsed ? "w-[88px]" : "w-[270px]"
+          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block lg:sticky lg:top-0 lg:h-screen z-20 transition-all duration-300 ease-in-out relative group/sidebar",
+          collapsed ? "w-[72px]" : "w-[270px]"
         )}
       >
-        <SidebarNav collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
+        <div className="h-full w-full overflow-hidden">
+          <SidebarNav collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
+        </div>
+
+        {/* Edge / Border Collapse Toggle Button ("akdom side a") */}
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="absolute -right-3.5 top-5 z-30 flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-surface text-muted-foreground shadow-md hover:bg-surface-hover hover:text-foreground hover:border-primary/50 hover:scale-110 active:scale-95 transition-all"
+          title={collapsed ? t("nav.expandSidebar", undefined, "Expand sidebar") : t("nav.collapseSidebar", undefined, "Collapse sidebar")}
+          aria-label={collapsed ? t("nav.expandSidebar", undefined, "Expand sidebar") : t("nav.collapseSidebar", undefined, "Collapse sidebar")}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="h-3.5 w-3.5" />
+          ) : (
+            <PanelLeftClose className="h-3.5 w-3.5" />
+          )}
+        </button>
       </aside>
 
       <div className="min-w-0 flex-1 flex flex-col min-h-screen relative z-10">
