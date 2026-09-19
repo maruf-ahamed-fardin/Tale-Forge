@@ -208,27 +208,27 @@ export default function SimpleTrainPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href="/chat" className={buttonVariants()}>
-            <MessageSquare className="h-4 w-4 mr-1.5" />
+          <Link href="/chat" className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all">
+            <MessageSquare className="h-4 w-4" />
             {t("nav.chat", undefined, "Go to Story Chat")}
           </Link>
         </div>
       </div>
 
       {/* Overview Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         {/* Personal Account Training Stats */}
         <Card
           className={cn(
-            "cursor-pointer transition-all bg-surface",
+            "cursor-pointer transition-all rounded-3xl backdrop-blur-xl shadow-card-elevated",
             activeTab === "personal"
-              ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
-              : "border-border hover:border-primary/40"
+              ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-radiant"
+              : "border-border/80 bg-surface/85 hover:border-primary/40 hover:-translate-y-0.5"
           )}
           onClick={() => setActiveTab("personal")}
         >
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="rounded-xl bg-primary p-3 text-white shrink-0">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-2xl bg-gradient-radiant p-3.5 text-white shrink-0 shadow-radiant">
               <User className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
@@ -236,14 +236,14 @@ export default function SimpleTrainPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-primary">
                   {t("train.tabPersonal", undefined, "Personal Stories")}
                 </span>
-                <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                <span className="text-[11px] bg-primary/15 text-primary px-2.5 py-0.5 rounded-full font-bold border border-primary/20">
                   {accountDisplay}
                 </span>
               </div>
-              <div className="text-2xl font-black text-foreground mt-0.5">
+              <div className="text-2xl font-black text-foreground mt-1 font-display">
                 {personalStories.length} <span className="text-sm font-normal text-muted-foreground">{t("nav.stories", undefined, "Stories")}</span>
                 <span className="text-muted-foreground mx-1.5 font-light">|</span>
-                <span className="text-lg font-bold text-foreground">
+                <span className="text-xl font-bold text-foreground">
                   {(status?.personal_words || 0).toLocaleString()}
                 </span>{" "}
                 <span className="text-xs font-normal text-muted-foreground">{t("common.words", undefined, "words")}</span>
@@ -258,15 +258,15 @@ export default function SimpleTrainPage() {
         {/* Default Master Literature Stats */}
         <Card
           className={cn(
-            "cursor-pointer transition-all bg-surface",
+            "cursor-pointer transition-all rounded-3xl backdrop-blur-xl shadow-card-elevated",
             activeTab === "default"
-              ? "border-amber-500 bg-amber-50/20 dark:bg-amber-950/20 ring-2 ring-amber-500/20 shadow-xs"
-              : "border-border hover:border-amber-500/40"
+              ? "border-amber-500 bg-amber-50/25 dark:bg-amber-950/25 ring-2 ring-amber-500/30"
+              : "border-border/80 bg-surface/85 hover:border-amber-500/40 hover:-translate-y-0.5"
           )}
           onClick={() => setActiveTab("default")}
         >
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="rounded-xl bg-amber-500 p-3 text-white shrink-0">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-3.5 text-white shrink-0 shadow-sm">
               <BookOpen className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
