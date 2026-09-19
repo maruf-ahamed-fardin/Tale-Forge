@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from "lucide-react";
+import { Menu, Plus, Search, X } from "lucide-react";
 
 import { SidebarNav } from "@/components/navigation/sidebar-nav";
 import { LanguageToggle } from "@/components/shared/language-toggle";
@@ -114,15 +114,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Sticky Desktop Header */}
         <header className="sticky top-0 z-10 hidden h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-6 backdrop-blur-xl lg:flex">
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-surface/80 text-muted-foreground hover:bg-surface-hover hover:text-foreground hover:border-primary/40 transition-all shadow-2xs"
-              title={collapsed ? t("nav.expandSidebar", undefined, "Expand sidebar") : t("nav.collapseSidebar", undefined, "Collapse sidebar")}
-              aria-label={collapsed ? t("nav.expandSidebar", undefined, "Expand sidebar") : t("nav.collapseSidebar", undefined, "Collapse sidebar")}
-            >
-              {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </button>
 
             {/* Quick Spotlight Search Bar */}
             <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-border/70 bg-surface/70 text-muted-foreground text-xs hover:border-primary/40 transition-all shadow-2xs w-64">
