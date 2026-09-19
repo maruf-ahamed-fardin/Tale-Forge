@@ -29,12 +29,12 @@ export function PlaceholderPage({
 
       <div className="grid gap-4 md:grid-cols-3">
         {features.map((feature) => (
-          <Card key={feature.title}>
+          <Card key={feature.title} className="bg-surface border-border">
             <CardHeader>
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[#eef2ff] text-primary">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </div>
-              <CardTitle>{feature.title}</CardTitle>
+              <CardTitle className="text-foreground">{feature.title}</CardTitle>
               <CardDescription>{feature.description}</CardDescription>
             </CardHeader>
             {feature.status ? (

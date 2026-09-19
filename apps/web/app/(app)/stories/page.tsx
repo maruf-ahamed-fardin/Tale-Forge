@@ -306,7 +306,14 @@ export default function StoriesPage() {
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => handleDownloadTxt(story, story.snippet)}
+                    onClick={async () => {
+                      try {
+                        const full = await storiesApi().get(story.id);
+                        handleDownloadTxt(full, full.content);
+                      } catch {
+                        handleDownloadTxt(story, "");
+                      }
+                    }}
                     className="p-1.5 rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground transition"
                     title={t("common.download", undefined, "Download TXT")}
                   >
