@@ -45,6 +45,14 @@ async function request<T>(
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
   if (!res.ok) {
+    if (res.status === 401 && auth && typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("tf_token");
+        localStorage.removeItem("tf_user");
+      } catch {
+        // ignore storage errors
+      }
+    }
     let detail = res.statusText;
     try {
       const body = await res.json();
@@ -54,6 +62,7 @@ async function request<T>(
     }
     throw new ApiError(res.status, detail);
   }
+
 
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
@@ -366,7 +375,7 @@ export function simpleAiApi() {
             account_id: activeAccountId,
           }),
         },
-        false,
+        true,
       );
     },
     trainText: (text: string, title = "My Story", accountId?: string) => {
@@ -386,7 +395,7 @@ export function simpleAiApi() {
           headers: { "x-account-id": activeAccountId },
           body: JSON.stringify({ text, title, account_id: activeAccountId }),
         },
-        false,
+        true,
       );
     },
     trainFile: async (file: File, title = "", accountId?: string) => {
@@ -396,11 +405,15 @@ export function simpleAiApi() {
       if (title) form.append("title", title);
       form.append("account_id", activeAccountId);
 
+      const token = getToken();
+      const headers: Record<string, string> = {
+        "x-account-id": activeAccountId,
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`${API_BASE}/api/v1/ai/train-file`, {
         method: "POST",
-        headers: {
-          "x-account-id": activeAccountId,
-        },
+        headers,
         body: form,
       });
       if (!res.ok) {
@@ -418,7 +431,7 @@ export function simpleAiApi() {
       return request<AIStatus>(
         `/api/v1/ai/status?account_id=${encodeURIComponent(activeAccountId)}`,
         { headers: { "x-account-id": activeAccountId } },
-        false,
+        true,
       );
     },
     deleteTrainedStory: (id: string, accountId?: string) => {
@@ -433,7 +446,7 @@ export function simpleAiApi() {
           method: "DELETE",
           headers: { "x-account-id": activeAccountId },
         },
-        false,
+        true,
       );
     },
     reset: (accountId?: string) => {
@@ -445,11 +458,12 @@ export function simpleAiApi() {
           headers: { "x-account-id": activeAccountId },
           body: JSON.stringify({ account_id: activeAccountId }),
         },
-        false,
+        true,
       );
     },
   };
 }
+
 
 export { ApiError, getToken };
 

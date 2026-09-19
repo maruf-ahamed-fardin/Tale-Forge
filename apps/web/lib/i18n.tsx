@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { translations, type Language } from "./translations";
 
 interface LanguageContextType {
@@ -31,32 +31,35 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  const setLanguage = (newLang: Language) => {
-    if (newLang === language) return;
+  const setLanguage = useCallback((newLang: Language) => {
+    setLanguageState((prevLang) => {
+      if (newLang === prevLang) return prevLang;
 
-    const updateLang = () => {
-      setLanguageState(newLang);
-      try {
-        localStorage.setItem("tf_lang", newLang);
-        if (typeof document !== "undefined") {
-          document.documentElement.lang = newLang;
+      const updateLang = () => {
+        try {
+          localStorage.setItem("tf_lang", newLang);
+          if (typeof document !== "undefined") {
+            document.documentElement.lang = newLang;
+          }
+        } catch {
+          // Ignore storage errors
         }
-      } catch {
-        // Ignore storage errors
-      }
-    };
+      };
 
-    // Use native View Transitions API for smooth language cross-fade if supported
-    if (
-      typeof document !== "undefined" &&
-      "startViewTransition" in document &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(updateLang);
-    } else {
-      updateLang();
-    }
-  };
+      // Use native View Transitions API for smooth language cross-fade if supported
+      if (
+        typeof document !== "undefined" &&
+        "startViewTransition" in document &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(updateLang);
+      } else {
+        updateLang();
+      }
+
+      return newLang;
+    });
+  }, []);
 
   useEffect(() => {
     if (mounted && typeof document !== "undefined") {
@@ -64,7 +67,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, [language, mounted]);
 
-  const t = (path: string, params?: Record<string, string | number>, fallback?: string): string => {
+  const t = useCallback((path: string, params?: Record<string, string | number>, fallback?: string): string => {
     const keys = path.split(".");
     let current: any = translations[language] || translations.en;
 
@@ -100,10 +103,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
 
     return current;
-  };
+  }, [language]);
+
+  const contextValue = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

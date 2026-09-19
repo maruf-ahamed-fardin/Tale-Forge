@@ -20,13 +20,18 @@ export async function POST(req: NextRequest) {
     }
     if (!accountId) accountId = "default_local_author";
 
+    const authHeader = req.headers.get("authorization");
+    const pyHeaders: Record<string, string> = {};
+    if (authHeader) pyHeaders["Authorization"] = authHeader;
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1500);
       await fetch(
-        `http://127.0.0.1:8000/api/v1/ai/reset?account_id=${encodeURIComponent(accountId)}`,
+        `http://127.0.0.1:8000/api/v1/ai/reset`,
         {
           method: "POST",
+          headers: pyHeaders,
           signal: controller.signal,
         },
       );
@@ -34,6 +39,7 @@ export async function POST(req: NextRequest) {
     } catch {
       // ignore python error
     }
+
 
     const res = resetAIMemory(accountId);
     return NextResponse.json(res);

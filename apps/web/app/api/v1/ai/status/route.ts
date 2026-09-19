@@ -9,13 +9,18 @@ export async function GET(req: NextRequest) {
     req.nextUrl.searchParams.get("account_id") ||
     "default_local_author";
 
+  const authHeader = req.headers.get("authorization");
+  const pyHeaders: Record<string, string> = {};
+  if (authHeader) pyHeaders["Authorization"] = authHeader;
+
   // Try proxying to Python backend if running
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1200);
     const pyRes = await fetch(
-      `http://127.0.0.1:8000/api/v1/ai/status?account_id=${encodeURIComponent(accountId)}`,
+      `http://127.0.0.1:8000/api/v1/ai/status`,
       {
+        headers: pyHeaders,
         signal: controller.signal,
       },
     );
@@ -27,6 +32,7 @@ export async function GET(req: NextRequest) {
   } catch {
     // Python backend not running or timed out; fall back to embedded story engine
   }
+
 
   const status = getAIStatus(accountId);
   return NextResponse.json(status);
