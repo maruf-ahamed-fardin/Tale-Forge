@@ -10,12 +10,16 @@ while _current.parent != _current:
         break
     _current = _current.parent
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
 
 from ai.story_engine import ai_engine
+from app.models.user import User
+from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/ai", tags=["simple-ai"])
+
+MAX_TRAIN_FILE_BYTES = 20 * 1024 * 1024  # 20 MB
 
 
 class ChatRequest(BaseModel):
@@ -32,23 +36,32 @@ class TrainRequest(BaseModel):
 
 
 @router.post("/chat")
-async def chat_and_generate(req: ChatRequest):
+async def chat_and_generate(
+    req: ChatRequest,
+    current_user: User = Depends(get_current_user),
+):
     """User prompts the AI, the AI crafts a new story in their chosen scope and trained style,
     and automatically retrains itself on the output!
+    Strictly isolated to current_user.id.
     """
+    account_id = current_user.id
     res = ai_engine.generate_and_chat(
         req.message,
         auto_train=req.auto_train,
         training_scope=req.training_scope,
-        account_id=req.account_id,
+        account_id=account_id,
     )
     return res
 
 
 @router.post("/train")
-async def train_story(req: TrainRequest):
-    """User submits text to train the AI for their specific account."""
-    res = ai_engine.train_on_text(req.text, req.title, account_id=req.account_id)
+async def train_story(
+    req: TrainRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """User submits text to train the AI for their specific authenticated account."""
+    account_id = current_user.id
+    res = ai_engine.train_on_text(req.text, req.title, account_id=account_id)
     return res
 
 
@@ -57,9 +70,21 @@ async def train_with_file(
     file: UploadFile = File(...),
     title: str = Form(""),
     account_id: str = Form("default_local_author"),
+    current_user: User = Depends(get_current_user),
 ):
-    """User uploads a .txt or .pdf file to train the AI directly for their account."""
-    contents = await file.read()
+    """User uploads a .txt, .pdf, or .docx file to train the AI directly for their account.
+    Enforces maximum upload size and authenticates the user.
+    """
+    account_id = current_user.id
+
+    # Read with size cap to prevent memory exhaustion DoS
+    contents = await file.read(MAX_TRAIN_FILE_BYTES + 1)
+    if len(contents) > MAX_TRAIN_FILE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File size exceeds maximum allowed limit (20 MB).",
+        )
+
     filename = file.filename or "uploaded_story"
     is_pdf = filename.lower().endswith(".pdf") or file.content_type == "application/pdf"
     is_docx = filename.lower().endswith(".docx") or file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -82,6 +107,8 @@ async def train_with_file(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="PDF ফাইলটি থেকে কোনো লেখা উদ্ধার করা যায়নি।",
                 )
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -139,30 +166,40 @@ async def train_with_file(
 
 
 @router.get("/status")
-async def get_ai_status(account_id: str = "default_local_author"):
-    """Returns how many stories AI is trained on and memory stats for this account."""
-    return ai_engine.get_status(account_id=account_id)
+async def get_ai_status(
+    current_user: User = Depends(get_current_user),
+):
+    """Returns how many stories AI is trained on and memory stats for the authenticated account."""
+    return ai_engine.get_status(account_id=current_user.id)
 
 
 @router.delete("/trained/{story_id}")
-async def delete_trained_story(story_id: str, account_id: str = "default_local_author"):
+async def delete_trained_story(
+    story_id: str,
+    current_user: User = Depends(get_current_user),
+):
     """Deletes a story from personal account memory."""
     try:
-        updated = ai_engine.delete_story(story_id, account_id=account_id)
+        updated = ai_engine.delete_story(story_id, account_id=current_user.id)
         return {"success": True, "message": "Trained story deleted", "status": updated}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/history")
-async def get_chat_history(account_id: str = "default_local_author"):
-    """Returns recent conversation messages."""
-    safe_id = ai_engine._sanitize_account_id(account_id)
+async def get_chat_history(
+    current_user: User = Depends(get_current_user),
+):
+    """Returns recent conversation messages for authenticated account."""
+    safe_id = ai_engine._sanitize_account_id(current_user.id)
     return {"messages": ai_engine.chat_history.get(safe_id, [])}
 
 
 @router.post("/reset")
-async def reset_ai_memory(account_id: str = "default_local_author"):
+async def reset_ai_memory(
+    current_user: User = Depends(get_current_user),
+):
     """Resets personal account AI memory to blank state."""
-    ai_engine.clear_memory(account_id=account_id)
-    return {"success": True, "message": f"AI model memory for account '{account_id}' reset successfully"}
+    ai_engine.clear_memory(account_id=current_user.id)
+    return {"success": True, "message": f"AI model memory for account '{current_user.id}' reset successfully"}
+
