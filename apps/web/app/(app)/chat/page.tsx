@@ -877,24 +877,27 @@ export default function AIChatPage() {
 
                   <div
                     className={cn(
-                      "max-w-[88%] sm:max-w-[82%] rounded-3xl px-5 py-4",
+                      "max-w-[88%] sm:max-w-[82%] rounded-3xl px-6 py-5 transition-all",
                       isUser
-                        ? "bg-primary text-primary-foreground rounded-tr-sm shadow-xs"
-                        : "bg-surface border border-border text-foreground rounded-tl-sm shadow-xs"
+                        ? "bg-gradient-radiant text-white rounded-tr-sm shadow-radiant"
+                        : "bg-surface/90 backdrop-blur-md border border-border/80 text-foreground rounded-tl-sm shadow-card-elevated"
                     )}
                   >
                     {/* Model & Persona Attribution (Assistant only) */}
                     {!isUser && (
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-border/60 text-[11px] text-muted-foreground">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-3 border-b border-border/60 text-[11px] text-muted-foreground">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-primary">TaleForge</span>
+                          <span className="font-display font-bold text-primary flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" />
+                            TaleForge
+                          </span>
                           {m.model && (
-                            <span className="rounded-md bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+                            <span className="rounded-lg bg-surface-hover/80 px-2 py-0.5 text-[10px] font-medium text-foreground border border-border/40">
                               {m.model}
                             </span>
                           )}
                           {m.trainingScope && (
-                            <span className="rounded-md bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-foreground flex items-center gap-1">
+                            <span className="rounded-lg bg-surface-hover/80 px-2 py-0.5 text-[10px] font-medium text-foreground flex items-center gap-1 border border-border/40">
                               {m.trainingScope === "personal" ? (
                                 <>
                                   <User className="h-2.5 w-2.5 text-emerald-600" />
@@ -934,7 +937,7 @@ export default function AIChatPage() {
                     )}
 
                     {/* Story / Prompt Body */}
-                    <div className="prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed break-words whitespace-pre-wrap text-foreground">
+                    <div className="prose dark:prose-invert max-w-none font-bengali font-serif text-[15px] sm:text-[17px] leading-[1.9] tracking-wide break-words whitespace-pre-wrap text-foreground">
                       {m.content}
                     </div>
 
@@ -1113,8 +1116,31 @@ export default function AIChatPage() {
             </div>
           )}
 
-          {/* Floating Rounded Input Pill */}
-          <div className="relative rounded-3xl border border-border bg-surface shadow-md focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          {/* Interactive Genre & Mood Pills */}
+          <div className="flex items-center gap-1.5 mb-2.5 overflow-x-auto pb-1">
+            {[
+              { id: "mystery", label: language === "bn" ? "🔮 রহস্য ও থ্রিলার" : "🔮 Mystery & Suspense", prompt: language === "bn" ? "একটি টানটান রহস্য ও রোমাঞ্চকর গল্পের সূচনা লিখুন যেখানে..." : "Write a gripping mystery prologue where..." },
+              { id: "folklore", label: language === "bn" ? "🐅 রূপকথা ও লোকগাথা" : "🐅 Bengali Folklore", prompt: language === "bn" ? "সুন্দরবনের গহীনের এক প্রাচীন লোকগাথা নিয়ে গল্প লিখুন যেখানে..." : "Craft a folklore tale rooted in the mystical Sundarbans where..." },
+              { id: "scifi", label: language === "bn" ? "🚀 সাই-ফাই সাইবারপাঙ্ক" : "🚀 Sci-Fi Cyberpunk", prompt: language === "bn" ? "২০৮৫ সালের ঢাকার নিয়ন আলোয় ঘেরা এক সাইবারপাঙ্ক থ্রিলার গল্প শুরু করুন যেখানে..." : "Start a 2085 cyberpunk sci-fi story set in neon-lit Dhaka where..." },
+              { id: "romance", label: language === "bn" ? "🌸 কাব্যিক প্রেম" : "🌸 Poetic Romance", prompt: language === "bn" ? "বৃষ্টিস্নাত এক সন্ধ্যায় পুরান ঢাকার ছাদবাগানে দুজনের আকস্মিক দেখা হওয়ার একটি কাব্যিক গল্প লিখুন..." : "Write a poetic, heartfelt romance about two strangers meeting on a rain-drenched rooftop..." },
+              { id: "historical", label: language === "bn" ? "📜 ঐতিহাসিক নাটক" : "📜 Historical Drama", prompt: language === "bn" ? "মুঘল আমলের সুবেদারি ঢাকার এক রহস্যময় রাত নিয়ে ঐতিহাসিক গল্প শুরু করুন..." : "Begin an atmospheric historical narrative set in Mughal-era Bengal..." }
+            ].map((genre) => (
+              <button
+                key={genre.id}
+                type="button"
+                onClick={() => {
+                  setInputPrompt(genre.prompt);
+                  textareaRef.current?.focus();
+                }}
+                className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-surface/80 hover:bg-surface-hover border border-border/70 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all shadow-2xs whitespace-nowrap active:scale-95"
+              >
+                {genre.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Floating Rounded Glass Input Pill */}
+          <div className="relative rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/25 transition-all">
             <textarea
               ref={textareaRef}
               rows={1}
@@ -1176,12 +1202,12 @@ export default function AIChatPage() {
                 </span>
               </div>
 
-              {/* Circular Send Button */}
+              {/* Radiant Send Button */}
               <button
                 type="button"
                 onClick={() => handleSendMessage()}
                 disabled={loading || (!inputPrompt.trim() && !attachedImage)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-radiant text-white shadow-radiant transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
                 title={t("chat.sendButton", undefined, "Send Prompt (Enter)")}
               >
                 {loading ? (
