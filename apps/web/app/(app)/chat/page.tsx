@@ -58,14 +58,16 @@ interface ImageAttachment {
   type: string;
 }
 
-// Model Options
-const AVAILABLE_MODELS = [
+const getAvailableModels = (lang: "en" | "bn") => [
   {
     id: "gemini-1.5-flash",
     name: "Google Gemini 1.5 Flash",
     tag: "Fast & Multimodal",
-    badge: "Recommended",
-    desc: "বিদ্যুৎগতির দ্রুত ও গভীর বাংলা গল্প কথন। ছবি দেখেও নিখুঁত দৃশ্য বর্ণনা ও গল্প সৃষ্টি করতে সক্ষম।",
+    badge: lang === "bn" ? "সুপারিশকৃত" : "Recommended",
+    desc:
+      lang === "bn"
+        ? "বিদ্যুৎগতির দ্রুত ও গভীর বাংলা গল্প কথন। ছবি দেখেও নিখুঁত দৃশ্য বর্ণনা ও গল্প সৃষ্টি করতে সক্ষম।"
+        : "Lightning fast narrative generation. Can create stories from image prompts.",
     icon: Zap,
     color: "text-amber-500",
   },
@@ -73,8 +75,11 @@ const AVAILABLE_MODELS = [
     id: "gemini-1.5-pro",
     name: "Google Gemini 1.5 Pro",
     tag: "Deep Literary Novelist",
-    badge: "Pro Quality",
-    desc: "জটিল প্লট, বহু-অধ্যায় উপন্যাস ও গভীর চরিত্র বিশ্লেষণের জন্য বিশ্বমানের শক্তিশালী মডেল।",
+    badge: lang === "bn" ? "প্রো কোয়ালিটি" : "Pro Quality",
+    desc:
+      lang === "bn"
+        ? "জটিল প্লট, বহু-অধ্যায় উপন্যাস ও গভীর চরিত্র বিশ্লেষণের জন্য বিশ্বমানের শক্তিশালী মডেল।"
+        : "World-class model for intricate plots, multi-chapter novels, and deep character development.",
     icon: Sparkles,
     color: "text-indigo-500",
   },
@@ -82,8 +87,11 @@ const AVAILABLE_MODELS = [
     id: "taleforge-lora",
     name: "TaleForge LoRA Adapter",
     tag: "Personal Trained Voice",
-    badge: "My Style",
-    desc: "আপনার নিজস্ব আপলোড করা ও অটো-ট্রেইন্ড গল্পগুলোর অবিকল বাচনভঙ্গি ও শব্দচয়নকে প্রাধান্য দেয়।",
+    badge: lang === "bn" ? "আমার স্টাইল" : "My Style",
+    desc:
+      lang === "bn"
+        ? "আপনার নিজস্ব আপলোড করা ও অটো-ট্রেইন্ড গল্পগুলোর অবিকল বাচনভঙ্গি ও শব্দচয়নকে প্রাধান্য দেয়।"
+        : "Emulates the exact vocabulary, cadence, and tone of your uploaded and trained stories.",
     icon: BookOpen,
     color: "text-emerald-500",
   },
@@ -91,119 +99,136 @@ const AVAILABLE_MODELS = [
     id: "smart-engine",
     name: "TaleForge Smart Engine",
     tag: "Offline & Procedural",
-    badge: "Offline",
-    desc: "সম্পূর্ণ লোকাল ও অফলাইন এলগরিদমিক বাংলা সাহিত্য ইঞ্জিন। কোনো ক্লাউড বা কি-এর প্রয়োজন নেই।",
+    badge: lang === "bn" ? "অফলাইন" : "Offline",
+    desc:
+      lang === "bn"
+        ? "সম্পূর্ণ লোকাল ও অফলাইন এলগরিদমিক বাংলা সাহিত্য ইঞ্জিন। কোনো ক্লাউড বা কি-এর প্রয়োজন নেই।"
+        : "Completely local offline literary engine. No cloud connection or API key needed.",
     icon: Cpu,
     color: "text-blue-500",
   },
 ];
 
-// Persona / Author Style Options
-const AVAILABLE_PERSONAS = [
+const getAvailablePersonas = (lang: "en" | "bn") => [
   {
     id: "default",
-    name: "স্বাভাবিক স্টাইল (Balanced)",
-    desc: "উন্নত, প্রাঞ্জল ও গতিশীল সমকালীন বাংলা গদ্য।",
+    name: lang === "bn" ? "স্বাভাবিক স্টাইল (Balanced)" : "Balanced Modern Fiction",
+    desc: lang === "bn" ? "উন্নত, প্রাঞ্জল ও গতিশীল সমকালীন বাংলা গদ্য।" : "Fluid, contemporary storytelling with dynamic narrative flow.",
     emoji: "✍️",
   },
   {
     id: "humayun",
-    name: "হুমায়ূন আহমেদ ধারা (Magic Realism)",
-    desc: "সহজ-সরল বাক্যে অদ্ভুত চরিত্র, রাতজাগা জোছনা, বৃষ্টি ও গভীর অনুভূতি।",
+    name: lang === "bn" ? "হুমায়ূন আহমেদ ধারা (Magic Realism)" : "Humayun Ahmed Magical Realism",
+    desc: lang === "bn" ? "সহজ-সরল বাক্যে অদ্ভুত চরিত্র, রাতজাগা জোছনা, বৃষ্টি ও গভীর অনুভূতি।" : "Conversational, whimsical dialogues, monsoon rains, and heartfelt melancholy.",
     emoji: "🌧️",
   },
   {
     id: "mystery",
-    name: "ফেলুদা / রহস্য ও গোয়েন্দা (Mystery)",
-    desc: "তীক্ষ্ণ পর্যবেক্ষণ, টানটান সাসপেন্স ও রোমাঞ্চকর অনুসন্ধান।",
+    name: lang === "bn" ? "ফেলুদা / রহস্য ও গোয়েন্দা (Mystery)" : "Feluda / Detective Suspense",
+    desc: lang === "bn" ? "তীক্ষ্ণ পর্যবেক্ষণ, টানটান সাসপেন্স ও রোমাঞ্চকর অনুসন্ধান।" : "Sharp deductions, keen observations, and atmospheric thriller suspense.",
     emoji: "🔍",
   },
   {
     id: "romance",
-    name: "কাব্যিক প্রেম ও মানবিক সম্পর্ক (Poetic Romance)",
-    desc: "হৃদয়স্পর্শী আবেগ, নিঃশব্দ দীর্ঘশ্বাস ও গভীর ভালোবাসার গল্প।",
+    name: lang === "bn" ? "কাব্যিক প্রেম ও মানবিক সম্পর্ক (Poetic Romance)" : "Poetic Romance & Bonds",
+    desc: lang === "bn" ? "হৃদয়স্পর্শী আবেগ, নিঃশব্দ দীর্ঘশ্বাস ও গভীর ভালোবাসার গল্প।" : "Deep lyrical emotional bonds, tender romance, and melancholic longings.",
     emoji: "💖",
   },
   {
     id: "classic",
-    name: "ক্লাসিক্যাল সাহিত্য (Rabindra / Sarat Classic)",
-    desc: "ভাবগম্ভীর, মার্জিত ও গভীর আত্মবিশ্লেষণমূলক ধ্রুপদী সাহিত্যধারা।",
+    name: lang === "bn" ? "ক্লাসিক্যাল সাহিত্য (Rabindra / Sarat Classic)" : "Classical Literature (Tagore Style)",
+    desc: lang === "bn" ? "ভাবগম্ভীর, মার্জিত ও গভীর আত্মবিশ্লেষণমূলক ধ্রুপদী সাহিত্যধারা।" : "Philosophical, stately prose reflecting Rabindranath & Sarat Chandra style.",
     emoji: "📜",
   },
 ];
 
-// Training Scope Options (Default Master Stories vs Account Personal vs Hybrid)
-const AVAILABLE_TRAINING_SCOPES = [
+const getAvailableScopes = (lang: "en" | "bn") => [
   {
     id: "hybrid",
-    name: "হাইব্রিড শৈলী (ডিফল্ট + নিজস্ব)",
-    shortName: "হাইব্রিড শৈলী",
+    name: lang === "bn" ? "হাইব্রিড শৈলী (ডিফল্ট + নিজস্ব)" : "Hybrid (Default + Personal)",
+    shortName: lang === "bn" ? "হাইব্রিড শৈলী" : "Hybrid",
     tag: "Recommended",
     badge: "Hybrid",
-    desc: "ডিফল্ট মাস্টার সাহিত্য ভাণ্ডার এবং আপনার অ্যাকাউন্টের নিজস্ব ব্যক্তিগত গল্প—উভয়ের সেরা জ্ঞান একসাথে প্রয়োগ করবে।",
+    desc: lang === "bn" ? "ডিফল্ট মাস্টার সাহিত্য ভাণ্ডার এবং আপনার অ্যাকাউন্টের নিজস্ব ব্যক্তিগত গল্প—উভয়ের সেরা জ্ঞান একসাথে প্রয়োগ করবে।" : "Combines default master literature with your private uploaded stories.",
     icon: Sparkles,
     color: "text-amber-500",
   },
   {
     id: "personal",
-    name: "শুধুমাত্র ব্যক্তিগত শৈলী (Account Only)",
-    shortName: "ব্যক্তিগত শৈলী",
+    name: lang === "bn" ? "শুধুমাত্র ব্যক্তিগত শৈলী (Account Only)" : "Personal Style (Account Only)",
+    shortName: lang === "bn" ? "ব্যক্তিগত শৈলী" : "Personal",
     tag: "Private",
     badge: "Personal",
-    desc: "শুধুমাত্র আপনার অ্যাকাউন্টে আপলোড ও ট্রেইন করা গল্পগুলোর নিজস্ব বাচনভঙ্গি ও চরিত্রায়ন ব্যবহার করবে।",
+    desc: lang === "bn" ? "শুধুমাত্র আপনার অ্যাকাউন্টে আপলোড ও ট্রেইন করা গল্পগুলোর নিজস্ব বাচনভঙ্গি ও চরিত্রায়ন ব্যবহার করবে।" : "Applies vocabulary and dialogue exclusively from your trained stories.",
     icon: User,
     color: "text-emerald-500",
   },
   {
     id: "default",
-    name: "শুধুমাত্র ডিফল্ট সাহিত্য (Master Stories)",
-    shortName: "ডিফল্ট সাহিত্য",
+    name: lang === "bn" ? "শুধুমাত্র ডিফল্ট সাহিত্য (Master Stories)" : "Default Master Literature",
+    shortName: lang === "bn" ? "ডিফল্ট সাহিত্য" : "Default Core",
     tag: "Master Class",
     badge: "Default",
-    desc: "হুমায়ূন আহমেদ, ফেলুদা রহস্য, বিভূতিভূষণ ও ক্লাসিক বাংলা সাহিত্যের ৬টি মাস্টার গল্পের কাঠামোর ওপর ভিত্তি করবে।",
+    desc: lang === "bn" ? "হুমায়ূন আহমেদ, ফেলুদা রহস্য, বিভূতিভূষণ ও ক্লাসিক বাংলা সাহিত্যের ৬টি মাস্টার গল্পের কাঠামোর ওপর ভিত্তি করবে।" : "Grounded in classic literary masterworks.",
     icon: BookOpen,
     color: "text-indigo-500",
   },
 ];
 
-// Starter prompt suggestion cards
-const STARTER_SUGGESTIONS = [
+const getStarterSuggestions = (lang: "en" | "bn") => [
   {
-    title: "বৃষ্টির রাতের একাকী ক্যাফে",
-    desc: "ঝুম বৃষ্টির রাতে শহরের এক পুরনো ক্যাফেতে হঠাৎ এক অদ্ভুত ডায়েরি ও অচেনা মানুষের প্রবেশ...",
+    title: lang === "bn" ? "বৃষ্টির রাতের একাকী ক্যাফে" : "Rainy Night in a Solitary Cafe",
+    desc: lang === "bn" ? "ঝুম বৃষ্টির রাতে শহরের এক পুরনো ক্যাফেতে হঠাৎ এক অদ্ভুত ডায়েরি ও অচেনা মানুষের প্রবেশ..." : "A cozy cafe on a rainy evening where an unknown stranger walks in with an antique leather journal...",
     prompt:
-      "একটি ঝুম বৃষ্টির রাতের গল্প লিখুন। শহরের কোলাহলহীন এক পুরনো ক্যাফেতে একাকী বসে কফি খাচ্ছিল শুভ্র। হঠাৎ বন্ধ দরজায় এসে দাঁড়াল ভেজা শরীরে এক অচেনা তরুণী, হাতে একটি পুরনো চামড়ায় বাঁধানো ডায়রি।",
+      lang === "bn"
+        ? "একটি ঝুম বৃষ্টির রাতের গল্প লিখুন। শহরের কোলাহলহীন এক পুরনো ক্যাফেতে একাকী বসে কফি খাচ্ছিল শুভ্র। হঠাৎ বন্ধ দরজায় এসে দাঁড়াল ভেজা শরীরে এক অচেনা তরুণী, হাতে একটি পুরনো চামড়ায় বাঁধানো ডায়রি।"
+        : "Write an atmospheric rainy evening story set in a quiet city cafe where an unknown stranger steps in holding a weathered leather diary.",
     icon: "🌧️",
     persona: "humayun",
   },
   {
-    title: "কুয়াশাচ্ছন্ন পাহাড়ি রহস্য",
-    desc: "দার্জিলিংয়ের এক প্রাচীন হেরিটেজ কটেজে ঘটে যাওয়া অমীমাংসিত এক অদ্ভুত চুরির অনুসন্ধান...",
+    title: lang === "bn" ? "কুয়াশাচ্ছন্ন পাহাড়ি রহস্য" : "Misty Mountain Cottage Mystery",
+    desc: lang === "bn" ? "দার্জিলিংয়ের এক প্রাচীন হেরিটেজ কটেজে ঘটে যাওয়া অমীমাংসিত এক অদ্ভুত চুরির অনুসন্ধান..." : "An unsolved mystery in a mist-covered heritage cottage in the hills...",
     prompt:
-      "দার্জিলিংয়ের কুয়াশাচ্ছন্ন ম্যাল রোডের ওপারে এক প্রাচীন কটেজে অমীমাংসিত একটি চুরির ঘটনা নিয়ে রহস্য গল্প লিখুন। ফেলুদা স্টাইলে তীক্ষ্ণ পর্যবেক্ষণ ও যুক্তির খেলায় সত্য উন্মোচন করুন।",
+      lang === "bn"
+        ? "দার্জিলিংয়ের কুয়াশাচ্ছন্ন ম্যাল রোডের ওপারে এক প্রাচীন কটেজে অমীমাংসিত একটি চুরির ঘটনা নিয়ে রহস্য গল্প লিখুন। ফেলুদা স্টাইলে তীক্ষ্ণ পর্যবেক্ষণ ও যুক্তির খেলায় সত্য উন্মোচন করুন।"
+        : "Write a suspenseful mystery story set in a mist-covered heritage cottage with keen observation and logical deductions.",
     icon: "🔍",
     persona: "mystery",
   },
   {
-    title: "ছবি দেখে দৃশ্যপট রচনা (Vision)",
-    desc: "আপনার ফোনের বা পিসির যে কোনো ছবি আপলোড করে সেই দৃশ্য নিয়ে সম্পূর্ণ মৌলিক বাংলা গল্প তৈরি করুন।",
-    prompt: "এই ছবিটি খুব গভীরভাবে পর্যবেক্ষণ করে একটি জীবন্ত ও গভীর মানবিক অনুভূতির বাংলা গল্প রচনা করুন।",
+    title: lang === "bn" ? "ছবি দেখে দৃশ্যপট রচনা (Vision)" : "Story from Image (Vision)",
+    desc: lang === "bn" ? "আপনার ফোনের বা পিসির যে কোনো ছবি আপলোড করে সেই দৃশ্য নিয়ে সম্পূর্ণ মৌলিক বাংলা গল্প তৈরি করুন।" : "Upload any photo from your device and craft a rich original story around it.",
+    prompt:
+      lang === "bn"
+        ? "এই ছবিটি খুব গভীরভাবে পর্যবেক্ষণ করে একটি জীবন্ত ও গভীর মানবিক অনুভূতির বাংলা গল্প রচনা করুন।"
+        : "Examine this image deeply and compose an evocative, cinematic story around the setting and emotions.",
     icon: "🎨",
     persona: "default",
     isAttachGuide: true,
   },
   {
-    title: "আমার নিজস্ব ট্রেইন্ড স্টাইলে উপন্যাস",
-    desc: "আমার পূর্বে আপলোড করা গল্পের শব্দভাণ্ডার, উপমা ও ভাষার ছাঁচে একটি সম্পূর্ণ নতুন কাহিনী...",
+    title: lang === "bn" ? "আমার নিজস্ব ট্রেইন্ড স্টাইলে উপন্যাস" : "Tale in My Personal Style",
+    desc: lang === "bn" ? "আমার পূর্বে আপলোড করা গল্পের শব্দভাণ্ডার, উপমা ও ভাষার ছাঁচে একটি সম্পূর্ণ নতুন কাহিনী..." : "A new story replicating your personal trained cadence, vocabulary, and prose style...",
     prompt:
-      "আমার পূর্বে ট্রেইন করানো গল্পের নিজস্ব শব্দচয়ন, বাক্য গঠন ও ছাঁচ নিখুঁতভাবে অনুকরণ করে মানুষের আত্মবিশ্বাস ও সম্পর্কের একটি সমৃদ্ধ গল্প রচনা করুন।",
+      lang === "bn"
+        ? "আমার পূর্বে ট্রেইন করানো গল্পের নিজস্ব শব্দচয়ন, বাক্য গঠন ও ছাঁচ নিখুঁতভাবে অনুকরণ করে মানুষের আত্মবিশ্বাস ও সম্পর্কের একটি সমৃদ্ধ গল্প রচনা করুন।"
+        : "Write a compelling story replicating my personal trained vocabulary, sentence cadence, and narrative tone.",
     icon: "🧠",
     persona: "default",
     model: "taleforge-lora",
   },
 ];
 
+type StarterItem = ReturnType<typeof getStarterSuggestions>[number];
+
 export default function AIChatPage() {
+  const { t, language } = useLanguage();
+  const availableModels = getAvailableModels(language);
+  const availablePersonas = getAvailablePersonas(language);
+  const availableScopes = getAvailableScopes(language);
+  const starterSuggestions = getStarterSuggestions(language);
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputPrompt, setInputPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -359,7 +384,7 @@ export default function AIChatPage() {
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
-  const handleTriggerSuggestion = (item: (typeof STARTER_SUGGESTIONS)[number]) => {
+  const handleTriggerSuggestion = (item: StarterItem) => {
     if (item.isAttachGuide) {
       imageInputRef.current?.click();
       return;
@@ -540,27 +565,27 @@ export default function AIChatPage() {
   };
 
   const currentModelInfo =
-    AVAILABLE_MODELS.find((m) => m.id === selectedModel) || AVAILABLE_MODELS[0];
+    availableModels.find((m) => m.id === selectedModel) || availableModels[0];
   const currentPersonaInfo =
-    AVAILABLE_PERSONAS.find((p) => p.id === selectedPersona) || AVAILABLE_PERSONAS[0];
+    availablePersonas.find((p) => p.id === selectedPersona) || availablePersonas[0];
   const currentScopeInfo =
-    AVAILABLE_TRAINING_SCOPES.find((s) => s.id === selectedTrainingScope) ||
-    AVAILABLE_TRAINING_SCOPES[0];
+    availableScopes.find((s) => s.id === selectedTrainingScope) ||
+    availableScopes[0];
   const ModelIcon = currentModelInfo.icon;
   const ScopeIcon = currentScopeInfo.icon;
 
   return (
     <div className="relative flex flex-col h-[calc(100dvh-125px)] sm:h-[calc(100vh-135px)] w-full max-w-5xl mx-auto overflow-hidden">
       {/* ─── Top Bar / Header: Model Selector & Actions ─── */}
-      <header className="shrink-0 flex items-center justify-between pb-3 px-2 border-b border-border/60">
+      <header className="shrink-0 flex items-center justify-between pb-3 px-2 border-b border-border">
         <div className="flex items-center gap-2">
           {/* Model Selector Dropdown */}
           <div className="relative" ref={modelDropdownRef}>
             <button
               type="button"
               onClick={() => setShowModelDropdown((prev) => !prev)}
-              className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-bold text-[#1f1b2d] bg-white border border-border/80 shadow-xs hover:bg-stone-50 transition"
-              title="Change AI Model"
+              className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-bold text-foreground bg-surface border border-border shadow-xs hover:bg-surface-hover transition"
+              title={t("chat.modelSelector", undefined, "Change AI Model")}
             >
               <ModelIcon className={`h-4 w-4 ${currentModelInfo.color}`} />
               <span className="truncate max-w-[130px] sm:max-w-[200px]">
@@ -570,12 +595,12 @@ export default function AIChatPage() {
             </button>
 
             {showModelDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Select AI Generation Engine
+                  {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
                 </p>
                 <div className="space-y-1">
-                  {AVAILABLE_MODELS.map((m) => {
+                  {availableModels.map((m) => {
                     const Icon = m.icon;
                     const isSelected = m.id === selectedModel;
                     return (
@@ -583,24 +608,26 @@ export default function AIChatPage() {
                         key={m.id}
                         type="button"
                         onClick={() => handleSelectModel(m.id)}
-                        className={`w-full flex items-start gap-3 rounded-xl p-2.5 text-left transition ${
+                        className={cn(
+                          "w-full flex items-start gap-3 rounded-xl p-2.5 text-left transition",
                           isSelected
-                            ? "bg-indigo-50/80 text-primary"
-                            : "hover:bg-stone-50 text-[#292524]"
-                        }`}
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-surface-hover text-foreground"
+                        )}
                       >
-                        <div className={`p-1.5 rounded-lg bg-white shadow-xs mt-0.5 ${m.color}`}>
+                        <div className={`p-1.5 rounded-lg bg-surface shadow-xs mt-0.5 ${m.color}`}>
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-xs font-bold truncate">{m.name}</span>
                             <span
-                              className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full ${
+                              className={cn(
+                                "text-[10px] font-semibold px-1.5 py-0.2 rounded-full",
                                 isSelected
                                   ? "bg-primary text-white"
-                                  : "bg-stone-100 text-stone-600"
-                              }`}
+                                  : "bg-surface-hover text-muted-foreground"
+                              )}
                             >
                               {m.badge}
                             </span>
@@ -622,34 +649,35 @@ export default function AIChatPage() {
             <button
               type="button"
               onClick={() => setShowPersonaDropdown((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#44403c] bg-stone-100/80 hover:bg-stone-200/80 transition"
-              title="Select Writing Persona / Literary Style"
+              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border hover:bg-surface-hover transition"
+              title={t("chat.personaSelector", undefined, "Select Literary Style")}
             >
               <span>{currentPersonaInfo.emoji}</span>
               <span className="hidden md:inline truncate max-w-[140px]">
                 {currentPersonaInfo.name.split(" ")[0]}
               </span>
-              <ChevronDown className="h-3 w-3 text-stone-500" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </button>
 
             {showPersonaDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Literary Persona / লেখক শৈলী
+                  {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
                 </p>
                 <div className="space-y-1">
-                  {AVAILABLE_PERSONAS.map((p) => {
+                  {availablePersonas.map((p) => {
                     const isSelected = p.id === selectedPersona;
                     return (
                       <button
                         key={p.id}
                         type="button"
                         onClick={() => handleSelectPersona(p.id)}
-                        className={`w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition ${
+                        className={cn(
+                          "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
                           isSelected
-                            ? "bg-indigo-50 text-primary"
-                            : "hover:bg-stone-50 text-[#292524]"
-                        }`}
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-surface-hover text-foreground"
+                        )}
                       >
                         <span className="text-base">{p.emoji}</span>
                         <div className="flex-1 min-w-0">
@@ -671,23 +699,23 @@ export default function AIChatPage() {
             <button
               type="button"
               onClick={() => setShowTrainingScopeDropdown((prev) => !prev)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#44403c] bg-stone-100/80 hover:bg-stone-200/80 transition"
-              title="Select AI Training Scope (Personal vs Default Literature)"
+              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border hover:bg-surface-hover transition"
+              title="Knowledge Scope"
             >
               <ScopeIcon className={`h-3.5 w-3.5 ${currentScopeInfo.color}`} />
               <span className="hidden md:inline truncate max-w-[130px]">
                 {currentScopeInfo.shortName}
               </span>
-              <ChevronDown className="h-3 w-3 text-stone-500" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </button>
 
             {showTrainingScopeDropdown && (
-              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+              <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Knowledge Scope / প্রশিক্ষণ জ্ঞান পরিসীমা
+                  Knowledge Scope / জ্ঞান পরিসীমা
                 </p>
                 <div className="space-y-1">
-                  {AVAILABLE_TRAINING_SCOPES.map((s) => {
+                  {availableScopes.map((s) => {
                     const SIcon = s.icon;
                     const isSelected = s.id === selectedTrainingScope;
                     return (
@@ -695,24 +723,26 @@ export default function AIChatPage() {
                         key={s.id}
                         type="button"
                         onClick={() => handleSelectTrainingScope(s.id)}
-                        className={`w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition ${
+                        className={cn(
+                          "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
                           isSelected
-                            ? "bg-amber-50/80 text-amber-950 font-medium"
-                            : "hover:bg-stone-50 text-[#292524]"
-                        }`}
+                            ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 font-medium"
+                            : "hover:bg-surface-hover text-foreground"
+                        )}
                       >
-                        <div className={`p-1 rounded-lg bg-white shadow-2xs mt-0.5 ${s.color}`}>
+                        <div className={`p-1 rounded-lg bg-surface shadow-2xs mt-0.5 ${s.color}`}>
                           <SIcon className="h-3.5 w-3.5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
                             <p className="text-xs font-bold leading-snug">{s.name}</p>
                             <span
-                              className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
+                              className={cn(
+                                "text-[9px] font-semibold px-1.5 py-0.2 rounded-full",
                                 isSelected
                                   ? "bg-amber-600 text-white"
-                                  : "bg-stone-100 text-stone-600"
-                              }`}
+                                  : "bg-surface-hover text-muted-foreground"
+                              )}
                             >
                               {s.badge}
                             </span>
@@ -735,12 +765,12 @@ export default function AIChatPage() {
           {aiStatus && (
             <Link
               href="/train"
-              className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200/80 hover:bg-emerald-100 transition"
-              title="View personal and default training stories"
+              className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition"
+              title={t("nav.goToTraining", undefined, "View personal and default training stories")}
             >
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span>
-                {aiStatus.personal_trained_stories ?? 0} নিজস্ব / {aiStatus.default_stories_count ?? 6} ডিফল্ট
+                {aiStatus.personal_trained_stories ?? 0} {language === "bn" ? "নিজস্ব" : "Personal"} / {aiStatus.default_stories_count ?? 6} {language === "bn" ? "ডিফল্ট" : "Default"}
               </span>
             </Link>
           )}
@@ -750,20 +780,20 @@ export default function AIChatPage() {
             variant="ghost"
             size="sm"
             onClick={handleNewChat}
-            className="flex items-center gap-1.5 rounded-xl text-xs font-semibold hover:bg-stone-100 text-[#44403c]"
-            title="Start a new clean story canvas"
+            className="flex items-center gap-1.5 rounded-xl text-xs font-semibold hover:bg-surface-hover text-foreground"
+            title={t("chat.newStoryButton", undefined, "New Story")}
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">New Story</span>
+            <span className="hidden sm:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
           </Button>
 
           <Link
             href="/stories"
-            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold bg-white border border-border/70 hover:bg-stone-50 text-[#292524] transition shadow-2xs"
-            title="Open Saved Stories Library"
+            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold bg-surface border border-border hover:bg-surface-hover text-foreground transition shadow-2xs"
+            title={t("nav.stories", undefined, "Open Saved Stories Library")}
           >
             <Library className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden sm:inline">Library</span>
+            <span className="hidden sm:inline">{t("nav.stories", undefined, "Library")}</span>
           </Link>
         </div>
       </header>
@@ -779,7 +809,7 @@ export default function AIChatPage() {
       {/* ─── Center Body: Either Empty Hero State or Conversation Stream ─── */}
       <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4 space-y-6">
         {messages.length === 0 ? (
-          /* ─── ChatGPT / Claude Style Welcome Empty State ─── */
+          /* ─── Welcome Empty State ─── */
           <div className="flex flex-col items-center justify-center min-h-[70%] text-center max-w-2xl mx-auto py-8">
             <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg mb-4">
               <Sparkles className="h-7 w-7" />
@@ -788,25 +818,29 @@ export default function AIChatPage() {
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f1b2d]">
-              What tale shall we craft today?
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+              {language === "bn" ? "আজ কী গল্প সৃষ্টি করতে চান?" : "What tale shall we craft today?"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground max-w-md">
-              আজ আপনি কী গল্প সৃষ্টি করতে চান? নিচে আপনার চিন্তা লিখুন, ছবি আপলোড করুন, বা যেকোনো একটি আইডিয়া নির্বাচন করুন।
+              {t(
+                "chat.subtitle",
+                undefined,
+                "Interactive story generation with personalized styles and voice adaptation."
+              )}
             </p>
 
             {/* Quick Starter Suggestion Cards */}
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full text-left">
-              {STARTER_SUGGESTIONS.map((item, idx) => (
+              {starterSuggestions.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleTriggerSuggestion(item)}
-                  className="group relative rounded-2xl border border-border/80 bg-white/80 hover:bg-white p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.99]"
+                  className="group relative rounded-2xl border border-border bg-surface hover:bg-surface-hover p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-lg">{item.icon}</span>
-                    <h3 className="text-xs font-bold text-[#1f1b2d] group-hover:text-primary transition-colors">
+                    <h3 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                       {item.title}
                     </h3>
                   </div>
@@ -836,52 +870,53 @@ export default function AIChatPage() {
                   className={`flex gap-3.5 ${isUser ? "justify-end" : "justify-start"}`}
                 >
                   {!isUser && (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-sm mt-0.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-xs mt-0.5">
                       <Sparkles className="h-4 w-4" />
                     </div>
                   )}
 
                   <div
-                    className={`max-w-[88%] sm:max-w-[82%] rounded-3xl px-5 py-4 ${
+                    className={cn(
+                      "max-w-[88%] sm:max-w-[82%] rounded-3xl px-5 py-4",
                       isUser
-                        ? "bg-primary text-primary-foreground rounded-tr-sm shadow-sm"
-                        : "bg-white border border-border/70 text-[#292524] rounded-tl-sm shadow-xs"
-                    }`}
+                        ? "bg-primary text-primary-foreground rounded-tr-sm shadow-xs"
+                        : "bg-surface border border-border text-foreground rounded-tl-sm shadow-xs"
+                    )}
                   >
                     {/* Model & Persona Attribution (Assistant only) */}
                     {!isUser && (
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-border/50 text-[11px] text-muted-foreground">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-border/60 text-[11px] text-muted-foreground">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-semibold text-primary">TaleForge</span>
                           {m.model && (
-                            <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-700">
+                            <span className="rounded-md bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-foreground">
                               {m.model}
                             </span>
                           )}
                           {m.trainingScope && (
-                            <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600 flex items-center gap-1">
+                            <span className="rounded-md bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-foreground flex items-center gap-1">
                               {m.trainingScope === "personal" ? (
                                 <>
                                   <User className="h-2.5 w-2.5 text-emerald-600" />
-                                  <span>ব্যক্তিগত AI</span>
+                                  <span>{t("train.tabPersonal", undefined, "Personal")}</span>
                                 </>
                               ) : m.trainingScope === "default" ? (
                                 <>
                                   <BookOpen className="h-2.5 w-2.5 text-indigo-600" />
-                                  <span>ডিফল্ট সাহিত্য</span>
+                                  <span>{t("train.tabDefault", undefined, "Default")}</span>
                                 </>
                               ) : (
                                 <>
                                   <Sparkles className="h-2.5 w-2.5 text-amber-600" />
-                                  <span>হাইব্রিড মোড</span>
+                                  <span>Hybrid</span>
                                 </>
                               )}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-stone-400">
-                            {wordCount} শব্দ • {readMinutes} মিনিট পড়া
+                          <span className="text-[10px] text-muted-foreground">
+                            {wordCount} {t("common.words", undefined, "words")} • {readMinutes} min
                           </span>
                         </div>
                       </div>
@@ -899,30 +934,30 @@ export default function AIChatPage() {
                     )}
 
                     {/* Story / Prompt Body */}
-                    <div className="prose prose-stone max-w-none text-sm sm:text-base leading-relaxed break-words whitespace-pre-wrap">
+                    <div className="prose dark:prose-invert max-w-none text-sm sm:text-base leading-relaxed break-words whitespace-pre-wrap text-foreground">
                       {m.content}
                     </div>
 
                     {/* Assistant Action Bar (Copy, Save, TTS, Download, Regenerate) */}
                     {!isUser && (
-                      <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap items-center justify-between gap-2">
+                      <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-1">
                           {/* Copy */}
                           <button
                             type="button"
                             onClick={() => handleCopyStory(m.id, m.content)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition"
-                            title="Copy story"
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground transition"
+                            title={t("common.copy", undefined, "Copy")}
                           >
                             {copiedId === m.id ? (
                               <>
                                 <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                <span className="text-emerald-700">Copied</span>
+                                <span className="text-emerald-700 dark:text-emerald-300">{t("common.copied", undefined, "Copied")}</span>
                               </>
                             ) : (
                               <>
                                 <Copy className="h-3.5 w-3.5" />
-                                <span>Copy</span>
+                                <span>{t("common.copy", undefined, "Copy")}</span>
                               </>
                             )}
                           </button>
@@ -932,27 +967,28 @@ export default function AIChatPage() {
                             type="button"
                             onClick={() => handleSaveToStories(m.id, m.content)}
                             disabled={isSaving || isSaved}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition",
                               isSaved
-                                ? "text-emerald-700 bg-emerald-50"
-                                : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-                            }`}
-                            title="Save story to personal library"
+                                ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40"
+                                : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                            )}
+                            title={t("chat.saveToLibrary", undefined, "Save to Library")}
                           >
                             {isSaving ? (
                               <>
                                 <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                                <span>Saving…</span>
+                                <span>{t("common.saving", undefined, "Saving…")}</span>
                               </>
                             ) : isSaved ? (
                               <>
                                 <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                <span>Saved in Library</span>
+                                <span>{t("chat.storySaved", undefined, "Saved")}</span>
                               </>
                             ) : (
                               <>
                                 <BookOpen className="h-3.5 w-3.5 text-primary" />
-                                <span>Save</span>
+                                <span>{t("chat.saveToLibrary", undefined, "Save")}</span>
                               </>
                             )}
                           </button>
@@ -961,22 +997,23 @@ export default function AIChatPage() {
                           <button
                             type="button"
                             onClick={() => handleReadAloud(m.content, m.id)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition",
                               isSpeaking
-                                ? "bg-amber-50 text-amber-700 animate-pulse"
-                                : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-                            }`}
-                            title={isSpeaking ? "Stop speech" : "Read story aloud"}
+                                ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 animate-pulse"
+                                : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                            )}
+                            title={isSpeaking ? t("chat.stopAudio", undefined, "Stop Voice") : t("chat.readAloud", undefined, "Read Aloud")}
                           >
                             {isSpeaking ? (
                               <>
                                 <VolumeX className="h-3.5 w-3.5 text-amber-600" />
-                                <span>Stop Audio</span>
+                                <span>{t("chat.stopAudio", undefined, "Stop Audio")}</span>
                               </>
                             ) : (
                               <>
                                 <Volume2 className="h-3.5 w-3.5" />
-                                <span>Read Aloud</span>
+                                <span>{t("chat.readAloud", undefined, "Read Aloud")}</span>
                               </>
                             )}
                           </button>
@@ -985,11 +1022,11 @@ export default function AIChatPage() {
                           <button
                             type="button"
                             onClick={() => handleDownloadStory(m.content)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition"
-                            title="Download story as .txt file"
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground transition"
+                            title={t("common.download", undefined, "Download TXT")}
                           >
                             <Download className="h-3.5 w-3.5" />
-                            <span>Download</span>
+                            <span>{t("common.download", undefined, "Download")}</span>
                           </button>
                         </div>
 
@@ -1016,7 +1053,7 @@ export default function AIChatPage() {
                   </div>
 
                   {isUser && (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-stone-200 text-stone-700 shadow-sm mt-0.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-surface-hover text-foreground shadow-xs mt-0.5">
                       <User className="h-4 w-4" />
                     </div>
                   )}
@@ -1027,16 +1064,20 @@ export default function AIChatPage() {
             {/* Typing / Generating Animation */}
             {loading && (
               <div className="flex gap-3.5 justify-start max-w-3xl mx-auto animate-in fade-in-50">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-sm">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-xs">
                   <Sparkles className="h-4 w-4 animate-spin" />
                 </div>
-                <div className="rounded-3xl rounded-tl-sm border border-border/70 bg-white px-5 py-4 shadow-xs">
+                <div className="rounded-3xl rounded-tl-sm border border-border bg-surface px-5 py-4 shadow-xs">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                    <span className="font-medium text-[#292524]">
+                    <span className="font-medium text-foreground">
                       {attachedImage
-                        ? "AI ছবিটি বিশ্লেষণ করে চমৎকার বাংলা গল্প রচনা করছে..."
-                        : `${currentModelInfo.name} আপনার নিজস্ব স্টাইলে গল্পটি বুনছে...`}
+                        ? language === "bn"
+                          ? "AI ছবিটি বিশ্লেষণ করে চমৎকার গল্প রচনা করছে..."
+                          : "AI is analyzing image and writing story..."
+                        : language === "bn"
+                        ? `${currentModelInfo.name} আপনার নিজস্ব স্টাইলে গল্পটি বুনছে...`
+                        : `${currentModelInfo.name} is weaving your story...`}
                     </span>
                   </div>
                 </div>
@@ -1047,16 +1088,16 @@ export default function AIChatPage() {
         )}
       </div>
 
-      {/* ─── Bottom Floating Capsule Input (ChatGPT / Claude Style) ─── */}
+      {/* ─── Bottom Floating Capsule Input ─── */}
       <div className="shrink-0 pb-3 pt-1 px-2 sm:px-4">
         <div className="max-w-3xl mx-auto">
           {/* Image Attachment Preview Badge */}
           {attachedImage && (
-            <div className="mb-2 inline-flex items-center gap-2 rounded-2xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs text-primary shadow-xs animate-in fade-in-50">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs text-primary shadow-xs animate-in fade-in-50">
               <img
                 src={attachedImage.dataUrl}
                 alt="Attached preview"
-                className="h-8 w-8 rounded-xl object-cover border border-indigo-300"
+                className="h-8 w-8 rounded-xl object-cover border border-primary/40"
               />
               <span className="font-semibold truncate max-w-[200px]">
                 {attachedImage.file.name}
@@ -1064,8 +1105,8 @@ export default function AIChatPage() {
               <button
                 type="button"
                 onClick={() => setAttachedImage(null)}
-                className="p-1 rounded-full text-stone-500 hover:text-red-600 hover:bg-stone-200/60 transition"
-                title="Remove image"
+                className="p-1 rounded-full text-muted-foreground hover:text-red-600 hover:bg-surface-hover transition"
+                title={t("chat.removeImage", undefined, "Remove image")}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -1073,7 +1114,7 @@ export default function AIChatPage() {
           )}
 
           {/* Floating Rounded Input Pill */}
-          <div className="relative rounded-3xl border border-stone-300/80 bg-white shadow-md focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          <div className="relative rounded-3xl border border-border bg-surface shadow-md focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <textarea
               ref={textareaRef}
               rows={1}
@@ -1082,10 +1123,12 @@ export default function AIChatPage() {
               onKeyDown={handleKeyDown}
               placeholder={
                 attachedImage
-                  ? "ছবিটি নিয়ে কিছু বলতে চাইলে লিখুন (বা সরাসরি Send চাপুন)..."
-                  : "কী গল্প সৃষ্টি করতে চান লিখুন... (Enter চাপলে সেন্ড, Shift+Enter নতুন লাইন)"
+                  ? language === "bn"
+                    ? "ছবিটি নিয়ে কিছু বলতে চাইলে লিখুন (বা সরাসরি Send চাপুন)..."
+                    : "Add notes about this image (or click Send)..."
+                  : t("chat.inputPlaceholder", undefined, "Describe your story premise (Bangla or English)...")
               }
-              className="w-full resize-none bg-transparent px-5 pt-4 pb-2 text-sm sm:text-base text-[#1f1b2d] placeholder:text-stone-400 focus:outline-none max-h-44"
+              className="w-full resize-none bg-transparent px-5 pt-4 pb-2 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
               disabled={loading}
             />
 
@@ -1105,8 +1148,8 @@ export default function AIChatPage() {
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-stone-500 hover:text-primary hover:bg-stone-100 transition"
-                  title="ছবি আপলোড করে গল্প লিখুন (Attach Image for Storytelling)"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-surface-hover transition"
+                  title={t("chat.attachImage", undefined, "Attach Image for Storytelling")}
                 >
                   <ImageIcon className="h-5 w-5" />
                 </button>
@@ -1115,11 +1158,12 @@ export default function AIChatPage() {
                 <button
                   type="button"
                   onClick={() => setAutoTrain((prev) => !prev)}
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
                     autoTrain
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                      : "bg-stone-100 text-stone-500 hover:bg-stone-200"
-                  }`}
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                      : "bg-surface-hover text-muted-foreground hover:text-foreground"
+                  )}
                   title="TaleForge learns and memorizes newly created stories automatically"
                 >
                   <Zap className={`h-3 w-3 ${autoTrain ? "text-amber-500 fill-amber-500" : ""}`} />
@@ -1137,8 +1181,8 @@ export default function AIChatPage() {
                 type="button"
                 onClick={() => handleSendMessage()}
                 disabled={loading || (!inputPrompt.trim() && !attachedImage)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                title="Send Prompt (Enter)"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                title={t("chat.sendButton", undefined, "Send Prompt (Enter)")}
               >
                 {loading ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -1151,7 +1195,9 @@ export default function AIChatPage() {
 
           {/* Minimalist Bottom Disclaimer */}
           <p className="text-center text-[10px] text-muted-foreground mt-1.5">
-            TaleForge learns from your stories and generates original tales. Check important plot and creative details.
+            {language === "bn"
+              ? "টেলফোর্জ আপনার গল্প থেকে শিখে নতুন গল্প সৃষ্টি করে। গুরুত্বপূর্ণ তথ্য ও চরিত্রের নাম যাচাই করে নিন।"
+              : "TaleForge learns from your stories and crafts original tales. Review important creative details."}
           </p>
         </div>
       </div>
