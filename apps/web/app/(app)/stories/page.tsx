@@ -227,30 +227,30 @@ export default function StoriesPage() {
       )}
 
       {/* Stories Grid */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((story) => {
           const isConfirming = confirmDeleteId === story.id;
           return (
             <Card
               key={story.id}
-              className="flex flex-col justify-between transition-all hover:shadow-md border-border bg-surface"
+              className="flex flex-col justify-between transition-all rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-1 hover:shadow-radiant group"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge variant="primary" className="text-[11px]">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
                         {story.genre || "Story"}
-                      </Badge>
+                      </span>
                       {story.mood && (
-                        <Badge variant="neutral" className="text-[11px]">
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-lg bg-surface-hover text-muted-foreground border border-border/60">
                           {story.mood}
-                        </Badge>
+                        </span>
                       )}
                     </div>
                     <CardTitle
                       onClick={() => handleOpenReader(story.id)}
-                      className="mt-2.5 text-base font-bold text-foreground leading-snug cursor-pointer hover:text-primary transition line-clamp-2"
+                      className="mt-2.5 font-editorial text-lg font-bold text-foreground leading-snug cursor-pointer group-hover:text-primary transition line-clamp-2"
                     >
                       {story.title}
                     </CardTitle>
@@ -259,20 +259,20 @@ export default function StoriesPage() {
                   <button
                     type="button"
                     onClick={(e) => handleToggleFavorite(e, story)}
-                    className="p-1 rounded-md hover:bg-surface-hover transition"
+                    className="p-1.5 rounded-xl hover:bg-surface-hover transition"
                     title={story.is_favorite ? t("stories.unfavorite", undefined, "Unfavorite") : t("stories.favorite", undefined, "Favorite")}
                   >
                     <Star
-                      className={`h-5 w-5 shrink-0 ${
+                      className={`h-4 w-4 shrink-0 transition-transform hover:scale-110 ${
                         story.is_favorite
                           ? "fill-amber-400 text-amber-400"
-                          : "text-muted-foreground/50 hover:text-amber-400"
+                          : "text-muted-foreground/40 hover:text-amber-400"
                       }`}
                     />
                   </button>
                 </div>
 
-                <CardDescription className="text-xs text-muted-foreground mt-1.5">
+                <CardDescription className="text-xs text-muted-foreground mt-2">
                   {new Date(story.updated_at || story.created_at).toLocaleDateString(language === "bn" ? "bn-BD" : "en-US", {
                     year: "numeric",
                     month: "short",
@@ -282,12 +282,12 @@ export default function StoriesPage() {
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-0 border-t border-border mt-3 py-3 flex items-center justify-between gap-2">
+              <CardContent className="pt-0 border-t border-border/60 mt-3 py-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs font-semibold hover:bg-primary/5 hover:text-primary"
+                    className="h-8 text-xs font-semibold rounded-xl border-border/70 hover:bg-primary/10 hover:text-primary hover:border-primary/40"
                     onClick={() => handleOpenReader(story.id)}
                   >
                     <BookOpen className="h-3.5 w-3.5 mr-1" />
@@ -296,7 +296,7 @@ export default function StoriesPage() {
 
                   <Link
                     href={`/stories/${story.id}`}
-                    className={buttonVariants({ variant: "ghost", size: "sm", className: "h-8 text-xs" })}
+                    className={buttonVariants({ variant: "ghost", size: "sm", className: "h-8 text-xs rounded-xl" })}
                   >
                     Details
                   </Link>
