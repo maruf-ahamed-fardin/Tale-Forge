@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, PanelLeftClose, PanelLeftOpen, Plus, X } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from "lucide-react";
 
 import { SidebarNav } from "@/components/navigation/sidebar-nav";
-import { buttonVariants } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/shared/language-toggle";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useLanguage } from "@/lib/i18n";
@@ -40,29 +39,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground lg:flex">
+    <div className="min-h-screen bg-background text-foreground lg:flex relative overflow-hidden">
+      {/* Ambient Glow Lights for rich atmospheric feel */}
+      <div className="ambient-glow-mesh pointer-events-none" />
+      <div className="ambient-glow-mesh-2 pointer-events-none" />
+
       {/* Permanent Desktop Sticky Sidebar - Collapsible with smooth transition */}
       <aside
         className={cn(
-          "hidden shrink-0 border-r border-border bg-surface lg:block lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden z-20 transition-all duration-300 ease-in-out",
-          collapsed ? "w-[68px]" : "w-[280px]"
+          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden z-20 transition-all duration-300 ease-in-out",
+          collapsed ? "w-[72px]" : "w-[270px]"
         )}
       >
         <SidebarNav collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
       </aside>
 
-      <div className="min-w-0 flex-1 flex flex-col min-h-screen">
+      <div className="min-w-0 flex-1 flex flex-col min-h-screen relative z-10">
         {/* Mobile Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/70 bg-surface/80 px-4 backdrop-blur-xl lg:hidden">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg shadow-xs border border-indigo-200/60">
+            <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
               <img
                 src="/favicon.svg"
                 alt="TaleForge Logo"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain filter drop-shadow"
               />
             </span>
-            <span className="text-base font-extrabold text-foreground">TaleForge</span>
+            <span className="font-display text-base font-extrabold text-foreground">TaleForge</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -70,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-foreground hover:bg-surface-hover"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface text-foreground hover:bg-surface-hover transition-colors"
               aria-label={t("nav.openMenu", undefined, "Open navigation")}
               onClick={() => setOpen(true)}
             >
@@ -82,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Mobile Overlay */}
         <div
           className={cn(
-            "fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity lg:hidden",
+            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity lg:hidden",
             open ? "opacity-100" : "pointer-events-none opacity-0",
           )}
           onClick={() => setOpen(false)}
@@ -91,13 +94,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Mobile Drawer */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(86vw,320px)] border-r border-border bg-surface shadow-xl transition-transform duration-200 lg:hidden flex flex-col h-full overflow-hidden",
+            "fixed inset-y-0 left-0 z-50 w-[min(86vw,320px)] border-r border-border bg-surface/95 backdrop-blur-2xl shadow-2xl transition-transform duration-200 lg:hidden flex flex-col h-full overflow-hidden",
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
           <button
             type="button"
-            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
             aria-label={t("nav.closeMenu", undefined, "Close navigation")}
             onClick={() => setOpen(false)}
           >
@@ -109,22 +112,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Sticky Desktop Header */}
-        <header className="sticky top-0 z-10 hidden h-16 items-center justify-between border-b border-border bg-surface/90 px-6 backdrop-blur lg:flex">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-10 hidden h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-6 backdrop-blur-xl lg:flex">
+          <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={toggleCollapsed}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-surface/80 text-muted-foreground hover:bg-surface-hover hover:text-foreground hover:border-primary/40 transition-all shadow-2xs"
               title={collapsed ? t("nav.expandSidebar", undefined, "Expand sidebar") : t("nav.collapseSidebar", undefined, "Collapse sidebar")}
               aria-label={collapsed ? t("nav.expandSidebar", undefined, "Expand sidebar") : t("nav.collapseSidebar", undefined, "Collapse sidebar")}
             >
               {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </button>
+
+            {/* Quick Spotlight Search Bar */}
+            <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-border/70 bg-surface/70 text-muted-foreground text-xs hover:border-primary/40 transition-all shadow-2xs w-64">
+              <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <input
+                type="text"
+                placeholder={t("common.search", undefined, "Search stories, prompts...")}
+                className="bg-transparent border-0 outline-none w-full text-xs text-foreground placeholder:text-muted-foreground/70"
+              />
+              <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-muted/70 border border-border/70 text-muted-foreground shrink-0">
+                ⌘K
+              </kbd>
+            </div>
+
             <div>
-              <p className="text-sm font-semibold text-foreground">
+              <p className="text-sm font-bold text-foreground leading-tight">
                 {t("nav.creativeWorkspace", undefined, "Creative Workspace")}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {t("nav.workspaceSubtitle", undefined, "Personalized AI Storytelling Platform")}
               </p>
             </div>
@@ -135,9 +152,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             <Link
               href="/studio"
-              className={buttonVariants({ size: "sm" })}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-              <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               {t("nav.newStory", undefined, "New Story")}
             </Link>
           </div>
