@@ -24,14 +24,26 @@ async def save_upload(db: AsyncSession, user_id: str, file: UploadFile) -> Datas
             detail=f"Unsupported file type '{suffix}'. Allowed: {', '.join(ALLOWED_EXTENSIONS)}",
         )
 
-    # Reject files larger than max_upload_mb
-    contents = await file.read()
-    size_mb = len(contents) / (1024 * 1024)
-    if size_mb > settings.max_upload_mb:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File exceeds {settings.max_upload_mb} MB limit",
-        )
+    # Read in bounded chunks to prevent memory exhaustion DoS
+    max_bytes = settings.max_upload_mb * 1024 * 1024
+    chunks: list[bytes] = []
+    total_bytes = 0
+    chunk_size = 64 * 1024  # 64 KB
+
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        total_bytes += len(chunk)
+        if total_bytes > max_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File exceeds {settings.max_upload_mb} MB limit",
+            )
+        chunks.append(chunk)
+
+    contents = b"".join(chunks)
+
 
     # Save to disk
     storage_dir = Path(settings.storage_path) / "datasets" / user_id
