@@ -65,3 +65,25 @@ async def test_invalid_login_credentials(client: AsyncClient) -> None:
         },
     )
     assert res.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_unauthenticated_request_rejected(client: AsyncClient) -> None:
+    # Protected endpoint without Authorization header must return 401
+    res = await client.get("/api/v1/auth/me")
+    assert res.status_code == 401
+    assert "not authenticated" in res.json()["detail"].lower() or "required" in res.json()["detail"].lower()
+
+    # Protected story endpoint without Authorization header must also return 401
+    stories_res = await client.get("/api/v1/stories")
+    assert stories_res.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_malformed_token_rejected(client: AsyncClient) -> None:
+    res = await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer invalid.token.value"},
+    )
+    assert res.status_code == 401
+
