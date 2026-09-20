@@ -63,11 +63,24 @@ function StudioContent() {
         length_preset: lengthPreset,
         language,
       });
-      if (content.trim()) {
-        setContent((prev) => `${prev}\n\n${res.text}`);
-      } else {
-        setContent(res.text);
+      const fullText = res.text || "";
+      const initialPrefix = content.trim() ? `${content.trim()}\n\n` : "";
+      const tokens = fullText.split(/(\s+)/);
+      let current = initialPrefix;
+
+      for (let i = 0; i < tokens.length; i++) {
+        current += tokens[i];
+        setContent(current);
+        const token = tokens[i];
+        let delay = 14;
+        if (token.includes("।") || token.includes(".") || token.includes("!")) {
+          delay = 50;
+        } else if (token.includes("\n")) {
+          delay = 70;
+        }
+        await new Promise((r) => setTimeout(r, delay));
       }
+
       setSaveMsg(`Generated ${res.word_count} words!`);
     } catch (err: unknown) {
       setSaveMsg(err instanceof Error ? err.message : "Generation failed");
