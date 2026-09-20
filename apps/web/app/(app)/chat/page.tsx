@@ -47,6 +47,7 @@ interface ChatMessage {
   saved?: boolean;
   imageUrl?: string;
   timestamp?: string;
+  isStreaming?: boolean;
 }
 
 interface ImageAttachment {
@@ -247,6 +248,8 @@ export default function AIChatPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const stopStreamingRef = useRef(false);
 
   // Image attachment
   const [attachedImage, setAttachedImage] = useState<ImageAttachment | null>(null);
@@ -367,6 +370,8 @@ export default function AIChatPage() {
   };
 
   const handleNewChat = () => {
+    stopStreamingRef.current = true;
+    setIsStreaming(false);
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
@@ -459,19 +464,63 @@ export default function AIChatPage() {
         selectedTrainingScope,
       );
 
+      // Transition from spinner to typewriter streaming
+      setLoading(false);
+      setIsStreaming(true);
+      stopStreamingRef.current = false;
+
+      const aiMsgId = `ai_${Date.now()}`;
       const aiMsg: ChatMessage = {
-        id: `ai_${Date.now()}`,
+        id: aiMsgId,
         role: "assistant",
-        content: res.story,
+        content: "",
         autoTrained: res.auto_trained,
         model: res.model,
         persona: activePersona,
         trainingScope: res.training_scope || selectedTrainingScope,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        isStreaming: true,
       };
       setMessages((prev) => [...prev, aiMsg]);
+
+      // Stream tokens like ChatGPT with natural typing cadence
+      const fullText = res.story || "";
+      const tokens = fullText.split(/(\s+)/);
+      let currentText = "";
+
+      for (let i = 0; i < tokens.length; i++) {
+        if (stopStreamingRef.current) {
+          break;
+        }
+        currentText += tokens[i];
+        const snapshot = currentText;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMsgId ? { ...m, content: snapshot } : m))
+        );
+
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+        const token = tokens[i];
+        let delay = 16;
+        if (token.includes("।") || token.includes(".") || token.includes("!") || token.includes("?")) {
+          delay = 60;
+        } else if (token.includes("\n")) {
+          delay = 75;
+        } else if (token.trim() === "") {
+          delay = 8;
+        }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+
+      // Finalize complete text and remove streaming state
+      setMessages((prev) =>
+        prev.map((m) => (m.id === aiMsgId ? { ...m, content: fullText, isStreaming: false } : m))
+      );
+      setIsStreaming(false);
       refreshStatus();
     } catch (err: unknown) {
+      setLoading(false);
+      setIsStreaming(false);
       const errDetail = err instanceof Error ? err.message : "গল্প তৈরিতে সমস্যা হয়েছে।";
       const errorMsg: ChatMessage = {
         id: `error_${Date.now()}`,
@@ -946,9 +995,16 @@ export default function AIChatPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground">
-                            {wordCount} {t("common.words", undefined, "words")} • {readMinutes} min
-                          </span>
+                          {m.isStreaming ? (
+                            <span className="text-[10px] text-primary font-medium flex items-center gap-1.5 animate-pulse">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                              {language === "bn" ? "লিখছে..." : "Typing..."}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">
+                              {wordCount} {t("common.words", undefined, "words")} • {readMinutes} min
+                            </span>
+                          )}
                         </div>
                       </div>
                     )}
@@ -967,11 +1023,14 @@ export default function AIChatPage() {
                     {/* Story / Prompt Body */}
                     <div className="prose dark:prose-invert max-w-none font-bengali font-serif text-[15px] sm:text-[17px] leading-[1.9] tracking-wide break-words whitespace-pre-wrap text-foreground">
                       {m.content}
+                      {m.isStreaming && (
+                        <span className="inline-block w-2 h-4.5 bg-primary ml-1 rounded-xs animate-pulse align-middle" />
+                      )}
                     </div>
 
                     {/* Assistant Action Bar (Copy, Save, TTS, Download, Regenerate) */}
-                    {!isUser && (
-                      <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
+                    {!isUser && !m.isStreaming && (
+                      <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 animate-in fade-in-50">
                         <div className="flex items-center gap-1">
                           {/* Copy */}
                           <button
@@ -1160,7 +1219,7 @@ export default function AIChatPage() {
                   : t("chat.inputPlaceholder", undefined, "Describe your story premise (Bangla or English)...")
               }
               className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 pb-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
-              disabled={loading}
+              disabled={loading || isStreaming}
             />
 
             {/* Inside Input Action Bar (Attachment, Auto-Train Toggle, Send Button) */}
@@ -1207,20 +1266,34 @@ export default function AIChatPage() {
                 </span>
               </div>
 
-              {/* Radiant Send Button */}
-              <button
-                type="button"
-                onClick={() => handleSendMessage()}
-                disabled={loading || (!inputPrompt.trim() && !attachedImage)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-radiant text-white shadow-radiant transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                title={t("chat.sendButton", undefined, "Send Prompt (Enter)")}
-              >
-                {loading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 ml-0.5" />
-                )}
-              </button>
+              {/* Radiant Send or ChatGPT-style Stop Button */}
+              {isStreaming ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopStreamingRef.current = true;
+                    setIsStreaming(false);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-md transition hover:scale-105 active:scale-95"
+                  title={language === "bn" ? "থামান (Stop)" : "Stop generating"}
+                >
+                  <div className="h-3 w-3 rounded-xs bg-current" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage()}
+                  disabled={loading || (!inputPrompt.trim() && !attachedImage)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-radiant text-white shadow-radiant transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                  title={t("chat.sendButton", undefined, "Send Prompt (Enter)")}
+                >
+                  {loading ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 ml-0.5" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
