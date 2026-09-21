@@ -434,17 +434,18 @@ export default function SimpleTrainPage() {
           type="button"
           onClick={() => setActiveTab("personal")}
           className={cn(
-            "flex-1 py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2",
+            "flex-1 py-2 px-2.5 sm:px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 sm:gap-2",
             activeTab === "personal"
               ? "bg-primary text-white shadow-radiant"
               : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/60"
           )}
         >
           <User className="h-4 w-4 shrink-0" />
-          <span>{t("train.tabPersonal", undefined, "Personal Stories")}</span>
+          <span className="truncate sm:hidden">{language === "bn" ? "নিজস্ব" : "Personal"}</span>
+          <span className="hidden sm:inline truncate">{t("train.tabPersonal", undefined, "Personal Stories")}</span>
           <span
             className={cn(
-              "text-[11px] px-2 py-0.2 rounded-full font-bold",
+              "text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.2 rounded-full font-bold shrink-0",
               activeTab === "personal" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
             )}
           >
@@ -456,17 +457,18 @@ export default function SimpleTrainPage() {
           type="button"
           onClick={() => setActiveTab("default")}
           className={cn(
-            "flex-1 py-2 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2",
+            "flex-1 py-2 px-2.5 sm:px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 sm:gap-2",
             activeTab === "default"
               ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
               : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/60"
           )}
         >
           <BookOpen className="h-4 w-4 shrink-0" />
-          <span>{t("train.tabDefault", undefined, "Default Curated Library")}</span>
+          <span className="truncate sm:hidden">{language === "bn" ? "ডিফল্ট" : "Default"}</span>
+          <span className="hidden sm:inline truncate">{t("train.tabDefault", undefined, "Default Curated Library")}</span>
           <span
             className={cn(
-              "text-[11px] px-2 py-0.2 rounded-full font-bold",
+              "text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.2 rounded-full font-bold shrink-0",
               activeTab === "default" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
             )}
           >
@@ -576,7 +578,7 @@ export default function SimpleTrainPage() {
               {inputMode === "write" ? (
                 <form onSubmit={handleTrain} className="space-y-4">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                       <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         {t("train.storyContentLabel", undefined, "Story Content")}
                       </label>
@@ -862,7 +864,7 @@ export default function SimpleTrainPage() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 shrink-0 self-start sm:self-center">
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -1112,7 +1114,7 @@ export default function SimpleTrainPage() {
               </Button>
             </div>
 
-            <div className="p-6 overflow-y-auto text-sm sm:text-base font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text space-y-4 story-paper">
+            <div className="p-4 sm:p-6 overflow-y-auto text-sm sm:text-base font-serif leading-relaxed text-foreground whitespace-pre-wrap select-text space-y-4 story-paper">
               {modalStory.text}
             </div>
 

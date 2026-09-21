@@ -229,7 +229,7 @@ export default function DatasetPage() {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-all ${
+            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 sm:p-8 text-center transition-all ${
               dragActive
                 ? "border-primary bg-primary/10"
                 : "border-border bg-surface-hover/40 hover:bg-surface-hover/70"
@@ -257,7 +257,7 @@ export default function DatasetPage() {
                 : "Your source documents remain private and are kept intact in cold storage."}
             </p>
             <Button
-              className="mt-4"
+              className="mt-4 w-full sm:w-auto"
               disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -289,7 +289,7 @@ export default function DatasetPage() {
 
       {/* Dataset List */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-md flex-1">
+        <div className="relative w-full sm:max-w-md flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
@@ -347,11 +347,11 @@ export default function DatasetPage() {
               <Card key={item.id} className="bg-surface border-border transition hover:border-primary/40">
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+                    <div className="rounded-lg bg-primary/10 p-2.5 text-primary shrink-0">
                       <FileCheck className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-foreground">{item.original_name}</h4>
+                      <h4 className="font-semibold text-foreground text-sm sm:text-base break-words">{item.original_name}</h4>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>
                           {item.word_count.toLocaleString(language === "bn" ? "bn-BD" : "en-US")}{" "}
