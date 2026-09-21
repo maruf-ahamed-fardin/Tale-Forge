@@ -87,7 +87,7 @@ export default function HistoryPage() {
 
       {/* Filter and Search */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-md flex-1">
+        <div className="relative w-full sm:max-w-md flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
@@ -179,7 +179,7 @@ export default function HistoryPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+                  <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
                     <Button
                       variant="ghost"
                       size="sm"

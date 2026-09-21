@@ -152,7 +152,7 @@ export default function SettingsPage() {
                 <label className="text-sm font-semibold text-foreground">
                   {t("settings.selectLanguage", undefined, "Website Language / ভাষা")}
                 </label>
-                <div className="mt-2 grid grid-cols-2 gap-3">
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setLanguage("en")}
@@ -187,7 +187,7 @@ export default function SettingsPage() {
                 <label className="text-sm font-semibold text-foreground">
                   {t("settings.selectTheme", undefined, "Color Theme / মোড")}
                 </label>
-                <div className="mt-2 grid grid-cols-2 gap-3">
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setTheme("light")}
@@ -241,7 +241,7 @@ export default function SettingsPage() {
                 </div>
               ) : currentUser ? (
                 <div className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <span className="text-xs text-muted-foreground font-semibold uppercase">
                         {t("settings.displayName", undefined, "Display Name")}
@@ -254,14 +254,14 @@ export default function SettingsPage() {
                       <span className="text-xs text-muted-foreground font-semibold uppercase">
                         {t("settings.emailAddress", undefined, "Email Address")}
                       </span>
-                      <p className="mt-1 font-medium text-foreground">{currentUser.email}</p>
+                      <p className="mt-1 font-medium text-foreground break-all">{currentUser.email}</p>
                     </div>
                   </div>
                   <div className="border-t border-border pt-3">
                     <span className="text-xs text-muted-foreground font-semibold uppercase">
                       {t("settings.accountId", undefined, "Account ID")}
                     </span>
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">
+                    <p className="mt-1 font-mono text-xs text-muted-foreground break-all">
                       {currentUser.id}
                     </p>
                   </div>
@@ -345,19 +345,19 @@ export default function SettingsPage() {
           {/* Live AI Model & API Key Configuration */}
           <Card className="border-primary/40 bg-gradient-to-br from-surface to-primary/5">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <Sparkles className="h-5 w-5 text-primary shrink-0" />
                   <CardTitle>
                     {t("settings.liveAiTitle", undefined, "Live AI Model & API Configuration")}
                   </CardTitle>
                 </div>
                 {geminiApiKey ? (
-                  <Badge variant="green">
+                  <Badge variant="green" className="self-start sm:self-auto">
                     {t("settings.liveAiConnected", undefined, "Live AI Connected")}
                   </Badge>
                 ) : (
-                  <Badge variant="warm">
+                  <Badge variant="warm" className="self-start sm:self-auto">
                     {t("settings.offlineEngineBadge", undefined, "Offline Smart Engine")}
                   </Badge>
                 )}
@@ -404,7 +404,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
                     <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                       <Key className="h-4 w-4 text-primary" />
                       {t("settings.geminiKeyLabel", undefined, "Google Gemini API Key")}
@@ -447,7 +447,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                <div className="flex gap-2 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1">
                   <Button type="submit">
                     <Save className="h-4 w-4 mr-1.5" />
                     {t("settings.saveAiConfig", undefined, "Save Live AI Settings")}

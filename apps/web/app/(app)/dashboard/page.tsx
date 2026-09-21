@@ -107,15 +107,15 @@ export default function DashboardPage() {
               <ul className="space-y-2">
                 {stories.map((story) => (
                   <li key={story.id} className="flex items-center justify-between rounded-2xl border border-border/60 bg-surface/80 hover:border-primary/40 p-3.5 transition-all group">
-                    <div>
-                      <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{story.title}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1 pr-3">
+                      <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">{story.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
                         {story.word_count.toLocaleString(language === "bn" ? "bn-BD" : "en-US")} {t("common.words", undefined, "words")}{story.genre ? ` · ${story.genre}` : ""}
                       </p>
                     </div>
                     <Link
                       href={`/stories/${story.id}`}
-                      className={buttonVariants({ variant: "ghost", size: "sm", className: "rounded-xl" })}
+                      className={buttonVariants({ variant: "ghost", size: "sm", className: "rounded-xl shrink-0" })}
                     >
                       <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                     </Link>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                 </p>
                 <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80 mt-0.5">{t("dashboard.frontendOnline", undefined, "AI Memory & Training active")}</p>
               </div>
-              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
             </div>
           </CardContent>
         </Card>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           <Card key={stat.label} className="rounded-3xl border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-0.5 transition-all">
             <CardHeader>
               <CardDescription className="text-xs font-semibold text-muted-foreground">{stat.label}</CardDescription>
-              <p className="font-display text-3xl font-extrabold text-foreground tracking-tight mt-1">{stat.value}</p>
+              <p className="font-display text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight mt-1 truncate">{stat.value}</p>
             </CardHeader>
           </Card>
         ))}
