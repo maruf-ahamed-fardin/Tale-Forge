@@ -646,8 +646,20 @@ export default function AIChatPage() {
   return (
     <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
+      {/* Mobile Dropdown Backdrop */}
+      {(showModelDropdown || showPersonaDropdown || showTrainingScopeDropdown) && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
+          onClick={() => {
+            setShowModelDropdown(false);
+            setShowPersonaDropdown(false);
+            setShowTrainingScopeDropdown(false);
+          }}
+        />
+      )}
+
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
-      <header className="shrink-0 relative z-30 flex items-center justify-between gap-1.5 sm:gap-3 px-2.5 sm:px-4 py-2 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
+      <header className="shrink-0 relative z-30 flex items-center justify-between gap-1 sm:gap-3 px-2 sm:px-4 py-2 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
         <div className="flex items-center gap-1 sm:gap-2 min-w-0">
           {/* Model Selector Dropdown */}
@@ -659,7 +671,7 @@ export default function AIChatPage() {
               title={t("chat.modelSelector", undefined, "Change AI Model")}
             >
               <ModelIcon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 ${currentModelInfo.color}`} />
-              <span className="truncate max-w-[85px] sm:max-w-[160px]">
+              <span className="truncate max-w-[85px] xs:max-w-[120px] sm:max-w-[160px]">
                 {currentModelInfo.name}
               </span>
               <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0" />
@@ -668,7 +680,7 @@ export default function AIChatPage() {
             {showModelDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="fixed left-3 right-3 top-[106px] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 sm:w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
@@ -736,7 +748,7 @@ export default function AIChatPage() {
             {showPersonaDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute left-0 sm:left-auto top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="fixed left-3 right-3 top-[106px] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 sm:w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
@@ -750,16 +762,16 @@ export default function AIChatPage() {
                         type="button"
                         onClick={() => handleSelectPersona(p.id)}
                         className={cn(
-                          "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
+                          "w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition",
                           isSelected
                             ? "bg-primary/10 text-primary"
                             : "hover:bg-surface-hover text-foreground"
                         )}
                       >
-                        <span className="text-base">{p.emoji}</span>
+                        <span className="text-lg shrink-0 mt-0.5">{p.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold leading-snug">{p.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
                             {p.desc}
                           </p>
                         </div>
@@ -789,7 +801,7 @@ export default function AIChatPage() {
             {showTrainingScopeDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute left-auto -right-12 sm:right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="fixed left-3 right-3 top-[106px] sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Knowledge Scope / জ্ঞান পরিসীমা
@@ -804,14 +816,14 @@ export default function AIChatPage() {
                         type="button"
                         onClick={() => handleSelectTrainingScope(s.id)}
                         className={cn(
-                          "w-full flex items-start gap-2.5 rounded-xl p-2 text-left transition",
+                          "w-full flex items-start gap-2.5 rounded-xl p-2.5 text-left transition",
                           isSelected
                             ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 font-medium"
                             : "hover:bg-surface-hover text-foreground"
                         )}
                       >
-                        <div className={`p-1 rounded-lg bg-surface shadow-2xs mt-0.5 ${s.color}`}>
-                          <SIcon className="h-3.5 w-3.5" />
+                        <div className={`p-1.5 rounded-lg bg-surface shadow-2xs mt-0.5 ${s.color}`}>
+                          <SIcon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
@@ -827,7 +839,7 @@ export default function AIChatPage() {
                               {s.badge}
                             </span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
                             {s.desc}
                           </p>
                         </div>
@@ -888,18 +900,18 @@ export default function AIChatPage() {
       )}
 
       {/* ─── Center Body: Either Empty Hero State or Conversation Stream ─── */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:py-6 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-4">
         {messages.length === 0 ? (
           /* ─── Clean, Focused Welcome State ─── */
-          <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto my-auto py-6 sm:py-10">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-radiant text-white shadow-radiant mb-4">
-              <Sparkles className="h-6 w-6" />
+          <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto my-auto py-4 sm:py-10">
+            <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-radiant text-white shadow-radiant mb-3 sm:mb-4">
+              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
 
-            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-foreground px-2">
               {language === "bn" ? "আজ কী গল্প সৃষ্টি করতে চান?" : "What tale shall we craft today?"}
             </h1>
-            <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md">
+            <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md px-3">
               {t(
                 "chat.subtitle",
                 undefined,
@@ -908,20 +920,20 @@ export default function AIChatPage() {
             </p>
 
             {/* Compact Starter Cards */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
+            <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 w-full text-left">
               {starterSuggestions.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleTriggerSuggestion(item)}
-                  className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-surface/80 hover:bg-surface p-3 sm:p-3.5 text-left transition-all hover:border-primary/50 hover:shadow-xs active:scale-[0.99]"
+                  className="group flex items-start gap-2.5 sm:gap-3 rounded-2xl border border-border/70 bg-surface/80 hover:bg-surface p-2.5 sm:p-3.5 text-left transition-all hover:border-primary/50 hover:shadow-xs active:scale-[0.99]"
                 >
-                  <span className="text-xl shrink-0 mt-0.5">{item.icon}</span>
+                  <span className="text-lg sm:text-xl shrink-0 mt-0.5">{item.icon}</span>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                       {item.title}
                     </h3>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 leading-relaxed">
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-snug">
                       {item.desc}
                     </p>
                   </div>
@@ -1180,17 +1192,17 @@ export default function AIChatPage() {
       </div>
 
       {/* ─── Bottom Floating Capsule Input ─── */}
-      <div className="shrink-0 pb-3 pt-2 px-3 sm:px-4 sm:pb-4">
+      <div className="shrink-0 pt-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] px-2.5 sm:px-4 sm:pb-4">
         <div className="max-w-3xl mx-auto">
           {/* Image Attachment Preview Badge */}
           {attachedImage && (
-            <div className="mb-2.5 inline-flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs text-primary shadow-xs animate-in fade-in-50">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-2xl bg-primary/10 border border-primary/30 px-2.5 py-1 text-xs text-primary shadow-xs animate-in fade-in-50">
               <img
                 src={attachedImage.dataUrl}
                 alt="Attached preview"
-                className="h-8 w-8 rounded-xl object-cover border border-primary/40"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl object-cover border border-primary/40"
               />
-              <span className="font-semibold truncate max-w-[200px]">
+              <span className="font-semibold truncate max-w-[170px] sm:max-w-[200px]">
                 {attachedImage.file.name}
               </span>
               <button
@@ -1219,13 +1231,13 @@ export default function AIChatPage() {
                     : "Add notes about this image (or click Send)..."
                   : t("chat.inputPlaceholder", undefined, "Describe your story premise (Bangla or English)...")
               }
-              className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 pb-2 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-44"
+              className="w-full resize-none bg-transparent px-3.5 pt-3 pb-1.5 sm:px-5 sm:pt-3.5 sm:pb-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-36 sm:max-h-44"
               disabled={loading || isStreaming}
             />
 
             {/* Inside Input Action Bar (Attachment, Auto-Train Toggle, Send Button) */}
-            <div className="flex items-center justify-between px-3 pb-2.5 pt-1">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-2.5 pb-2 pt-0.5 sm:px-3 sm:pb-2.5 sm:pt-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Hidden Image Input */}
                 <input
                   ref={imageInputRef}
@@ -1239,10 +1251,10 @@ export default function AIChatPage() {
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-surface-hover transition"
+                  className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-surface-hover transition"
                   title={t("chat.attachImage", undefined, "Attach Image for Storytelling")}
                 >
-                  <ImageIcon className="h-5 w-5" />
+                  <ImageIcon className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                 </button>
 
                 {/* Auto-Retrain Toggle Pill */}
@@ -1250,7 +1262,7 @@ export default function AIChatPage() {
                   type="button"
                   onClick={() => setAutoTrain((prev) => !prev)}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-1 text-[11px] font-semibold transition shrink-0 active:scale-95",
+                    "inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold transition shrink-0 active:scale-95",
                     autoTrain
                       ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                       : "bg-surface-hover text-muted-foreground hover:text-foreground"
@@ -1275,23 +1287,23 @@ export default function AIChatPage() {
                     stopStreamingRef.current = true;
                     setIsStreaming(false);
                   }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-md transition hover:scale-105 active:scale-95"
+                  className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-md transition hover:scale-105 active:scale-95"
                   title={language === "bn" ? "থামান (Stop)" : "Stop generating"}
                 >
-                  <div className="h-3 w-3 rounded-xs bg-current" />
+                  <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-xs bg-current" />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => handleSendMessage()}
                   disabled={loading || (!inputPrompt.trim() && !attachedImage)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-radiant text-white shadow-radiant transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                  className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-gradient-radiant text-white shadow-radiant transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
                   title={t("chat.sendButton", undefined, "Send Prompt (Enter)")}
                 >
                   {loading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                   ) : (
-                    <Send className="h-4 w-4 ml-0.5" />
+                    <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-0.5" />
                   )}
                 </button>
               )}
@@ -1299,7 +1311,7 @@ export default function AIChatPage() {
           </div>
 
           {/* Minimalist Bottom Disclaimer */}
-          <p className="text-center text-[10px] text-muted-foreground mt-1.5">
+          <p className="text-center text-[10px] text-muted-foreground mt-1 sm:mt-1.5 px-2">
             {language === "bn"
               ? "টেলফোর্জ আপনার গল্প থেকে শিখে নতুন গল্প সৃষ্টি করে। গুরুত্বপূর্ণ তথ্য ও চরিত্রের নাম যাচাই করে নিন।"
               : "TaleForge learns from your stories and crafts original tales. Review important creative details."}

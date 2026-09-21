@@ -62,17 +62,17 @@ export default function DashboardPage() {
         title={`${greetingText}${user?.display_name ? `, ${user.display_name}` : ""}.`}
         description={t("dashboard.readyToCreate", undefined, "Ready to create something new?")}
       >
-        <Link href="/train" className={buttonVariants({ variant: "outline", className: "rounded-xl border-border/80 hover:bg-surface-hover" })}>
+        <Link href="/train" className={buttonVariants({ variant: "outline", className: "w-full sm:w-auto justify-center rounded-xl border-border/80 hover:bg-surface-hover" })}>
           <Sparkles className="h-4 w-4 mr-1.5 text-primary" aria-hidden="true" />
           {t("dashboard.trainAiModel", undefined, "Train AI Model")}
         </Link>
-        <Link href="/chat" className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all">
+        <Link href="/chat" className="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all">
           <BookOpen className="h-4 w-4" aria-hidden="true" />
           {t("dashboard.aiStoryChat", undefined, "AI Story Chat")}
         </Link>
       </PageHeader>
 
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-[1.4fr_0.8fr]">
         <Card className="rounded-3xl border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated">
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
@@ -153,12 +153,12 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 sm:mt-5 grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="rounded-3xl border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-0.5 transition-all">
+          <Card key={stat.label} className="rounded-2xl sm:rounded-3xl border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-0.5 transition-all">
             <CardHeader>
               <CardDescription className="text-xs font-semibold text-muted-foreground">{stat.label}</CardDescription>
-              <p className="font-display text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight mt-1 truncate">{stat.value}</p>
+              <p className="font-display text-xl sm:text-2xl lg:text-3xl font-extrabold text-foreground tracking-tight mt-1 truncate">{stat.value}</p>
             </CardHeader>
           </Card>
         ))}
