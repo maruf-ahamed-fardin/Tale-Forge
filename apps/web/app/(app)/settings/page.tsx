@@ -108,7 +108,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 sm:space-y-6">
       <PageHeader
         eyebrow={t("nav.settings", undefined, "Settings")}
         title={t("settings.title", undefined, "Workspace Settings")}
@@ -126,14 +126,14 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_340px]">
         {/* Main Settings Form */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Appearance & Language Card */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Palette className="h-5 w-5 text-primary" />
+                <Palette className="h-5 w-5 text-primary shrink-0" />
                 <CardTitle>
                   {t("settings.uiPreferencesTitle", undefined, "Appearance & Language")}
                 </CardTitle>
@@ -146,18 +146,18 @@ export default function SettingsPage() {
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4 sm:space-y-5">
               {/* Language Selection */}
               <div>
                 <label className="text-sm font-semibold text-foreground">
                   {t("settings.selectLanguage", undefined, "Website Language / ভাষা")}
                 </label>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setLanguage("en")}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all",
                       language === "en"
                         ? "border-primary bg-primary/10 text-primary shadow-xs"
                         : "border-border bg-surface text-foreground hover:bg-surface-hover"
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => setLanguage("bn")}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all",
                       language === "bn"
                         ? "border-primary bg-primary/10 text-primary shadow-xs"
                         : "border-border bg-surface text-foreground hover:bg-surface-hover"
@@ -183,35 +183,35 @@ export default function SettingsPage() {
               </div>
 
               {/* Theme Mode Selection */}
-              <div className="border-t border-border pt-4">
+              <div className="border-t border-border pt-3.5 sm:pt-4">
                 <label className="text-sm font-semibold text-foreground">
                   {t("settings.selectTheme", undefined, "Color Theme / মোড")}
                 </label>
-                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setTheme("light")}
                     className={cn(
-                      "flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3 text-sm font-semibold transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all",
                       theme === "light"
                         ? "border-primary bg-primary/10 text-primary shadow-xs"
                         : "border-border bg-surface text-foreground hover:bg-surface-hover"
                     )}
                   >
-                    <Sun className="h-4 w-4 text-amber-500" />
+                    <Sun className="h-4 w-4 text-amber-500 shrink-0" />
                     <span>{t("settings.themeLight", undefined, "Light Mode (লাইট মোড)")}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setTheme("dark")}
                     className={cn(
-                      "flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3 text-sm font-semibold transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold transition-all",
                       theme === "dark"
                         ? "border-primary bg-primary/10 text-primary shadow-xs"
                         : "border-border bg-surface text-foreground hover:bg-surface-hover"
                     )}
                   >
-                    <Moon className="h-4 w-4 text-indigo-400" />
+                    <Moon className="h-4 w-4 text-indigo-400 shrink-0" />
                     <span>{t("settings.themeNight", undefined, "Night Mode (নাইট মোড)")}</span>
                   </button>
                 </div>
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1">
                     <label className="text-sm font-semibold text-foreground">
                       {t("settings.temperatureLabel", { val: temperature }, `Creativity & Temperature: ${temperature}`)}
                     </label>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <Button type="submit">
+                <Button type="submit" className="w-full sm:w-auto">
                   <Save className="h-4 w-4 mr-1.5" />
                   {t("settings.savePreferences", undefined, "Save Preferences")}
                 </Button>
@@ -345,19 +345,19 @@ export default function SettingsPage() {
           {/* Live AI Model & API Key Configuration */}
           <Card className="border-primary/40 bg-gradient-to-br from-surface to-primary/5">
             <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                  <CardTitle>
+              <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Sparkles className="h-4.5 w-4.5 text-primary shrink-0" />
+                  <CardTitle className="text-sm sm:text-base truncate">
                     {t("settings.liveAiTitle", undefined, "Live AI Model & API Configuration")}
                   </CardTitle>
                 </div>
                 {geminiApiKey ? (
-                  <Badge variant="green" className="self-start sm:self-auto">
+                  <Badge variant="green" className="self-start xs:self-auto shrink-0">
                     {t("settings.liveAiConnected", undefined, "Live AI Connected")}
                   </Badge>
                 ) : (
-                  <Badge variant="warm" className="self-start sm:self-auto">
+                  <Badge variant="warm" className="self-start xs:self-auto shrink-0">
                     {t("settings.offlineEngineBadge", undefined, "Offline Smart Engine")}
                   </Badge>
                 )}
@@ -386,34 +386,41 @@ export default function SettingsPage() {
                   <select
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
-                    className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                    className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs sm:text-sm text-foreground outline-none focus:border-primary truncate"
                   >
-                    <option value="local-lora">
-                      TaleForge Custom Trained LoRA Model (Offline Style Adapter)
-                    </option>
-                    <option value="taleforge-smart">
-                      TaleForge Smart Local Engine (Offline / No Key Needed)
-                    </option>
                     <option value="gemini-1.5-flash">
-                      Google Gemini 1.5 Flash (Cloud AI - Ultra Fast Bangla/English)
+                      Google Gemini 1.5 Flash (Cloud AI - Fast)
                     </option>
                     <option value="gemini-2.0-flash">
-                      Google Gemini 2.0 Flash (Next-Gen Multimodal Cloud AI)
+                      Google Gemini 2.0 Flash (Next-Gen AI)
+                    </option>
+                    <option value="local-lora">
+                      TaleForge LoRA Adapter (Personal Style)
+                    </option>
+                    <option value="taleforge-smart">
+                      TaleForge Smart Engine (Offline)
                     </option>
                   </select>
+                  <p className="mt-1.5 text-xs text-muted-foreground flex items-center gap-1.5">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                    {selectedModel === "gemini-1.5-flash" && "Ultra-fast live storytelling in Bangla & English"}
+                    {selectedModel === "gemini-2.0-flash" && "Cutting-edge multimodal literary intelligence"}
+                    {selectedModel === "local-lora" && "Replicates your personal trained stories and tone"}
+                    {selectedModel === "taleforge-smart" && "Offline local engine (no API key or network required)"}
+                  </p>
                 </div>
 
                 <div>
-                  <div className="flex flex-wrap items-center justify-between gap-1">
+                  <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1">
                     <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                      <Key className="h-4 w-4 text-primary" />
+                      <Key className="h-4 w-4 text-primary shrink-0" />
                       {t("settings.geminiKeyLabel", undefined, "Google Gemini API Key")}
                     </label>
                     <a
                       href="https://aistudio.google.com/app/apikey"
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs text-primary hover:underline font-medium"
+                      className="text-xs text-primary hover:underline font-medium self-start xs:self-auto"
                     >
                       {t("settings.getFreeKey", undefined, "Get Free Key (Google AI Studio) →")}
                     </a>
@@ -424,7 +431,7 @@ export default function SettingsPage() {
                       value={geminiApiKey}
                       onChange={(e) => setGeminiApiKey(e.target.value)}
                       placeholder="AIzaSy..."
-                      className="pr-10 font-mono text-sm"
+                      className="pr-10 font-mono text-xs sm:text-sm rounded-xl"
                     />
                     <button
                       type="button"
@@ -447,8 +454,8 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Button type="submit">
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <Button type="submit" className="w-full sm:w-auto">
                     <Save className="h-4 w-4 mr-1.5" />
                     {t("settings.saveAiConfig", undefined, "Save Live AI Settings")}
                   </Button>
@@ -456,6 +463,7 @@ export default function SettingsPage() {
                     <Button
                       type="button"
                       variant="outline"
+                      className="w-full sm:w-auto"
                       onClick={() => {
                         setGeminiApiKey("");
                         localStorage.removeItem("tf_gemini_api_key");
@@ -473,11 +481,11 @@ export default function SettingsPage() {
         </div>
 
         {/* Sidebar Actions & Privacy */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <HardDrive className="h-5 w-5 text-primary" />
+                <HardDrive className="h-5 w-5 text-primary shrink-0" />
                 <CardTitle>
                   {t("settings.storageCardTitle", undefined, "Storage & Session")}
                 </CardTitle>
@@ -495,24 +503,24 @@ export default function SettingsPage() {
               <div className="border-t border-border pt-4 space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-xs"
+                  className="w-full justify-start text-xs sm:text-sm py-2.5 rounded-xl"
                   onClick={() => {
                     localStorage.removeItem("tf_preferences");
                     setSavedMsg(t("settings.preferencesSaved", undefined, "Preferences reset to defaults."));
                     setTimeout(() => setSavedMsg(""), 3000);
                   }}
                 >
-                  <RefreshCw className="h-3.5 w-3.5 mr-2" />
-                  {t("settings.resetPreferences", undefined, "Reset Preferences to Defaults")}
+                  <RefreshCw className="h-3.5 w-3.5 mr-2 shrink-0" />
+                  <span className="truncate">{t("settings.resetPreferences", undefined, "Reset Preferences to Defaults")}</span>
                 </Button>
 
                 <Button
                   variant="destructive"
-                  className="w-full justify-start text-xs"
+                  className="w-full justify-start text-xs sm:text-sm py-2.5 rounded-xl"
                   onClick={handleLogout}
                 >
-                  <LogOut className="h-3.5 w-3.5 mr-2" />
-                  {t("settings.signOut", undefined, "Sign Out of TaleForge")}
+                  <LogOut className="h-3.5 w-3.5 mr-2 shrink-0" />
+                  <span className="truncate">{t("settings.signOut", undefined, "Sign Out of TaleForge")}</span>
                 </Button>
               </div>
             </CardContent>

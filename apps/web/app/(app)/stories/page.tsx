@@ -147,11 +147,11 @@ export default function StoriesPage() {
             : `${total} saved ${total === 1 ? "story" : "stories"}`
         }
       >
-        <Link href="/chat" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link href="/chat" className={buttonVariants({ variant: "outline", size: "sm", className: "w-full sm:w-auto justify-center rounded-xl" })}>
           <MessageSquare className="h-4 w-4 mr-1.5" />
           {t("nav.chat", undefined, "AI Story Chat")}
         </Link>
-        <Link href="/train" className={buttonVariants({ size: "sm" })}>
+        <Link href="/train" className={buttonVariants({ size: "sm", className: "w-full sm:w-auto justify-center rounded-xl" })}>
           <Sparkles className="h-4 w-4 mr-1.5" />
           {t("nav.train", undefined, "Train AI")}
         </Link>
@@ -227,13 +227,13 @@ export default function StoriesPage() {
       )}
 
       {/* Stories Grid */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3.5 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((story) => {
           const isConfirming = confirmDeleteId === story.id;
           return (
             <Card
               key={story.id}
-              className="flex flex-col justify-between transition-all rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-1 hover:shadow-radiant group"
+              className="flex flex-col justify-between transition-all rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-1 hover:shadow-radiant group"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">

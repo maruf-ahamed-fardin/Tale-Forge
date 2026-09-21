@@ -181,7 +181,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             "flex-1 min-h-0 min-w-0 flex flex-col",
             isChat
               ? "overflow-hidden p-0"
-              : "overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+              : "overflow-y-auto px-3.5 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
           )}
         >
           {children}

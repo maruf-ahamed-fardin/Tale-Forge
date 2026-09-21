@@ -210,7 +210,7 @@ function StudioContent() {
         )}
       >
         {editingId && (
-          <Button variant="outline" onClick={handleNewStory} className="rounded-xl border-border/80">
+          <Button variant="outline" onClick={handleNewStory} className="w-full sm:w-auto rounded-xl border-border/80">
             <FilePlus className="h-4 w-4 mr-1.5" aria-hidden="true" />
             {t("studio.newBlankStory", undefined, "New Blank Story")}
           </Button>
@@ -219,7 +219,7 @@ function StudioContent() {
           id="generate-story-btn"
           onClick={handleGenerate}
           disabled={generating}
-          className="rounded-xl bg-gradient-radiant text-white shadow-radiant hover:brightness-110 active:scale-95 border-0 font-bold"
+          className="w-full sm:w-auto rounded-xl bg-gradient-radiant text-white shadow-radiant hover:brightness-110 active:scale-95 border-0 font-bold"
         >
           <Wand2 className={`h-4 w-4 mr-1.5 ${generating ? "animate-spin" : ""}`} aria-hidden="true" />
           {generating
@@ -228,7 +228,7 @@ function StudioContent() {
         </Button>
       </PageHeader>
 
-      <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         {/* Left Controls Panel */}
         <div className="space-y-4 xl:sticky xl:top-20 xl:self-start">
           <Card>

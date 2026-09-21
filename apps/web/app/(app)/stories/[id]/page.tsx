@@ -165,21 +165,21 @@ export default function StoryDetailPage() {
       >
         <Link
           href={`/studio?id=${story.id}`}
-          className={buttonVariants({ variant: "outline" })}
+          className={buttonVariants({ variant: "outline", className: "w-full sm:w-auto justify-center rounded-xl border-border/80" })}
         >
           <PenLine className="h-4 w-4 mr-1.5" aria-hidden="true" />
           {t("storyDetail.editInStudio", undefined, "Edit in Studio")}
         </Link>
         <Link
           href={`/studio?id=${story.id}&action=continue`}
-          className={buttonVariants()}
+          className={buttonVariants({ className: "w-full sm:w-auto justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant" })}
         >
           <Wand2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
           {t("storyDetail.continueStory", undefined, "Continue Story")}
         </Link>
       </PageHeader>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_320px]">
         {/* Story Text Area */}
         <Card className="min-w-0 bg-surface border-border">
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3">

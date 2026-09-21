@@ -231,24 +231,24 @@ export default function SimpleTrainPage() {
   const readEstimateMin = Math.max(1, Math.ceil(wordCount / 180));
 
   return (
-    <section className="max-w-4xl mx-auto space-y-6 pb-12">
+    <section className="max-w-4xl mx-auto space-y-4 sm:space-y-6 pb-12">
       {/* ── 1. Modern Atmospheric Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-border/70">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 sm:pb-5 border-b border-border/70">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold">
+            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold">
               <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" />
               {language === "bn" ? "এআই সাহিত্য ও স্টাইল প্রশিক্ষণ" : "AI Style & Vocabulary Forge"}
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border/80 text-[11px] text-muted-foreground font-medium shadow-2xs">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              <span className="truncate max-w-[160px] font-mono font-semibold">{accountDisplay}</span>
+              <span className="truncate max-w-[140px] sm:max-w-[160px] font-mono font-semibold">{accountDisplay}</span>
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground font-display tracking-tight flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant">
-              <GraduationCap className="h-5 w-5" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground font-display tracking-tight flex items-center gap-2 sm:gap-2.5">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant">
+              <GraduationCap className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
             </span>
             {t("train.title", undefined, "Train AI on Your Stories")}
           </h1>
@@ -261,10 +261,10 @@ export default function SimpleTrainPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <Link
             href="/chat"
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-radiant px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+            className="w-full sm:w-auto justify-center inline-flex items-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-radiant px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all group"
           >
             <MessageSquare className="h-4 w-4" />
             <span>{t("nav.chat", undefined, "Story Chat")}</span>
@@ -274,7 +274,7 @@ export default function SimpleTrainPage() {
       </div>
 
       {/* ── 2. Interactive Telemetry Cards & Primary Tab Selectors ── */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
         {/* Personal Account Training Card */}
         <div
           role="button"
@@ -282,7 +282,7 @@ export default function SimpleTrainPage() {
           onClick={() => setActiveTab("personal")}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveTab("personal")}
           className={cn(
-            "group relative p-5 rounded-3xl border transition-all cursor-pointer backdrop-blur-xl text-left overflow-hidden",
+            "group relative p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer backdrop-blur-xl text-left overflow-hidden",
             activeTab === "personal"
               ? "border-primary/80 bg-surface/90 ring-2 ring-primary/30 shadow-card-elevated"
               : "border-border/80 bg-surface/60 hover:bg-surface/85 hover:border-primary/40 hover:-translate-y-0.5"
@@ -358,7 +358,7 @@ export default function SimpleTrainPage() {
           onClick={() => setActiveTab("default")}
           onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveTab("default")}
           className={cn(
-            "group relative p-5 rounded-3xl border transition-all cursor-pointer backdrop-blur-xl text-left overflow-hidden",
+            "group relative p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer backdrop-blur-xl text-left overflow-hidden",
             activeTab === "default"
               ? "border-amber-500/80 bg-surface/90 ring-2 ring-amber-500/30 shadow-card-elevated"
               : "border-border/80 bg-surface/60 hover:bg-surface/85 hover:border-amber-500/40 hover:-translate-y-0.5"
