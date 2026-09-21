@@ -182,9 +182,9 @@ export default function StoryDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Story Text Area */}
         <Card className="min-w-0 bg-surface border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-lg text-foreground">{t("storyDetail.manuscript", undefined, "Manuscript")}</CardTitle>
-            <div className="flex items-center gap-2">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3">
+            <CardTitle className="text-base sm:text-lg text-foreground">{t("storyDetail.manuscript", undefined, "Manuscript")}</CardTitle>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               {copyMsg && (
                 <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 animate-fade-in">
                   {copyMsg}
@@ -195,8 +195,9 @@ export default function StoryDetailPage() {
                 size="sm"
                 onClick={handleCopy}
                 aria-label="Copy story text"
+                className="h-8 text-xs rounded-xl"
               >
-                <Copy className="h-4 w-4 mr-1.5" />
+                <Copy className="h-3.5 w-3.5 mr-1" />
                 {t("storyDetail.copy", undefined, "Copy")}
               </Button>
               <Button
@@ -204,20 +205,21 @@ export default function StoryDetailPage() {
                 size="sm"
                 onClick={handleExport}
                 aria-label="Export story"
+                className="h-8 text-xs rounded-xl border-border/80"
               >
-                <Download className="h-4 w-4 mr-1.5" />
+                <Download className="h-3.5 w-3.5 mr-1" />
                 {t("storyDetail.exportTxt", undefined, "Export TXT")}
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="story-paper min-h-[560px] rounded-xl border border-border p-6 sm:p-10">
+          <CardContent className="p-3 sm:p-5 lg:p-6">
+            <div className="story-paper min-h-[420px] sm:min-h-[560px] rounded-2xl border border-border/70 p-4 sm:p-8 lg:p-10 shadow-xs">
               {story.content ? (
-                <div className="whitespace-pre-wrap font-serif text-base leading-8 text-foreground">
+                <div className="whitespace-pre-wrap font-serif text-[15px] sm:text-base leading-relaxed sm:leading-8 text-foreground">
                   {story.content}
                 </div>
               ) : (
-                <p className="italic text-muted-foreground">
+                <p className="italic text-muted-foreground text-sm">
                   {t(
                     "storyDetail.noContentYet",
                     undefined,

@@ -351,12 +351,12 @@ export default function StoriesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <div className="min-w-0 pr-4">
+            <div className="flex items-center justify-between border-b border-border px-4 sm:px-6 py-3 sm:py-4">
+              <div className="min-w-0 pr-3">
                 <span className="text-xs font-semibold text-primary uppercase tracking-wide">
                   {t("stories.readerModalTitle", undefined, "Story Reader")}
                 </span>
-                <h2 className="mt-1 text-base sm:text-lg font-bold text-foreground truncate">
+                <h2 className="mt-0.5 text-base sm:text-lg font-bold text-foreground truncate">
                   {readingStory.title}
                 </h2>
               </div>
@@ -400,15 +400,15 @@ export default function StoriesPage() {
             </div>
 
             {/* Modal Body: Manuscript */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 story-paper">
-              <div className="whitespace-pre-wrap font-serif text-base leading-relaxed text-foreground">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 story-paper">
+              <div className="whitespace-pre-wrap font-serif text-sm sm:text-base leading-relaxed text-foreground">
                 {readingStory.content || "(No content available)"}
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between border-t border-border px-6 py-3 bg-surface-hover/50 rounded-b-2xl text-xs">
-              <span className="text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 sm:px-6 py-3 bg-surface-hover/50 rounded-b-2xl text-xs">
+              <span className="text-muted-foreground text-[11px] sm:text-xs">
                 Saved in TaleForge Library
               </span>
               <div className="flex items-center gap-2">

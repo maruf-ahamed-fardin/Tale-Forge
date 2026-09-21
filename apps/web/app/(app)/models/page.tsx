@@ -115,7 +115,7 @@ export default function ModelsPage() {
 
       {/* Currently Active Banner */}
       <Card className="mb-8 border-primary/40 bg-gradient-to-r from-primary/10 via-surface to-surface">
-        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="flex flex-col gap-4 p-4 sm:p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="rounded-xl bg-primary p-3 text-white shadow-sm shrink-0">
               <Sparkles className="h-6 w-6" />
@@ -283,7 +283,7 @@ export default function ModelsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 self-end sm:self-center">
+                      <div className="flex items-center gap-2 self-start sm:self-center">
                         <Button
                           variant={isAdapterActive ? "primary" : "outline"}
                           size="sm"

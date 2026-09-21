@@ -139,17 +139,26 @@ export default function TrainingPage() {
             : "Adapt open-source base models to your personal Bangla storytelling style using Low-Rank Adaptation (LoRA/QLoRA)."
         }
       >
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             onClick={handleExportDataset}
             disabled={exporting}
             className="border-primary/40 text-primary hover:bg-primary/10"
           >
-            <Database className="h-4 w-4 mr-1.5" />
-            {exporting
-              ? isBn ? "এক্সপোর্ট হচ্ছে..." : "Exporting..."
-              : isBn ? "গল্পগুলো ML ডেটাসেটে এক্সপোর্ট (.jsonl)" : "Export Stories to ML Dataset (.jsonl)"}
+            <Database className="h-4 w-4 mr-1.5 shrink-0" />
+            {exporting ? (
+              isBn ? "এক্সপোর্ট হচ্ছে..." : "Exporting..."
+            ) : (
+              <>
+                <span className="hidden sm:inline">
+                  {isBn ? "গল্পগুলো ML ডেটাসেটে এক্সপোর্ট (.jsonl)" : "Export Stories to ML Dataset (.jsonl)"}
+                </span>
+                <span className="inline sm:hidden">
+                  {isBn ? "এক্সপোর্ট (.jsonl)" : "Export (.jsonl)"}
+                </span>
+              </>
+            )}
           </Button>
           <Button variant="outline" onClick={() => loadData()} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
@@ -242,7 +251,7 @@ export default function TrainingPage() {
                   ? "টার্মিনালে নিচের কমান্ডটি চালালেই আপনার গল্পগুলোর ওপর Qwen2.5-1.5B মডেল ট্রেইন হবে:"
                   : "Run this terminal command to fine-tune Qwen 2.5 on your trained story corpus:"}
               </p>
-              <div className="relative rounded bg-slate-900 text-slate-100 p-2.5 font-mono text-[11px] break-all">
+              <div className="relative rounded bg-slate-900 text-slate-100 p-2.5 pr-16 font-mono text-[11px] break-all">
                 python ai/training/train_lora.py --base_model Qwen/Qwen2.5-1.5B-Instruct
                 <button
                   type="button"
@@ -349,7 +358,7 @@ export default function TrainingPage() {
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   LoRA Rank (r)
                 </label>
-                <div className="mt-2 grid grid-cols-4 gap-2">
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {rankOptions.map((r) => (
                     <button
                       type="button"
@@ -371,7 +380,7 @@ export default function TrainingPage() {
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {isBn ? "ইপক (Epochs)" : "Epochs"}
                 </label>
-                <div className="mt-2 grid grid-cols-4 gap-2">
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {epochOptions.map((e) => (
                     <button
                       type="button"

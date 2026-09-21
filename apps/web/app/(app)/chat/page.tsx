@@ -646,28 +646,29 @@ export default function AIChatPage() {
   return (
     <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
-      <header className="shrink-0 relative z-30 flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
+      {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
+      <header className="shrink-0 relative z-30 flex items-center justify-between gap-1.5 sm:gap-3 px-2.5 sm:px-4 py-2 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-visible">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
           {/* Model Selector Dropdown */}
           <div className="relative shrink-0" ref={modelDropdownRef}>
             <button
               type="button"
               onClick={(e) => toggleDropdown("model", e)}
-              className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title={t("chat.modelSelector", undefined, "Change AI Model")}
             >
-              <ModelIcon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${currentModelInfo.color}`} />
-              <span className="truncate max-w-[110px] sm:max-w-[160px]">
+              <ModelIcon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 ${currentModelInfo.color}`} />
+              <span className="truncate max-w-[85px] sm:max-w-[160px]">
                 {currentModelInfo.name}
               </span>
-              <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0" />
             </button>
 
             {showModelDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-32px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="absolute left-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
@@ -722,20 +723,20 @@ export default function AIChatPage() {
             <button
               type="button"
               onClick={(e) => toggleDropdown("persona", e)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title={t("chat.personaSelector", undefined, "Select Literary Style")}
             >
-              <span>{currentPersonaInfo.emoji}</span>
-              <span className="truncate max-w-[90px] sm:max-w-[120px]">
+              <span className="text-sm shrink-0">{currentPersonaInfo.emoji}</span>
+              <span className="hidden sm:inline truncate max-w-[110px]">
                 {currentPersonaInfo.name.split(" ")[0]}
               </span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
             </button>
 
             {showPersonaDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute left-0 top-full mt-2 w-64 max-w-[calc(100vw-32px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="absolute left-0 sm:left-auto top-full mt-2 w-64 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
@@ -775,20 +776,20 @@ export default function AIChatPage() {
             <button
               type="button"
               onClick={(e) => toggleDropdown("scope", e)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
               title="Knowledge Scope"
             >
-              <ScopeIcon className={`h-3.5 w-3.5 ${currentScopeInfo.color}`} />
-              <span className="truncate max-w-[90px] sm:max-w-[120px]">
+              <ScopeIcon className={`h-3.5 w-3.5 shrink-0 ${currentScopeInfo.color}`} />
+              <span className="hidden sm:inline truncate max-w-[110px]">
                 {currentScopeInfo.shortName}
               </span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
             </button>
 
             {showTrainingScopeDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-32px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="absolute left-auto -right-12 sm:right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
                 <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Knowledge Scope / জ্ঞান পরিসীমা
@@ -840,7 +841,7 @@ export default function AIChatPage() {
         </div>
 
         {/* Right: Actions and Status */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* AI Memory Status Badge */}
           {aiStatus && (
             <Link
@@ -859,21 +860,21 @@ export default function AIChatPage() {
           <button
             type="button"
             onClick={handleNewChat}
-            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 text-foreground hover:bg-surface-hover transition shadow-2xs shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 text-foreground hover:bg-surface-hover active:scale-95 transition shadow-2xs shrink-0"
             title={t("chat.newStoryButton", undefined, "New Conversation")}
           >
             <Plus className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden xs:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
+            <span className="hidden md:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
           </button>
 
           {/* Story Library Button */}
           <Link
             href="/stories"
-            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 hover:bg-surface-hover text-foreground transition shadow-2xs shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 hover:bg-surface-hover text-foreground active:scale-95 transition shadow-2xs shrink-0"
             title={t("nav.stories", undefined, "Story Library")}
           >
             <Library className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden xs:inline">{t("nav.stories", undefined, "Library")}</span>
+            <span className="hidden md:inline">{t("nav.stories", undefined, "Library")}</span>
           </Link>
         </div>
       </header>
@@ -954,7 +955,7 @@ export default function AIChatPage() {
 
                   <div
                     className={cn(
-                      "max-w-[88%] sm:max-w-[82%] rounded-3xl px-6 py-5 transition-all",
+                      "max-w-[92%] sm:max-w-[82%] rounded-3xl px-4 py-3.5 sm:px-6 sm:py-5 transition-all",
                       isUser
                         ? "bg-gradient-radiant text-white rounded-tr-sm shadow-radiant"
                         : "bg-surface/90 backdrop-blur-md border border-border/80 text-foreground rounded-tl-sm shadow-card-elevated"
@@ -1030,13 +1031,13 @@ export default function AIChatPage() {
 
                     {/* Assistant Action Bar (Copy, Save, TTS, Download, Regenerate) */}
                     {!isUser && !m.isStreaming && (
-                      <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 animate-in fade-in-50">
-                        <div className="flex items-center gap-1">
+                      <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 animate-in fade-in-50">
+                        <div className="flex items-center gap-1 flex-wrap">
                           {/* Copy */}
                           <button
                             type="button"
                             onClick={() => handleCopyStory(m.id, m.content)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground transition"
+                            className="inline-flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
                             title={t("common.copy", undefined, "Copy")}
                           >
                             {copiedId === m.id ? (
@@ -1047,7 +1048,7 @@ export default function AIChatPage() {
                             ) : (
                               <>
                                 <Copy className="h-3.5 w-3.5" />
-                                <span>{t("common.copy", undefined, "Copy")}</span>
+                                <span className="hidden sm:inline">{t("common.copy", undefined, "Copy")}</span>
                               </>
                             )}
                           </button>
@@ -1058,7 +1059,7 @@ export default function AIChatPage() {
                             onClick={() => handleSaveToStories(m.id, m.content)}
                             disabled={isSaving || isSaved}
                             className={cn(
-                              "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition",
+                              "inline-flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium active:scale-95 transition",
                               isSaved
                                 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40"
                                 : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
@@ -1078,7 +1079,7 @@ export default function AIChatPage() {
                             ) : (
                               <>
                                 <BookOpen className="h-3.5 w-3.5 text-primary" />
-                                <span>{t("chat.saveToLibrary", undefined, "Save")}</span>
+                                <span className="hidden sm:inline">{t("chat.saveToLibrary", undefined, "Save")}</span>
                               </>
                             )}
                           </button>
@@ -1088,7 +1089,7 @@ export default function AIChatPage() {
                             type="button"
                             onClick={() => handleReadAloud(m.content, m.id)}
                             className={cn(
-                              "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium transition",
+                              "inline-flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium active:scale-95 transition",
                               isSpeaking
                                 ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 animate-pulse"
                                 : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
@@ -1098,12 +1099,12 @@ export default function AIChatPage() {
                             {isSpeaking ? (
                               <>
                                 <VolumeX className="h-3.5 w-3.5 text-amber-600" />
-                                <span>{t("chat.stopAudio", undefined, "Stop Audio")}</span>
+                                <span>{t("chat.stopAudio", undefined, "Stop")}</span>
                               </>
                             ) : (
                               <>
                                 <Volume2 className="h-3.5 w-3.5" />
-                                <span>{t("chat.readAloud", undefined, "Read Aloud")}</span>
+                                <span className="hidden sm:inline">{t("chat.readAloud", undefined, "Read")}</span>
                               </>
                             )}
                           </button>
@@ -1112,11 +1113,11 @@ export default function AIChatPage() {
                           <button
                             type="button"
                             onClick={() => handleDownloadStory(m.content)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground transition"
+                            className="inline-flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
                             title={t("common.download", undefined, "Download TXT")}
                           >
                             <Download className="h-3.5 w-3.5" />
-                            <span>{t("common.download", undefined, "Download")}</span>
+                            <span className="hidden sm:inline">{t("common.download", undefined, "Download")}</span>
                           </button>
                         </div>
 
@@ -1132,7 +1133,7 @@ export default function AIChatPage() {
                             }
                           }}
                           disabled={loading}
-                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition"
+                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary active:scale-95 transition shrink-0"
                           title="Generate a fresh variation"
                         >
                           <RotateCcw className="h-3 w-3" />
@@ -1249,7 +1250,7 @@ export default function AIChatPage() {
                   type="button"
                   onClick={() => setAutoTrain((prev) => !prev)}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                    "inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-1 text-[11px] font-semibold transition shrink-0 active:scale-95",
                     autoTrain
                       ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                       : "bg-surface-hover text-muted-foreground hover:text-foreground"
@@ -1257,7 +1258,7 @@ export default function AIChatPage() {
                   title="TaleForge learns and memorizes newly created stories automatically"
                 >
                   <Zap className={`h-3 w-3 ${autoTrain ? "text-amber-500 fill-amber-500" : ""}`} />
-                  <span>{autoTrain ? "Auto-Train On" : "Auto-Train Off"}</span>
+                  <span>{autoTrain ? (language === "bn" ? "অটো-লার্ন" : "Auto-Train") : "Off"}</span>
                 </button>
 
                 {/* Quick Persona Badge */}

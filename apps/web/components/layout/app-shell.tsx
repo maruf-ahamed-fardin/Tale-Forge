@@ -76,24 +76,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="min-w-0 flex-1 flex flex-col h-full max-h-full overflow-hidden relative z-10">
         {/* Mobile Header */}
-        <header className="shrink-0 z-30 flex h-16 items-center justify-between border-b border-border/70 bg-surface/80 px-4 backdrop-blur-xl lg:hidden">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
+        <header className="shrink-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border/70 bg-surface/80 px-3 sm:px-4 backdrop-blur-xl lg:hidden">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <span className="relative flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
               <img
                 src="/favicon.svg"
                 alt="TaleForge Logo"
                 className="h-full w-full object-contain filter drop-shadow"
               />
             </span>
-            <span className="font-display text-base font-extrabold text-foreground">TaleForge</span>
+            <span className="font-display text-sm sm:text-base font-extrabold text-foreground truncate">TaleForge</span>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <LanguageToggle />
             <ThemeToggle />
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface text-foreground hover:bg-surface-hover transition-colors"
+              className="inline-flex h-9 w-9 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-border bg-surface text-foreground hover:bg-surface-hover active:scale-95 transition-all"
               aria-label={t("nav.openMenu", undefined, "Open navigation")}
               onClick={() => setOpen(true)}
             >
@@ -105,28 +105,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Mobile Overlay */}
         <div
           className={cn(
-            "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity lg:hidden",
+            "fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity duration-200 lg:hidden",
             open ? "opacity-100" : "pointer-events-none opacity-0",
           )}
           onClick={() => setOpen(false)}
+          aria-hidden="true"
         />
 
         {/* Mobile Drawer */}
         <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation drawer"
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(86vw,320px)] border-r border-border bg-surface/95 backdrop-blur-2xl shadow-2xl transition-transform duration-200 lg:hidden flex flex-col h-full overflow-hidden",
+            "fixed inset-y-0 left-0 z-50 w-[min(88vw,320px)] border-r border-border bg-surface/95 backdrop-blur-2xl shadow-2xl transition-transform duration-250 ease-out lg:hidden flex flex-col h-full overflow-hidden",
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
           <button
             type="button"
-            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
+            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition-all"
             aria-label={t("nav.closeMenu", undefined, "Close navigation")}
             onClick={() => setOpen(false)}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
-          <div className="flex-1 overflow-hidden h-full">
+          <div className="flex-1 overflow-y-auto h-full">
             <SidebarNav onNavigate={() => setOpen(false)} />
           </div>
         </aside>
