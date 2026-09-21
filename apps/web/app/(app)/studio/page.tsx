@@ -317,7 +317,7 @@ function StudioContent() {
 
               <div>
                 <label className="text-sm font-semibold text-foreground">Length</label>
-                <div className="mt-2 grid grid-cols-4 gap-2">
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {lengths.map((l) => (
                     <button
                       type="button"
@@ -379,9 +379,9 @@ function StudioContent() {
         <Card className="min-w-0 rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated">
           <CardHeader className="pb-4 border-b border-border/60">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="font-editorial text-2xl font-bold tracking-tight">{title}</CardTitle>
-                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="min-w-0">
+                <CardTitle className="font-editorial text-xl sm:text-2xl font-bold tracking-tight truncate">{title}</CardTitle>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">{wordCount.toLocaleString()}</span> {t("common.words", undefined, "words")} ·{" "}
                   <span className="font-medium text-foreground">{charCount.toLocaleString()}</span> {t("common.characters", undefined, "chars")} ·{" "}
                   <span className="font-medium text-foreground">{paraCount}</span> {t("common.paragraphs", undefined, "paras")} ·{" "}
@@ -400,14 +400,14 @@ function StudioContent() {
                     {saveMsg}
                   </span>
                 )}
-                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-surface-hover" aria-label={t("common.copy", undefined, "Copy")} onClick={handleCopy}>
+                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-surface-hover h-8 w-8 sm:h-9 sm:w-9" aria-label={t("common.copy", undefined, "Copy")} onClick={handleCopy}>
                   <Copy className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <Button variant="outline" size="sm" className="rounded-xl border-border/80 hover:bg-surface-hover" onClick={handleExport}>
+                <Button variant="outline" size="sm" className="rounded-xl border-border/80 hover:bg-surface-hover text-xs" onClick={handleExport}>
                   <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />
-                  {t("common.exportTxt", undefined, "Export TXT")}
+                  <span>{t("common.exportTxt", undefined, "Export TXT")}</span>
                 </Button>
-                <Button size="sm" onClick={handleSave} disabled={saving} id="studio-save" className="rounded-xl bg-primary text-white shadow-sm hover:brightness-105">
+                <Button size="sm" onClick={handleSave} disabled={saving} id="studio-save" className="rounded-xl bg-primary text-white shadow-sm hover:brightness-105 text-xs font-semibold">
                   <Save className="h-4 w-4 mr-1.5" aria-hidden="true" />
                   {saving
                     ? t("common.saving", undefined, "Saving…")
@@ -418,11 +418,11 @@ function StudioContent() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-3 sm:p-6">
-            <div className="story-paper min-h-[420px] sm:min-h-[620px] rounded-2xl border border-border/70 p-4 sm:p-10 shadow-xs">
+          <CardContent className="p-3 sm:p-5 lg:p-6">
+            <div className="story-paper min-h-[380px] sm:min-h-[560px] rounded-2xl border border-border/70 p-3.5 sm:p-6 lg:p-8 shadow-xs">
               <textarea
                 aria-label="Story editor"
-                className="min-h-[380px] sm:min-h-[560px] w-full resize-none bg-transparent font-bengali font-editorial text-[15px] sm:text-[17px] leading-[1.85] sm:leading-[2.1] text-foreground outline-none tracking-wide"
+                className="min-h-[340px] sm:min-h-[500px] w-full resize-none bg-transparent font-bengali font-editorial text-[15px] sm:text-[17px] leading-[1.85] sm:leading-[2.1] text-foreground outline-none tracking-wide"
                 placeholder={t(
                   "studio.editorPlaceholder",
                   undefined,
