@@ -255,7 +255,9 @@ export default function AIChatPage() {
   // Image attachment
   const [attachedImage, setAttachedImage] = useState<ImageAttachment | null>(null);
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isAutoScrollEnabledRef = useRef<boolean>(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
@@ -336,9 +338,27 @@ export default function AIChatPage() {
     }
   };
 
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior,
+    });
+  };
+
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isAutoScrollEnabledRef.current = distanceToBottom <= 120;
+  };
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    if (isAutoScrollEnabledRef.current) {
+      scrollToBottom("smooth");
+    }
+  }, [messages.length, loading]);
 
   // Adjust textarea height dynamically like ChatGPT/Claude
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -456,6 +476,8 @@ export default function AIChatPage() {
 
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
+    isAutoScrollEnabledRef.current = true;
+    setTimeout(() => scrollToBottom("smooth"), 50);
 
     try {
       const res = await simpleAiApi().chat(
@@ -502,7 +524,9 @@ export default function AIChatPage() {
           prev.map((m) => (m.id === aiMsgId ? { ...m, content: snapshot } : m))
         );
 
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesContainerRef.current && isAutoScrollEnabledRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
 
         const token = tokens[i];
         let delay = 16;
@@ -520,6 +544,9 @@ export default function AIChatPage() {
       setMessages((prev) =>
         prev.map((m) => (m.id === aiMsgId ? { ...m, content: fullText, isStreaming: false } : m))
       );
+      if (messagesContainerRef.current && isAutoScrollEnabledRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
       setIsStreaming(false);
       refreshStatus();
     } catch (err: unknown) {
@@ -1117,7 +1144,11 @@ export default function AIChatPage() {
       )}
 
       {/* ─── Center Body: Either Empty Hero State or Conversation Stream ─── */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-4">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 sm:py-6 space-y-3 sm:space-y-4"
+      >
         {messages.length === 0 ? (
           /* ─── Clean, Focused Welcome State ─── */
           <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto my-auto py-4 sm:py-10">
