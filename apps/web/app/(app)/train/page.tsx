@@ -864,7 +864,7 @@ export default function SimpleTrainPage() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 shrink-0 self-start sm:self-center">
+                            <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-1.5 shrink-0 pt-2 sm:pt-0 border-t border-border/40 sm:border-0 w-full sm:w-auto">
                               <Button
                                 variant="ghost"
                                 size="sm"
