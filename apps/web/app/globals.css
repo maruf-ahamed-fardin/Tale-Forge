@@ -59,26 +59,10 @@
 
 html,
 body {
-  min-height: 100%;
   height: 100%;
-  overscroll-behavior-y: none;
-}
-
-/* Desktop and tablet shell: keep single scroll frame */
-@media (min-width: 768px) {
-  html,
-  body {
-    max-height: 100%;
-    overflow: hidden;
-  }
-}
-
-/* Mobile: allow dynamic browser viewport & keyboard adaptation */
-@media (max-width: 767px) {
-  html,
-  body {
-    overflow-x: hidden;
-  }
+  max-height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Mobile Safe Areas */

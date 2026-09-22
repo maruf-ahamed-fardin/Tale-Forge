@@ -32,6 +32,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Ensure the browser window itself is pinned at (0, 0) and cannot drift on mobile
+  useEffect(() => {
+    const resetScroll = () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+    window.addEventListener("scroll", resetScroll, { passive: true });
+    return () => window.removeEventListener("scroll", resetScroll);
+  }, []);
+
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
       const next = !prev;
@@ -45,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="h-screen h-[100dvh] max-h-screen max-h-[100dvh] w-full overflow-hidden bg-background text-foreground flex relative">
+    <div className="fixed inset-0 h-full w-full overflow-hidden bg-background text-foreground flex relative">
       {/* Ambient Glow Lights for rich atmospheric feel */}
       <div className="ambient-glow-mesh pointer-events-none" />
       <div className="ambient-glow-mesh-2 pointer-events-none" />
@@ -79,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="min-w-0 flex-1 flex flex-col h-full max-h-full overflow-hidden relative z-10">
         {/* Mobile Header (Phones < 768px) */}
-        <header className="shrink-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-surface/80 px-2.5 xs:px-3 sm:px-4 backdrop-blur-xl md:hidden">
+        <header className="shrink-0 sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-surface/80 px-2.5 xs:px-3 sm:px-4 backdrop-blur-xl md:hidden">
           <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 min-w-0 shrink">
             <span className="relative flex h-7 w-7 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
               <img
