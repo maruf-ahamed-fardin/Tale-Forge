@@ -19,6 +19,12 @@ export interface ChatMessageRecord {
   timestamp: string;
 }
 
+export interface StoryChoice {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
 export interface AIModelStatus {
   total_trained_stories: number;
   total_words: number;
@@ -448,6 +454,14 @@ Story Guidelines:
     systemInstruction += `\nBlend their personal style patterns into the Bengali prose.`;
   }
 
+  systemInstruction += `\n\nINTERACTIVE STORY BRANCHES:
+At the very end of your response, after the story ends, you MUST propose exactly 3 exciting next narrative directions/choices for the reader to choose how the story continues. Format them strictly as:
+[CHOICES]
+1. [সংক্ষিপ্ত বিকল্প ১] | [বিস্তারিত নির্দেশনা ১]
+2. [সংক্ষিপ্ত বিকল্প ২] | [বিস্তারিত নির্দেশনা ২]
+3. [সংক্ষিপ্ত বিকল্প ৩] | [বিস্তারিত নির্দেশনা ৩]
+[/CHOICES]`;
+
   const userContent = `User Prompt: ${prompt}\n\nPlease generate a full, beautiful Bengali story based on this.`;
 
   const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
@@ -820,6 +834,163 @@ function composeSmartStory(
   return `# ${title}\n\n${p1}\n\n${p2}\n\n${p3}\n\n${p4}`;
 }
 
+export function getProceduralChoices(theme: string, isBengali = true): StoryChoice[] {
+  const choicesByTheme: Record<string, Array<{ label: string; prompt: string }>> = {
+    romance: [
+      {
+        label: isBengali ? "হৃদয়ের গোপন চিঠি পাঠানো" : "Send the Secret Letter",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: সে অবশেষে ড্রয়ার খুলে অনেক যত্নে লেখা নীল খামের চিঠিটি ডাকবাক্সে ফেলে দিয়ে এলো..."
+          : "Continue the story: They finally opened the drawer and mailed the carefully penned blue envelope...",
+      },
+      {
+        label: isBengali ? "বৃষ্টির রাতে অপ্রত্যাশিত পুনর্মিলন" : "Unexpected Reunion in Rain",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: হঠাৎ দরজায় কড়া নাড়ার মৃদু শব্দ হলো। দরজা খুলতেই সেই চিরচেনা চোখের মায়াবী চাহনি..."
+          : "Continue the story: A gentle knock on the door broke the silence. Standing there was the unforgettable gaze...",
+      },
+      {
+        label: isBengali ? "নীরব প্রস্থান ও নতুন পথচলা" : "Silent Departure & New Dawn",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: কোনো অভিমান না রেখে নিঃশব্দে প্ল্যাটফর্ম ছেড়ে ভোরের প্রথম ট্রেনে উঠে পড়ল সে..."
+          : "Continue the story: Without any bitter words, they quietly left the platform and boarded the dawn train...",
+      },
+    ],
+    mystery: [
+      {
+        label: isBengali ? "গোপন ড্রয়ারের সংকেত উদ্ধার" : "Decode the Hidden Cipher",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: ব্রোঞ্জ ঘড়ির তলায় লুকানো অদ্ভুত সংকেতটি ম্যাগনিফাইং গ্লাস দিয়ে পরীক্ষা করতেই এক চমকপ্রদ তথ্য বেরিয়ে এলো..."
+          : "Continue the story: Examining the cipher beneath the bronze clock revealed an astonishing secret...",
+      },
+      {
+        label: isBengali ? "চিলেকোঠার গোপন ঘরে পদার্পণ" : "Enter the Locked Attic",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: প্রাচীন পিতলের চাবিটি ঘুরিয়ে চিলেকোঠার অন্ধকার ঘরটিতে পা রাখতেই দেখা গেল দেয়ালের এক অদ্ভুত তৈলচিত্র..."
+          : "Continue the story: Turning the brass key and stepping into the dark attic, an eerie oil painting came to light...",
+      },
+      {
+        label: isBengali ? "সন্দেহভাজন ব্যক্তিকে মুখোমুখি জেরা" : "Confront the Prime Suspect",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: চা পানের ছলে বসার ঘরে বসে মূল সন্দেহভাজন ব্যক্তির চোখের দিকে তাকিয়ে সরাসরি মোক্ষম প্রশ্নটি করা হলো..."
+          : "Continue the story: Over evening tea, looking straight into the suspect's eyes, the decisive question was asked...",
+      },
+    ],
+    horror: [
+      {
+        label: isBengali ? "অন্ধকার করিডোরে আলো ফেলা" : "Illuminate the Dark Hallway",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: টর্চের কম্পমান আলো করিডোরের শেষ মাথায় পড়তেই দেখা গেল এক অদ্ভুত ছায়ামূর্তি..."
+          : "Continue the story: As the flickering flashlight hit the end of the corridor, a strange shadowy figure emerged...",
+      },
+      {
+        label: isBengali ? "প্রাচীন আয়নায় দৃশ্যমান রহস্য" : "The Mirror's Reflection",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: দেয়ালে টাঙানো ধুলোমাখা বেলজিয়াম কাঁচের আয়নার দিকে তাকাতেই রক্ত হিম হয়ে গেল..."
+          : "Continue the story: Looking into the dusty antique mirror on the wall, their blood ran cold...",
+      },
+      {
+        label: isBengali ? "নিশুতি রাতে বাড়ির বাইরে পলায়ন" : "Flee into the Midnight Storm",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: কালবিলম্ব না করে প্রধান দরজার ছিটকিনি খুলে অন্ধকারের বুকে প্রাণপণ দৌড় শুরু করল..."
+          : "Continue the story: Without wasting a second, unlatching the heavy oak door and bolting into the dark storm...",
+      },
+    ],
+    rain: [
+      {
+        label: isBengali ? "বৃষ্টিভেজা একাকী ট্রামযাত্রা" : "A Solitary Tram Journey in Rain",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: সে বৃষ্টির তোড় অগ্রাহ্য করে ট্রামের শেষ বগিতে গিয়ে বসল, জানালার কাঁচে তখন বৃষ্টির জলধারা..."
+          : "Continue the story: Ignoring the downpour, they stepped onto the last tram car as rain streamed down the windows...",
+      },
+      {
+        label: isBengali ? "পুরনো ক্যাফেতে চা ও চিঠি" : "Tea & Old Letters at the Cafe",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: রাস্তার মোড়ের পুরনো ক্যাফেতে এক কাপ ধোঁয়া ওঠা চা নিয়ে বসে বহু বছর আগের চিঠিগুলো খুলল..."
+          : "Continue the story: Sitting at the corner cafe with a steaming cup of tea, they opened the letters from years ago...",
+      },
+      {
+        label: isBengali ? "মেঘ কেটে রোদের দেখা" : "Sunlight Breaking through the Clouds",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: দুপুরের দিকে মেঘের ফাঁক গলে হঠাৎ এক চিলতে সোনালী রোদ এসে পড়ল ভেজা উঠোনে..."
+          : "Continue the story: Around noon, a sliver of golden sunlight broke through the clouds onto the drenched courtyard...",
+      },
+    ],
+    general: [
+      {
+        label: isBengali ? "একটি অচেনা মোড় ও নতুন সম্ভাবনা" : "A New Narrative Twist",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: ঠিক এই মুহূর্তে জীবনের এমন এক অপ্রত্যাশিত ঘটনা ঘটল যা সব হিসেব নিমিষেই বদলে দিল..."
+          : "Continue the story: Just then, an unexpected twist occurred that overturned all previous calculations...",
+      },
+      {
+        label: isBengali ? "অতীতের গোপন সত্য প্রকাশ" : "Unveil the Past Truth",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: টেবিলের ওপর রাখা পুরনো ডায়েরির পাতার ভেতর থেকে খসে পড়ল এক বিস্ময়কর প্রমাণ..."
+          : "Continue the story: A startling piece of evidence slipped from the worn pages of the antique diary...",
+      },
+      {
+        label: isBengali ? "সাহসী চূড়ান্ত সিদ্ধান্ত নেওয়া" : "Make the Bold Choice",
+        prompt: isBengali
+          ? "গল্পটি এভাবে এগিয়ে নাও: সব দ্বিধাদ্বন্দ্ব ভুলে নিজের বিশ্বাসের ওপর ভর করে জীবনের সবচেয়ে সাহসী পদক্ষেপটি গ্রহণ করল..."
+          : "Continue the story: Casting all hesitation aside, they took the boldest step of their life...",
+      },
+    ],
+  };
+
+  const pool = choicesByTheme[theme] || choicesByTheme.general;
+  return pool.map((item, idx) => ({
+    id: `choice_${idx + 1}`,
+    label: item.label,
+    prompt: item.prompt,
+  }));
+}
+
+export function parseChoicesAndCleanText(
+  rawText: string,
+  theme: string,
+  isBengali: boolean,
+): { cleanText: string; choices: StoryChoice[] } {
+  const choiceRegex = /\[CHOICES\]([\s\S]*?)\[\/CHOICES\]/i;
+  const match = rawText.match(choiceRegex);
+  let cleanText = rawText;
+  const choices: StoryChoice[] = [];
+
+  if (match) {
+    cleanText = rawText.replace(choiceRegex, "").trim();
+    const lines = match[1]
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+
+    lines.forEach((line, idx) => {
+      const stripped = line.replace(/^[-*•\d\.\)]+\s*/, "").trim();
+      if (!stripped) return;
+      let label = stripped;
+      let prompt = stripped;
+      if (stripped.includes("|")) {
+        const parts = stripped.split("|");
+        label = parts[0].trim();
+        prompt = parts[1].trim() || parts[0].trim();
+      }
+      choices.push({
+        id: `choice_${idx + 1}`,
+        label: label.slice(0, 45),
+        prompt: `গল্পটি এভাবে এগিয়ে নাও: ${prompt}`,
+      });
+    });
+  }
+
+  if (choices.length < 2) {
+    return {
+      cleanText,
+      choices: getProceduralChoices(theme, isBengali),
+    };
+  }
+
+  return { cleanText, choices };
+}
+
 export async function generateStoryAndChat(
   prompt: string,
   autoTrain = true,
@@ -837,6 +1008,7 @@ export async function generateStoryAndChat(
   model: string;
   training_scope: string;
   account_id: string;
+  choices: StoryChoice[];
 }> {
   const safeAccountId = sanitizeAccountId(accountId);
   loadAccountMemory(safeAccountId);
@@ -934,6 +1106,24 @@ export async function generateStoryAndChat(
     }
   }
 
+  // Extract theme for procedural choices fallback
+  let promptTheme = "general";
+  if (/প্রেম|ভালোবাসা|ভালবাসা|রোমান্টিক|love|romance|romantic|prem/i.test(cleanPrompt)) {
+    promptTheme = "romance";
+  } else if (/রহস্য|গোয়েন্দা|ফেলুদা|খুন|চুরি|mystery|detective|investigation/i.test(cleanPrompt)) {
+    promptTheme = "mystery";
+  } else if (/ভয়|ভূত|আতঙ্ক|শ্মশান|রাক্ষস|horror|ghost|scary/i.test(cleanPrompt)) {
+    promptTheme = "horror";
+  } else if (/বৃষ্টি|মেঘ|শ্রাবণ|বর্ষা|rain|storm/i.test(cleanPrompt)) {
+    promptTheme = "rain";
+  }
+
+  const { cleanText: finalStory, choices } = parseChoicesAndCleanText(
+    generatedStory,
+    promptTheme,
+    isBengali,
+  );
+
   // Save chat history for this specific account
   const chatHist = accountChatHistory.get(safeAccountId) || [];
   chatHist.push({
@@ -943,20 +1133,20 @@ export async function generateStoryAndChat(
   });
   chatHist.push({
     role: "assistant",
-    content: generatedStory,
+    content: finalStory,
     timestamp: new Date().toISOString(),
   });
   accountChatHistory.set(safeAccountId, chatHist);
 
   if (autoTrain) {
     // Auto-retrain: save this newly generated story into this account's personal memory
-    const firstLine = generatedStory
+    const firstLine = finalStory
       .split("\n")[0]
       .replace(/[#*]/g, "")
       .trim()
       .slice(0, 40);
     trainOnText(
-      generatedStory,
+      finalStory,
       `Auto-Trained: ${firstLine || cleanPrompt.slice(0, 30)}`,
       safeAccountId,
     );
@@ -968,12 +1158,13 @@ export async function generateStoryAndChat(
   const currentTotal = DEFAULT_TRAINED_STORIES.length + updatedPersonalStories.length;
 
   return {
-    story: generatedStory,
+    story: finalStory,
     prompt: cleanPrompt,
     auto_trained: autoTrain,
     total_trained_count: currentTotal,
     model: activeModel,
     training_scope: trainingScope,
     account_id: safeAccountId,
+    choices,
   };
 }

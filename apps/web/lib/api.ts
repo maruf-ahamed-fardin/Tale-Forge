@@ -75,6 +75,12 @@ export interface TokenResponse {
   token_type: string;
 }
 
+export interface StoryChoice {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
 export interface UserOut {
   id: string;
   email: string;
@@ -359,6 +365,7 @@ export function simpleAiApi() {
         model?: string;
         training_scope?: string;
         account_id?: string;
+        choices?: StoryChoice[];
       }>(
         "/api/v1/ai/chat",
         {

@@ -17,6 +17,8 @@ import {
   Library,
   MessageSquare,
   Plus,
+  FileText,
+  GitFork,
   RefreshCw,
   RotateCcw,
   Send,
@@ -33,7 +35,8 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { simpleAiApi, storiesApi, type AIStatus } from "@/lib/api";
+import { simpleAiApi, storiesApi, type AIStatus, type StoryChoice } from "@/lib/api";
+import { exportStoryAsPdf } from "@/lib/pdf-export";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +52,7 @@ interface ChatMessage {
   imageUrl?: string;
   timestamp?: string;
   isStreaming?: boolean;
+  choices?: StoryChoice[];
 }
 
 interface ImageAttachment {
@@ -443,6 +447,11 @@ export default function AIChatPage() {
     sendPrompt(item.prompt, item.persona, item.model);
   };
 
+  const handleSelectChoice = (choicePrompt: string) => {
+    if (loading || isStreaming) return;
+    sendPrompt(choicePrompt, selectedPersona, selectedModel);
+  };
+
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const prompt = inputPrompt.trim();
@@ -506,6 +515,7 @@ export default function AIChatPage() {
         trainingScope: res.training_scope || selectedTrainingScope,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isStreaming: true,
+        choices: res.choices || [],
       };
       setMessages((prev) => [...prev, aiMsg]);
 
@@ -542,7 +552,11 @@ export default function AIChatPage() {
 
       // Finalize complete text and remove streaming state
       setMessages((prev) =>
-        prev.map((m) => (m.id === aiMsgId ? { ...m, content: fullText, isStreaming: false } : m))
+        prev.map((m) =>
+          m.id === aiMsgId
+            ? { ...m, content: fullText, isStreaming: false, choices: res.choices || [] }
+            : m
+        )
       );
       if (messagesContainerRef.current && isAutoScrollEnabledRef.current) {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -1369,6 +1383,24 @@ export default function AIChatPage() {
                             )}
                           </button>
 
+                          {/* Export as PDF */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const firstLine = m.content.split("\n")[0].replace(/^#\s*/, "").trim();
+                              exportStoryAsPdf({
+                                title: firstLine || "TaleForge Story",
+                                content: m.content,
+                                genre: currentPersonaInfo.name,
+                              });
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
+                            title="Export PDF (মুদ্রণযোগ্য ই-বুক)"
+                          >
+                            <FileText className="h-3.5 w-3.5 text-primary" />
+                            <span className="hidden sm:inline">PDF</span>
+                          </button>
+
                           {/* Download as TXT */}
                           <button
                             type="button"
@@ -1399,6 +1431,43 @@ export default function AIChatPage() {
                           <RotateCcw className="h-3 w-3" />
                           <span>Regenerate</span>
                         </button>
+                      </div>
+                    )}
+
+                    {/* Interactive Story Branching Options (Choose Your Own Adventure) */}
+                    {!isUser && !m.isStreaming && m.choices && m.choices.length > 0 && (
+                      <div className="mt-3.5 pt-3 border-t border-border/70 animate-in fade-in-50 slide-in-from-bottom-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                          <GitFork className="h-3.5 w-3.5 text-primary" />
+                          <span>
+                            {language === "bn"
+                              ? "গল্পের পরবর্তী মোড় বেছে নিন (Interactive Choices)"
+                              : "Choose the Next Story Turn"}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {m.choices.map((c, idx) => (
+                            <button
+                              key={c.id || idx}
+                              type="button"
+                              onClick={() => handleSelectChoice(c.prompt)}
+                              disabled={loading || isStreaming}
+                              className="group flex flex-col items-start p-2.5 rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 text-left transition-all hover:scale-[1.01] active:scale-[0.99] shadow-2xs disabled:opacity-50"
+                            >
+                              <div className="flex items-center gap-1.5 w-full">
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary text-[10px] font-black shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                                  {c.label}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-snug">
+                                {c.prompt.replace(/^গল্পটি এভাবে এগিয়ে নাও:\s*/, "")}
+                              </p>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
