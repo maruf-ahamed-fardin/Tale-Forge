@@ -23,6 +23,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem("tf_sidebar_collapsed");
       if (saved !== null) {
         setCollapsed(saved === "true");
+      } else if (typeof window !== "undefined" && window.innerWidth < 1024) {
+        // Default to clean collapsed icon sidebar on tablet screens (768px-1023px)
+        setCollapsed(true);
       }
     } catch {
       // Ignore storage errors
@@ -47,10 +50,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="ambient-glow-mesh pointer-events-none" />
       <div className="ambient-glow-mesh-2 pointer-events-none" />
 
-      {/* Permanent Desktop Sticky Sidebar - Collapsible with smooth transition */}
+      {/* Permanent Desktop/Tablet Sticky Sidebar - Collapsible with smooth transition */}
       <aside
         className={cn(
-          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl lg:block h-full max-h-full z-20 transition-all duration-300 ease-in-out relative group/sidebar",
+          "hidden shrink-0 border-r border-border/70 bg-surface/70 backdrop-blur-2xl md:block h-full max-h-full z-20 transition-all duration-300 ease-in-out relative group/sidebar",
           collapsed ? "w-[72px]" : "w-[270px]"
         )}
       >
@@ -75,25 +78,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="min-w-0 flex-1 flex flex-col h-full max-h-full overflow-hidden relative z-10">
-        {/* Mobile Header */}
-        <header className="shrink-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border/70 bg-surface/80 px-3 sm:px-4 backdrop-blur-xl lg:hidden">
-          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <span className="relative flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
+        {/* Mobile Header (Phones < 768px) */}
+        <header className="shrink-0 z-30 flex h-14 items-center justify-between border-b border-border/70 bg-surface/80 px-2.5 xs:px-3 sm:px-4 backdrop-blur-xl md:hidden">
+          <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 min-w-0 shrink">
+            <span className="relative flex h-7 w-7 shrink-0 overflow-hidden rounded-xl bg-gradient-radiant p-1 shadow-radiant">
               <img
                 src="/favicon.svg"
                 alt="TaleForge Logo"
                 className="h-full w-full object-contain filter drop-shadow"
               />
             </span>
-            <span className="font-display text-sm sm:text-base font-extrabold text-foreground truncate">TaleForge</span>
+            <span className="font-display text-xs xs:text-sm font-extrabold text-foreground truncate max-w-[120px] xs:max-w-[180px]">
+              TaleForge
+            </span>
           </Link>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 xs:gap-1.5 shrink-0">
             <LanguageToggle />
             <ThemeToggle />
             <button
               type="button"
-              className="inline-flex h-9 w-9 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-border bg-surface text-foreground hover:bg-surface-hover active:scale-95 transition-all"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface text-foreground hover:bg-surface-hover active:scale-95 transition-all"
               aria-label={t("nav.openMenu", undefined, "Open navigation")}
               onClick={() => setOpen(true)}
             >
@@ -105,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Mobile Overlay */}
         <div
           className={cn(
-            "fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity duration-200 lg:hidden",
+            "fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity duration-200 md:hidden",
             open ? "opacity-100" : "pointer-events-none opacity-0",
           )}
           onClick={() => setOpen(false)}
@@ -118,7 +123,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           aria-label="Navigation drawer"
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(88vw,320px)] border-r border-border bg-surface/95 backdrop-blur-2xl shadow-2xl transition-transform duration-250 ease-out lg:hidden flex flex-col h-full overflow-hidden",
+            "fixed inset-y-0 left-0 z-50 w-[min(88vw,320px)] border-r border-border bg-surface/95 backdrop-blur-2xl shadow-2xl transition-transform duration-250 ease-out md:hidden flex flex-col h-full overflow-hidden",
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -135,10 +140,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {/* Desktop Header */}
-        <header className="shrink-0 z-10 hidden h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-6 backdrop-blur-xl lg:flex">
-          <div className="flex items-center gap-4">
-
+        {/* Tablet & Desktop Header */}
+        <header className="shrink-0 z-10 hidden h-14 md:h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-4 md:px-5 lg:px-6 backdrop-blur-xl md:flex">
+          <div className="flex items-center gap-3 lg:gap-4 min-w-0">
             {/* Quick Spotlight Search Bar */}
             <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-border/70 bg-surface/70 text-muted-foreground text-xs hover:border-primary/40 transition-all shadow-2xs w-64">
               <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -152,25 +156,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </kbd>
             </div>
 
-            <div>
-              <p className="text-sm font-bold text-foreground leading-tight">
+            <div className="truncate">
+              <p className="text-sm font-bold text-foreground leading-tight truncate">
                 {t("nav.creativeWorkspace", undefined, "Creative Workspace")}
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground truncate hidden sm:block">
                 {t("nav.workspaceSubtitle", undefined, "Personalized AI Storytelling Platform")}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3 shrink-0">
             <LanguageToggle />
             <ThemeToggle />
             <Link
               href="/studio"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-3.5 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              {t("nav.newStory", undefined, "New Story")}
+              <span className="hidden sm:inline">{t("nav.newStory", undefined, "New Story")}</span>
             </Link>
           </div>
         </header>
@@ -181,7 +185,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             "flex-1 min-h-0 min-w-0 flex flex-col",
             isChat
               ? "overflow-hidden p-0"
-              : "overflow-y-auto px-3.5 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
+              : "overflow-y-auto px-3 py-3.5 xs:px-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
           )}
         >
           {children}
