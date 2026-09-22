@@ -12,16 +12,19 @@ import {
   FileText,
   Heart,
   PenLine,
+  Quote,
   RefreshCw,
   Trash2,
   Wand2,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { QuoteCardDialog } from "@/components/story/quote-card-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { storiesApi, type StoryOut } from "@/lib/api";
+import { exportStoryAsPdf } from "@/lib/pdf-export";
 import { useLanguage } from "@/lib/i18n";
 
 export default function StoryDetailPage() {
@@ -36,6 +39,7 @@ export default function StoryDetailPage() {
   const [copyMsg, setCopyMsg] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
 
   useEffect(() => {
     if (!storyId) return;
@@ -203,12 +207,40 @@ export default function StoryDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() =>
+                  exportStoryAsPdf({
+                    title: story.title,
+                    content: story.content,
+                    genre: story.genre,
+                    wordCount: story.word_count,
+                    date: formattedDate,
+                  })
+                }
+                aria-label="Export story as PDF"
+                className="h-8 text-xs rounded-xl border-border/80"
+              >
+                <FileText className="h-3.5 w-3.5 mr-1 text-primary" />
+                <span>{language === "bn" ? "পিডিএফ (PDF)" : "Export PDF"}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowQuoteDialog(true)}
+                aria-label="Create quote card"
+                className="h-8 text-xs rounded-xl border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary"
+              >
+                <Quote className="h-3.5 w-3.5 mr-1" />
+                <span>{language === "bn" ? "উদ্ধৃতি কার্ড" : "Quote Card"}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleExport}
                 aria-label="Export story"
                 className="h-8 text-xs rounded-xl border-border/80"
               >
                 <Download className="h-3.5 w-3.5 mr-1" />
-                {t("storyDetail.exportTxt", undefined, "Export TXT")}
+                <span>TXT</span>
               </Button>
             </div>
           </CardHeader>
@@ -321,6 +353,14 @@ export default function StoryDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Social Quote Card Generator Dialog */}
+      <QuoteCardDialog
+        open={showQuoteDialog}
+        onClose={() => setShowQuoteDialog(false)}
+        storyTitle={story.title}
+        defaultQuote={story.content}
+      />
     </section>
   );
 }
