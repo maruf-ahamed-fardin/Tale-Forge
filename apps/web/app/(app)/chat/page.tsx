@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   BookOpen,
@@ -261,6 +262,8 @@ export default function AIChatPage() {
   const personaDropdownRef = useRef<HTMLDivElement>(null);
   const trainingScopeDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [mounted, setMounted] = useState(false);
+
   // Load status and persisted preferences
   const refreshStatus = () => {
     simpleAiApi()
@@ -270,6 +273,7 @@ export default function AIChatPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     refreshStatus();
     if (typeof window !== "undefined") {
       const savedModel = localStorage.getItem("tf_preferred_model");
@@ -645,23 +649,233 @@ export default function AIChatPage() {
 
   return (
     <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
-      {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
-      {/* Mobile Dropdown Backdrop */}
-      {(showModelDropdown || showPersonaDropdown || showTrainingScopeDropdown) && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs sm:hidden animate-in fade-in-50"
-          onClick={() => {
-            setShowModelDropdown(false);
-            setShowPersonaDropdown(false);
-            setShowTrainingScopeDropdown(false);
-          }}
-        />
-      )}
+      {/* ─── Mobile Bottom Sheet Portal (Mounted to document.body so backdrop-filter & overflow never trap it) ─── */}
+      {mounted &&
+        (showModelDropdown || showPersonaDropdown || showTrainingScopeDropdown) &&
+        createPortal(
+          <div className="sm:hidden">
+            {/* Dark Backdrop */}
+            <div
+              className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-xs animate-in fade-in-50"
+              onClick={() => {
+                setShowModelDropdown(false);
+                setShowPersonaDropdown(false);
+                setShowTrainingScopeDropdown(false);
+              }}
+            />
+
+            {/* Model Bottom Sheet */}
+            {showModelDropdown && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-x-0 bottom-0 z-[1000] max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-y-auto"
+              >
+                <div className="mx-auto mb-2.5 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+                <div className="flex items-center justify-between px-1 pb-3 border-b border-border/60 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg bg-surface shadow-xs ${currentModelInfo.color}`}>
+                      <ModelIcon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground font-display">
+                        {t("chat.modelSelector", undefined, "Select AI Engine")}
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        {language === "bn" ? "গল্প রচনার জন্য এআই মডেল নির্বাচন করুন" : "Choose AI generation model"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowModelDropdown(false)}
+                    className="p-1.5 rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  {availableModels.map((m) => {
+                    const Icon = m.icon;
+                    const isSelected = m.id === selectedModel;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleSelectModel(m.id)}
+                        className={cn(
+                          "w-full flex items-start gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]",
+                          isSelected
+                            ? "bg-primary/10 border border-primary/30 text-primary shadow-2xs"
+                            : "hover:bg-surface-hover text-foreground border border-border/60 bg-surface/50"
+                        )}
+                      >
+                        <div className={`p-2 rounded-xl bg-surface shadow-xs mt-0.5 ${m.color}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-xs font-bold truncate">{m.name}</span>
+                            <span
+                              className={cn(
+                                "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                                isSelected
+                                  ? "bg-primary text-white"
+                                  : "bg-surface-hover text-muted-foreground"
+                              )}
+                            >
+                              {m.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                            {m.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Persona Bottom Sheet */}
+            {showPersonaDropdown && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-x-0 bottom-0 z-[1000] max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-y-auto"
+              >
+                <div className="mx-auto mb-2.5 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+                <div className="flex items-center justify-between px-1 pb-3 border-b border-border/60 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{currentPersonaInfo.emoji}</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground font-display">
+                        {t("chat.personaSelector", undefined, "Literary Style / লেখক শৈলী")}
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        {language === "bn" ? "গল্পের বাচনভঙ্গি ও সাহিত্যের ধরণ" : "Writing cadence & narrative tone"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPersonaDropdown(false)}
+                    className="p-1.5 rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  {availablePersonas.map((p) => {
+                    const isSelected = p.id === selectedPersona;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelectPersona(p.id)}
+                        className={cn(
+                          "w-full flex items-start gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]",
+                          isSelected
+                            ? "bg-primary/10 border border-primary/30 text-primary shadow-2xs"
+                            : "hover:bg-surface-hover text-foreground border border-border/60 bg-surface/50"
+                        )}
+                      >
+                        <span className="text-xl shrink-0 mt-0.5">{p.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold leading-snug">{p.name}</p>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                            {p.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Training Scope Bottom Sheet */}
+            {showTrainingScopeDropdown && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-x-0 bottom-0 z-[1000] max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-y-auto"
+              >
+                <div className="mx-auto mb-2.5 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+                <div className="flex items-center justify-between px-1 pb-3 border-b border-border/60 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg bg-surface shadow-xs ${currentScopeInfo.color}`}>
+                      <ScopeIcon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground font-display">
+                        Knowledge Scope / জ্ঞান পরিসীমা
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        {language === "bn" ? "কোন ডেটাসেটের ওপর ভিত্তি করে গল্প লিখবে" : "Training knowledge baseline"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowTrainingScopeDropdown(false)}
+                    className="p-1.5 rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  {availableScopes.map((s) => {
+                    const SIcon = s.icon;
+                    const isSelected = s.id === selectedTrainingScope;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleSelectTrainingScope(s.id)}
+                        className={cn(
+                          "w-full flex items-start gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]",
+                          isSelected
+                            ? "bg-amber-500/15 border border-amber-500/30 text-amber-900 dark:text-amber-200 shadow-2xs font-medium"
+                            : "hover:bg-surface-hover text-foreground border border-border/60 bg-surface/50"
+                        )}
+                      >
+                        <div className={`p-2 rounded-xl bg-surface shadow-2xs mt-0.5 ${s.color}`}>
+                          <SIcon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="text-xs font-bold leading-snug">{s.name}</p>
+                            <span
+                              className={cn(
+                                "text-[9px] font-semibold px-2 py-0.5 rounded-full",
+                                isSelected
+                                  ? "bg-amber-600 text-white"
+                                  : "bg-surface-hover text-muted-foreground"
+                              )}
+                            >
+                              {s.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                            {s.desc}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
 
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
-      <header className="shrink-0 relative z-30 flex items-center justify-between gap-1 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
+      <header className="shrink-0 relative z-20 flex items-center justify-between gap-1 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
-        <div className="flex items-center gap-1 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 overflow-x-auto sm:overflow-visible no-scrollbar py-0.5">
           {/* Model Selector Dropdown */}
           <div className="relative shrink-0" ref={modelDropdownRef}>
             <button
@@ -677,25 +891,16 @@ export default function AIChatPage() {
               <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0" />
             </button>
 
+            {/* Desktop Model Popover */}
             {showModelDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="fixed inset-x-0 bottom-0 max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl z-50 animate-in slide-in-from-bottom sm:fixed sm:inset-auto sm:left-auto sm:right-auto sm:absolute sm:left-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[calc(75dvh)] sm:rounded-2xl sm:border sm:p-2 sm:zoom-in-95 overflow-y-auto"
+                className="hidden sm:block absolute left-0 top-full mt-2 w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
-                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted sm:hidden" />
-                <div className="flex items-center justify-between px-1 sm:px-3 py-1.5">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                    {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowModelDropdown(false)}
-                    className="p-1 rounded-lg text-muted-foreground hover:bg-surface-hover sm:hidden"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="space-y-1 mt-1">
+                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
+                </p>
+                <div className="space-y-1">
                   {availableModels.map((m) => {
                     const Icon = m.icon;
                     const isSelected = m.id === selectedModel;
@@ -755,25 +960,16 @@ export default function AIChatPage() {
               <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
             </button>
 
+            {/* Desktop Persona Popover */}
             {showPersonaDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="fixed inset-x-0 bottom-0 max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl z-50 animate-in slide-in-from-bottom sm:fixed sm:inset-auto sm:left-auto sm:right-auto sm:absolute sm:left-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[calc(75dvh)] sm:rounded-2xl sm:border sm:p-2 sm:zoom-in-95 overflow-y-auto"
+                className="hidden sm:block absolute left-0 top-full mt-2 w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
-                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted sm:hidden" />
-                <div className="flex items-center justify-between px-1 sm:px-3 py-1.5">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                    {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowPersonaDropdown(false)}
-                    className="p-1 rounded-lg text-muted-foreground hover:bg-surface-hover sm:hidden"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="space-y-1 mt-1">
+                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
+                </p>
+                <div className="space-y-1">
                   {availablePersonas.map((p) => {
                     const isSelected = p.id === selectedPersona;
                     return (
@@ -818,25 +1014,16 @@ export default function AIChatPage() {
               <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
             </button>
 
+            {/* Desktop Training Scope Popover */}
             {showTrainingScopeDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="fixed inset-x-0 bottom-0 max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl z-50 animate-in slide-in-from-bottom sm:fixed sm:inset-auto sm:left-auto sm:right-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[calc(75dvh)] sm:rounded-2xl sm:border sm:p-2 sm:zoom-in-95 overflow-y-auto"
+                className="hidden sm:block absolute right-0 sm:right-auto sm:left-0 lg:left-auto lg:right-0 top-full mt-2 w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
-                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted sm:hidden" />
-                <div className="flex items-center justify-between px-1 sm:px-3 py-1.5">
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Knowledge Scope / জ্ঞান পরিসীমা
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowTrainingScopeDropdown(false)}
-                    className="p-1 rounded-lg text-muted-foreground hover:bg-surface-hover sm:hidden"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="space-y-1 mt-1">
+                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Knowledge Scope / জ্ঞান পরিসীমা
+                </p>
+                <div className="space-y-1">
                   {availableScopes.map((s) => {
                     const SIcon = s.icon;
                     const isSelected = s.id === selectedTrainingScope;
