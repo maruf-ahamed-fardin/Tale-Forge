@@ -649,7 +649,7 @@ export default function AIChatPage() {
       {/* Mobile Dropdown Backdrop */}
       {(showModelDropdown || showPersonaDropdown || showTrainingScopeDropdown) && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs sm:hidden animate-in fade-in-50"
           onClick={() => {
             setShowModelDropdown(false);
             setShowPersonaDropdown(false);
@@ -659,19 +659,19 @@ export default function AIChatPage() {
       )}
 
       {/* ─── Top Bar / Header: Clean, Uncluttered Unified Navigation ─── */}
-      <header className="shrink-0 relative z-30 flex items-center justify-between gap-1 sm:gap-3 px-2 sm:px-4 py-2 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
+      <header className="shrink-0 relative z-30 flex items-center justify-between gap-1 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
-        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 overflow-x-auto no-scrollbar py-0.5">
           {/* Model Selector Dropdown */}
           <div className="relative shrink-0" ref={modelDropdownRef}>
             <button
               type="button"
               onClick={(e) => toggleDropdown("model", e)}
-              className="flex items-center gap-1 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1 sm:gap-2 rounded-xl px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition shrink-0"
               title={t("chat.modelSelector", undefined, "Change AI Model")}
             >
               <ModelIcon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 ${currentModelInfo.color}`} />
-              <span className="truncate max-w-[85px] xs:max-w-[120px] sm:max-w-[160px]">
+              <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-[160px]">
                 {currentModelInfo.name}
               </span>
               <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0" />
@@ -680,12 +680,22 @@ export default function AIChatPage() {
             {showModelDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="fixed left-3 right-3 top-[106px] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 sm:w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="fixed inset-x-0 bottom-0 max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl z-50 animate-in slide-in-from-bottom sm:fixed sm:inset-auto sm:left-auto sm:right-auto sm:absolute sm:left-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[calc(75dvh)] sm:rounded-2xl sm:border sm:p-2 sm:zoom-in-95 overflow-y-auto"
               >
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
-                </p>
-                <div className="space-y-1">
+                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted sm:hidden" />
+                <div className="flex items-center justify-between px-1 sm:px-3 py-1.5">
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowModelDropdown(false)}
+                    className="p-1 rounded-lg text-muted-foreground hover:bg-surface-hover sm:hidden"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-1 mt-1">
                   {availableModels.map((m) => {
                     const Icon = m.icon;
                     const isSelected = m.id === selectedModel;
@@ -735,11 +745,11 @@ export default function AIChatPage() {
             <button
               type="button"
               onClick={(e) => toggleDropdown("persona", e)}
-              className="flex items-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition shrink-0"
               title={t("chat.personaSelector", undefined, "Select Literary Style")}
             >
               <span className="text-sm shrink-0">{currentPersonaInfo.emoji}</span>
-              <span className="hidden sm:inline truncate max-w-[110px]">
+              <span className="hidden xs:inline truncate max-w-[90px] sm:max-w-[110px]">
                 {currentPersonaInfo.name.split(" ")[0]}
               </span>
               <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -748,12 +758,22 @@ export default function AIChatPage() {
             {showPersonaDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="fixed left-3 right-3 top-[106px] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 sm:w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="fixed inset-x-0 bottom-0 max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl z-50 animate-in slide-in-from-bottom sm:fixed sm:inset-auto sm:left-auto sm:right-auto sm:absolute sm:left-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[calc(75dvh)] sm:rounded-2xl sm:border sm:p-2 sm:zoom-in-95 overflow-y-auto"
               >
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
-                </p>
-                <div className="space-y-1">
+                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted sm:hidden" />
+                <div className="flex items-center justify-between px-1 sm:px-3 py-1.5">
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowPersonaDropdown(false)}
+                    className="p-1 rounded-lg text-muted-foreground hover:bg-surface-hover sm:hidden"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-1 mt-1">
                   {availablePersonas.map((p) => {
                     const isSelected = p.id === selectedPersona;
                     return (
@@ -788,11 +808,11 @@ export default function AIChatPage() {
             <button
               type="button"
               onClick={(e) => toggleDropdown("scope", e)}
-              className="flex items-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition"
+              className="flex items-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover transition shrink-0"
               title="Knowledge Scope"
             >
               <ScopeIcon className={`h-3.5 w-3.5 shrink-0 ${currentScopeInfo.color}`} />
-              <span className="hidden sm:inline truncate max-w-[110px]">
+              <span className="hidden xs:inline truncate max-w-[90px] sm:max-w-[110px]">
                 {currentScopeInfo.shortName}
               </span>
               <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -801,12 +821,22 @@ export default function AIChatPage() {
             {showTrainingScopeDropdown && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="fixed left-3 right-3 top-[106px] sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
+                className="fixed inset-x-0 bottom-0 max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl z-50 animate-in slide-in-from-bottom sm:fixed sm:inset-auto sm:left-auto sm:right-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[calc(75dvh)] sm:rounded-2xl sm:border sm:p-2 sm:zoom-in-95 overflow-y-auto"
               >
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Knowledge Scope / জ্ঞান পরিসীমা
-                </p>
-                <div className="space-y-1">
+                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted sm:hidden" />
+                <div className="flex items-center justify-between px-1 sm:px-3 py-1.5">
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Knowledge Scope / জ্ঞান পরিসীমা
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowTrainingScopeDropdown(false)}
+                    className="p-1 rounded-lg text-muted-foreground hover:bg-surface-hover sm:hidden"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-1 mt-1">
                   {availableScopes.map((s) => {
                     const SIcon = s.icon;
                     const isSelected = s.id === selectedTrainingScope;
@@ -1192,7 +1222,7 @@ export default function AIChatPage() {
       </div>
 
       {/* ─── Bottom Floating Capsule Input ─── */}
-      <div className="shrink-0 pt-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] px-2.5 sm:px-4 sm:pb-4">
+      <div className="shrink-0 pt-1.5 pb-safe pb-[max(0.75rem,env(safe-area-inset-bottom))] px-2 xs:px-2.5 sm:px-4 sm:pb-4">
         <div className="max-w-3xl mx-auto">
           {/* Image Attachment Preview Badge */}
           {attachedImage && (
