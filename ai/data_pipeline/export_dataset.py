@@ -3,7 +3,12 @@
 Reads an account's own Bengali stories (saved by the web app's Train AI page) and formats
 them into ChatML / Alpaca instruction-tuning datasets (JSONL) ready for LoRA / QLoRA fine-tuning.
 
-Mirrors apps/web/lib/training-dataset.ts (LOCAL_LORA_CHUNKS) — keep the two in sync.
+Each story becomes several training conversations:
+  - write:    "write a story titled X" -> first chunk (instruction rotated through Bengali, Banglish, English)
+  - expand:   short draft -> "make it longer" -> full first chunk (teaches follow-up instructions)
+  - continue: previous chunk's ending -> "continue" -> next chunk, as a real multi-turn conversation
+
+Mirrors apps/web/lib/training-dataset.ts — keep the two in sync.
 """
 
 import argparse
@@ -17,18 +22,47 @@ PERSONAL_TRAINING_DIR = REPO_ROOT / "apps" / "web" / "storage" / "personal_train
 DEFAULT_ACCOUNT_ID = "default_local_author"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "data" / "datasets"
 
-# Must match the system prompt used at inference time (ai/inference/local_provider.py)
-SYSTEM_PROMPT = "You are TaleForge AI, an expert literary novelist specializing in Bengali literature."
+# Must match TRAINING_SYSTEM_PROMPT in apps/web/lib/system-prompt.ts and the inference prompt in
+# ai/inference/local_provider.py, so the model sees the same framing at training and chat time.
+SYSTEM_PROMPT = (
+    "You are TaleForge AI, an expert literary novelist specializing in Bengali literature. "
+    "Follow the user's latest instruction exactly. If they ask to expand, continue, shorten, rewrite or change "
+    "the previous story, work on that story from the conversation and keep its title, characters and events. "
+    "Otherwise write a new story. Write in Bengali unless the user asks for English."
+)
 
 # Bengali is token-heavy: Qwen2.5 uses ~1.1 tokens per character. A 650-char chunk (~720 tokens)
-# plus the prompt and 150 chars of context (~260 tokens) stays under the 1024-token training limit,
-# so the end of each chunk is never truncated away.
+# plus the multi-turn prompt (short draft + instruction, ~450 tokens) stays under the 1792-token training limit.
 MAX_CHUNK_CHARS = 650
 CONTEXT_CHARS = 150
+SHORT_DRAFT_CHARS = 260
 
 # Stories written by Gemini / the template engine are saved with this title prefix.
 # They are not the user's own voice, so they are excluded from fine-tuning.
 AUTO_TRAINED_PREFIX = "Auto-Trained:"
+
+# The same request phrased in Bengali, Banglish and English, so the model obeys all three.
+LANGS = ("bn", "banglish", "en")
+WRITE_INSTRUCTIONS = {
+    "bn": lambda title: f"'{title}' শিরোনামে একটি সাহিত্যিক বাংলা গল্প রচনা করো।",
+    "banglish": lambda title: f"'{title}' name e ekta shundor bangla golpo lekho.",
+    "en": lambda title: f"Write a literary Bengali story titled '{title}'.",
+}
+SHORT_INSTRUCTIONS = {
+    "bn": lambda title: f"'{title}' শিরোনামে একটি ছোট গল্প লেখো, কয়েক লাইনে।",
+    "banglish": lambda title: f"'{title}' name e ekta choto golpo lekho, koyek line e.",
+    "en": lambda title: f"Write a very short story titled '{title}', just a few lines.",
+}
+EXPAND_INSTRUCTIONS = {
+    "bn": "এই গল্পটা আরও বড় করো। একই শিরোনাম, চরিত্র আর ঘটনা রেখে বিস্তারিতভাবে লেখো।",
+    "banglish": "ei golpo ta aro boro koro. same title, character ar ghotona rekhe details e lekho.",
+    "en": "Make this story longer. Keep the same title, characters and events, and write it in detail.",
+}
+CONTINUE_INSTRUCTIONS = {
+    "bn": "গল্পটা যেখানে শেষ হয়েছে সেখান থেকে একই ধারায় চালিয়ে যাও।",
+    "banglish": "golpo ta jekhane shesh hoyeche shekhan theke continue koro.",
+    "en": "Continue the story from where it stopped, in the same style.",
+}
 
 
 def sanitize_account_id(raw_id: str | None) -> str:
@@ -69,30 +103,69 @@ def chunk_story(text: str) -> list[str]:
     return chunks
 
 
-def build_sample(instruction: str, output: str) -> dict:
+def short_draft(chunk: str) -> str:
+    """The opening sentences of a chunk, cut on a sentence boundary, at most SHORT_DRAFT_CHARS long."""
+    sentences = re.findall(r"[^।?!.\n]+[।?!.]*\s*", chunk) or [chunk]
+    draft = ""
+    for s in sentences:
+        if draft and len(draft) + len(s) > SHORT_DRAFT_CHARS:
+            break
+        draft += s
+    return draft.strip() or chunk[:SHORT_DRAFT_CHARS].strip()
+
+
+def build_sample(turns: list[dict]) -> dict:
+    """One training conversation. The last turn is the assistant reply the model learns from."""
+    last_user = next(t["content"] for t in reversed(turns) if t["role"] == "user")
     return {
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": instruction},
-            {"role": "assistant", "content": output},
-        ],
-        "instruction": instruction,
+        "messages": [{"role": "system", "content": SYSTEM_PROMPT}, *turns],
+        "instruction": last_user,
         "input": "",
-        "output": output,
+        "output": turns[-1]["content"],
     }
 
 
-def story_to_samples(title: str, text: str) -> list[dict]:
+def story_to_samples(title: str, text: str, story_index: int = 0) -> list[dict]:
     clean_title = title.strip() or "গল্প"
     chunks = chunk_story(text)
+    if not chunks:
+        return []
     samples = []
-    for i, chunk in enumerate(chunks):
-        if i == 0:
-            instruction = f"'{clean_title}' শিরোনামে একটি সাহিত্যিক বাংলা গল্প রচনা করো।"
-        else:
-            context = chunks[i - 1][-CONTEXT_CHARS:]
-            instruction = f"'{clean_title}' গল্পটি নিচের অংশ থেকে একই ধারায় এগিয়ে নাও:\n\n\"{context}\""
-        samples.append(build_sample(instruction, chunk))
+
+    # Every story gets a Bengali write sample; the other phrasings rotate so the dataset stays balanced.
+    samples.append(build_sample([
+        {"role": "user", "content": WRITE_INSTRUCTIONS["bn"](clean_title)},
+        {"role": "assistant", "content": chunks[0]},
+    ]))
+    alt_lang = LANGS[(story_index + 1) % len(LANGS)]
+    if alt_lang != "bn":
+        samples.append(build_sample([
+            {"role": "user", "content": WRITE_INSTRUCTIONS[alt_lang](clean_title)},
+            {"role": "assistant", "content": chunks[0]},
+        ]))
+
+    # Expand: the model sees its own short draft, then the request to grow it.
+    draft = short_draft(chunks[0])
+    if len(draft) < len(chunks[0]):
+        lang = LANGS[story_index % len(LANGS)]
+        samples.append(build_sample([
+            {"role": "user", "content": SHORT_INSTRUCTIONS[lang](clean_title)},
+            {"role": "assistant", "content": draft},
+            {"role": "user", "content": EXPAND_INSTRUCTIONS[lang]},
+            {"role": "assistant", "content": chunks[0]},
+        ]))
+
+    # Continue: a real conversation where the previous chunk's ending is the assistant's last turn.
+    for i in range(1, len(chunks)):
+        previous = chunks[i - 1]
+        context = f"…{previous[-CONTEXT_CHARS * 2:]}" if len(previous) > CONTEXT_CHARS * 2 else previous
+        lang = LANGS[(story_index + i) % len(LANGS)]
+        samples.append(build_sample([
+            {"role": "user", "content": WRITE_INSTRUCTIONS["bn"](clean_title)},
+            {"role": "assistant", "content": context},
+            {"role": "user", "content": CONTINUE_INSTRUCTIONS[lang]},
+            {"role": "assistant", "content": chunks[i]},
+        ]))
     return samples
 
 
@@ -123,8 +196,8 @@ def export_dataset(
         )
 
     all_samples = []
-    for s in stories:
-        all_samples.extend(story_to_samples(s.get("title", ""), s["text"]))
+    for index, s in enumerate(stories):
+        all_samples.extend(story_to_samples(s.get("title", ""), s["text"], index))
 
     # Hold out ~10% for validation only when there is enough data to spare
     val_count = int(len(all_samples) * 0.1) if len(all_samples) >= 10 else 0

@@ -126,10 +126,10 @@ export async function startTuning(accountId: string): Promise<TuningState> {
       .map((s) =>
         JSON.stringify({
           systemInstruction: { parts: [{ text: TRAINING_SYSTEM_PROMPT }] },
-          contents: [
-            { role: "user", parts: [{ text: s.instruction }] },
-            { role: "model", parts: [{ text: s.output }] },
-          ],
+          contents: s.messages.map((m) => ({
+            role: m.role === "assistant" ? "model" : "user",
+            parts: [{ text: m.content }],
+          })),
         }),
       )
       .join("\n") + "\n";
@@ -192,7 +192,13 @@ export async function getTuningStatus(accountId: string): Promise<TuningState> {
 }
 
 /** Writes a story with the account's tuned Gemini model. Throws if the account has none yet. */
-export async function generateWithTunedGemini(accountId: string, prompt: string): Promise<string> {
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/** Generates with the account's tuned Gemini endpoint. `conversation` ends with the user's latest message. */
+export async function generateWithTunedGemini(accountId: string, conversation: ConversationTurn[]): Promise<string> {
   const config = requireConfig();
   const state = await loadState(accountId);
   if (!state.active_endpoint) {
@@ -209,7 +215,10 @@ export async function generateWithTunedGemini(accountId: string, prompt: string)
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: TRAINING_SYSTEM_PROMPT }] },
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      contents: conversation.map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      })),
       generationConfig: { temperature: 0.85, maxOutputTokens: 8192 },
     }),
   });

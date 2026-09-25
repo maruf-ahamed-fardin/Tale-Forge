@@ -1,9 +1,7 @@
 import { getAccountPersonalStories, type TrainedStory } from "@/lib/story-engine";
+import { TRAINING_SYSTEM_PROMPT } from "@/lib/system-prompt";
 
-// Used for every training sample AND at inference time, so the fine-tuned model sees the same framing.
-// Keep in sync with ai/data_pipeline/export_dataset.py and ai/inference/local_provider.py.
-export const TRAINING_SYSTEM_PROMPT =
-  "You are TaleForge AI, an expert literary novelist specializing in Bengali literature.";
+export { TRAINING_SYSTEM_PROMPT };
 
 // Stories written by Gemini / the template engine are saved with this title prefix.
 // They are not the user's own voice, so they are excluded from fine-tuning.
@@ -15,13 +13,24 @@ export interface ChunkOptions {
 }
 
 // Local Qwen LoRA: Qwen2.5 uses ~1.1 tokens per Bengali character. A 650-char chunk (~720 tokens)
-// plus the prompt and 150 chars of context (~260 tokens) stays under the 1024-token training limit.
+// plus the multi-turn prompt (short draft + instruction, ~450 tokens) stays under the 1792-token training limit.
 export const LOCAL_LORA_CHUNKS: ChunkOptions = { maxChunkChars: 650, contextChars: 150 };
 
 // Gemini tuning has a far larger context window; bigger chunks keep more of each story's flow.
 export const GEMINI_TUNING_CHUNKS: ChunkOptions = { maxChunkChars: 1500, contextChars: 300 };
 
+// A "short draft" is the opening of a story; the expand sample teaches the model to grow it into the full chunk.
+const SHORT_DRAFT_CHARS = 260;
+
+export interface TrainingTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/** One training conversation. The last turn is always the assistant reply the model learns from. */
 export interface TrainingSample {
+  messages: TrainingTurn[];
+  /** Alpaca compatibility: the last user instruction and the assistant reply. */
   instruction: string;
   output: string;
 }
@@ -76,26 +85,101 @@ function chunkStory(text: string, maxChunkChars: number): string[] {
   return chunks;
 }
 
-/** Turns stories into instruction → story-chunk pairs: the first chunk from the title, the rest as continuations. */
+/** The opening sentences of a chunk, cut on a sentence boundary, at most SHORT_DRAFT_CHARS long. */
+function shortDraft(chunk: string): string {
+  const sentences = chunk.match(/[^।?!.\n]+[।?!.]*\s*/g) || [chunk];
+  let draft = "";
+  for (const s of sentences) {
+    if (draft && draft.length + s.length > SHORT_DRAFT_CHARS) break;
+    draft += s;
+  }
+  return draft.trim() || chunk.slice(0, SHORT_DRAFT_CHARS).trim();
+}
+
+// The same request phrased in Bengali, Banglish and English, so the model obeys all three.
+// Keep in sync with the INSTRUCTION_* lists in ai/data_pipeline/export_dataset.py.
+const WRITE_INSTRUCTIONS = {
+  bn: (title: string) => `'${title}' শিরোনামে একটি সাহিত্যিক বাংলা গল্প রচনা করো।`,
+  banglish: (title: string) => `'${title}' name e ekta shundor bangla golpo lekho.`,
+  en: (title: string) => `Write a literary Bengali story titled '${title}'.`,
+};
+
+const SHORT_INSTRUCTIONS = {
+  bn: (title: string) => `'${title}' শিরোনামে একটি ছোট গল্প লেখো, কয়েক লাইনে।`,
+  banglish: (title: string) => `'${title}' name e ekta choto golpo lekho, koyek line e.`,
+  en: (title: string) => `Write a very short story titled '${title}', just a few lines.`,
+};
+
+const EXPAND_INSTRUCTIONS = {
+  bn: "এই গল্পটা আরও বড় করো। একই শিরোনাম, চরিত্র আর ঘটনা রেখে বিস্তারিতভাবে লেখো।",
+  banglish: "ei golpo ta aro boro koro. same title, character ar ghotona rekhe details e lekho.",
+  en: "Make this story longer. Keep the same title, characters and events, and write it in detail.",
+};
+
+const CONTINUE_INSTRUCTIONS = {
+  bn: "গল্পটা যেখানে শেষ হয়েছে সেখান থেকে একই ধারায় চালিয়ে যাও।",
+  banglish: "golpo ta jekhane shesh hoyeche shekhan theke continue koro.",
+  en: "Continue the story from where it stopped, in the same style.",
+};
+
+const LANGS = ["bn", "banglish", "en"] as const;
+
+function sample(messages: TrainingTurn[]): TrainingSample {
+  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const lastAssistant = messages[messages.length - 1];
+  return { messages, instruction: lastUser?.content || "", output: lastAssistant.content };
+}
+
+/**
+ * Turns stories into training conversations:
+ *  - write:    "write a story titled X" → first chunk (instruction rotated through Bengali, Banglish, English)
+ *  - expand:   short draft → "make it longer" → full first chunk (teaches follow-up instructions)
+ *  - continue: previous chunk's ending → "continue" → next chunk, as a real multi-turn conversation
+ */
 export function buildTrainingSamples(stories: TrainedStory[], options: ChunkOptions): TrainingSample[] {
   const samples: TrainingSample[] = [];
-  for (const s of stories) {
-    const title = s.title.trim() || "গল্প";
-    const chunks = chunkStory(s.text, options.maxChunkChars);
-    chunks.forEach((chunk, i) => {
-      if (i === 0) {
-        samples.push({
-          instruction: `'${title}' শিরোনামে একটি সাহিত্যিক বাংলা গল্প রচনা করো।`,
-          output: chunk,
-        });
-      } else {
-        const context = chunks[i - 1].slice(-options.contextChars);
-        samples.push({
-          instruction: `'${title}' গল্পটি নিচের অংশ থেকে একই ধারায় এগিয়ে নাও:\n\n"${context}"`,
-          output: chunk,
-        });
-      }
-    });
-  }
+  stories.forEach((story, storyIndex) => {
+    const title = story.title.trim() || "গল্প";
+    const chunks = chunkStory(story.text, options.maxChunkChars);
+    if (chunks.length === 0) return;
+
+    // Every story gets a Bengali write sample; the other phrasings rotate so the dataset stays balanced.
+    const altLang = LANGS[(storyIndex + 1) % LANGS.length];
+    samples.push(sample([{ role: "user", content: WRITE_INSTRUCTIONS.bn(title) }, { role: "assistant", content: chunks[0] }]));
+    if (altLang !== "bn") {
+      samples.push(
+        sample([{ role: "user", content: WRITE_INSTRUCTIONS[altLang](title) }, { role: "assistant", content: chunks[0] }]),
+      );
+    }
+
+    // Expand: the model sees its own short draft, then the request to grow it.
+    const draft = shortDraft(chunks[0]);
+    if (draft.length < chunks[0].length) {
+      const lang = LANGS[storyIndex % LANGS.length];
+      samples.push(
+        sample([
+          { role: "user", content: SHORT_INSTRUCTIONS[lang](title) },
+          { role: "assistant", content: draft },
+          { role: "user", content: EXPAND_INSTRUCTIONS[lang] },
+          { role: "assistant", content: chunks[0] },
+        ]),
+      );
+    }
+
+    // Continue: a real conversation where the previous chunk's ending is the assistant's last turn.
+    for (let i = 1; i < chunks.length; i++) {
+      const previous = chunks[i - 1];
+      const context = previous.length > options.contextChars * 2 ? `…${previous.slice(-options.contextChars * 2)}` : previous;
+      const lang = LANGS[(storyIndex + i) % LANGS.length];
+      samples.push(
+        sample([
+          { role: "user", content: WRITE_INSTRUCTIONS.bn(title) },
+          { role: "assistant", content: context },
+          { role: "user", content: CONTINUE_INSTRUCTIONS[lang] },
+          { role: "assistant", content: chunks[i] },
+        ]),
+      );
+    }
+  });
   return samples;
 }

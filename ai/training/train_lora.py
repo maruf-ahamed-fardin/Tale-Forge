@@ -63,10 +63,11 @@ def run_training(
     batch_size: int = 1,
     gradient_accumulation_steps: int = 4,
     learning_rate: float = 2e-4,
-    max_seq_length: int = 1024,
+    max_seq_length: int = 1792,
     lora_r: int = 16,
     lora_alpha: int = 32,
     use_4bit: bool = True,
+    gradient_checkpointing: bool = True,
 ):
     """Executes the LoRA / QLoRA fine-tuning loop."""
     if not check_dependencies():
@@ -115,6 +116,14 @@ def run_training(
     torch_dtype = torch.float16 if has_cuda else torch.float32
 
     if has_cuda and use_4bit:
+        try:
+            import bitsandbytes  # noqa: F401
+        except ImportError:
+            print("   bitsandbytes is not installed: training in fp16 without 4-bit quantization.")
+            print("   (pip install bitsandbytes, or use a smaller base model such as Qwen/Qwen2.5-0.5B-Instruct)")
+            use_4bit = False
+
+    if has_cuda and use_4bit:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -132,6 +141,11 @@ def run_training(
 
     if has_cuda and use_4bit:
         model = prepare_model_for_kbit_training(model)
+
+    if gradient_checkpointing:
+        # Trades compute for memory so 1.5B fits on a 4 GB card at 1536 tokens
+        model.gradient_checkpointing_enable()
+        model.enable_input_require_grads()
 
     # 3. LoRA Configuration
     print("\n[3/5] Configuring LoRA adapter layers...")
@@ -238,6 +252,11 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=1, help="Per-device batch size")
     parser.add_argument("--lora_r", type=int, default=16, help="LoRA rank")
     parser.add_argument("--lora_alpha", type=int, default=32, help="LoRA alpha scaling")
+    parser.add_argument("--grad_accum", type=int, default=4, help="Gradient accumulation steps")
+    parser.add_argument("--lr", type=float, default=2e-4, help="Learning rate")
+    parser.add_argument("--max_seq_length", type=int, default=1792, help="Max tokens per sample")
+    parser.add_argument("--no_4bit", action="store_true", help="Disable 4-bit (QLoRA) quantization")
+    parser.add_argument("--no_grad_checkpoint", action="store_true", help="Disable gradient checkpointing")
     args = parser.parse_args()
 
     run_training(
@@ -248,4 +267,9 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         lora_r=args.lora_r,
         lora_alpha=args.lora_alpha,
+        gradient_accumulation_steps=args.grad_accum,
+        learning_rate=args.lr,
+        max_seq_length=args.max_seq_length,
+        use_4bit=not args.no_4bit,
+        gradient_checkpointing=not args.no_grad_checkpoint,
     )
