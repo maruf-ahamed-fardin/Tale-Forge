@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { CloudTuningCard } from "@/components/training/cloud-tuning-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -221,6 +222,8 @@ export default function TrainingPage() {
           </CardContent>
         </Card>
       </div>
+
+      <CloudTuningCard />
 
       {/* True ML Training Hub Banner */}
       <Card className="mb-6 border-primary/40 bg-gradient-to-r from-primary/10 via-surface to-surface">

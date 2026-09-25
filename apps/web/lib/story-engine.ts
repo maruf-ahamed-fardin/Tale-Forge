@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { generateWithTunedGemini, isVertexTuningConfigured } from "@/lib/vertex-tuning";
 
 export interface TrainedStory {
   id: string;
@@ -1107,8 +1108,13 @@ export async function generateStoryAndChat(
     activeModel = "TaleForge Smart Engine (Offline)";
   } else if (model === "taleforge-lora") {
     // The user's own fine-tuned model. Errors propagate so a failure is never hidden behind another model.
-    generatedStory = await generateWithLocalLoRA(cleanPrompt);
-    activeModel = "TaleForge LoRA Adapter (Your Trained Model)";
+    if (isVertexTuningConfigured()) {
+      generatedStory = await generateWithTunedGemini(safeAccountId, cleanPrompt);
+      activeModel = "Your Tuned Gemini (Vertex AI)";
+    } else {
+      generatedStory = await generateWithLocalLoRA(cleanPrompt);
+      activeModel = "TaleForge LoRA Adapter (Your Trained Model)";
+    }
   } else if (geminiKey) {
     try {
       const targetModel = model === "gemini-1.5-pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";

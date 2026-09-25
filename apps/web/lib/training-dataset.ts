@@ -18,6 +18,9 @@ export interface ChunkOptions {
 // plus the prompt and 150 chars of context (~260 tokens) stays under the 1024-token training limit.
 export const LOCAL_LORA_CHUNKS: ChunkOptions = { maxChunkChars: 650, contextChars: 150 };
 
+// Gemini tuning has a far larger context window; bigger chunks keep more of each story's flow.
+export const GEMINI_TUNING_CHUNKS: ChunkOptions = { maxChunkChars: 1500, contextChars: 300 };
+
 export interface TrainingSample {
   instruction: string;
   output: string;
