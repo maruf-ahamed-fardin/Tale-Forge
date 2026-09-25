@@ -345,10 +345,11 @@ export function simpleAiApi() {
       autoTrain = true,
       imageBase64?: string,
       imageType?: string,
-      model = "gemini-1.5-flash",
+      model = "taleforge-lora",
       persona = "default",
       trainingScope = "hybrid",
       accountId?: string,
+      history: Array<{ role: "user" | "assistant"; content: string }> = [],
     ) => {
       const activeAccountId = accountId || getAccountId();
       const apiKey = getCustomApiKey();
@@ -380,6 +381,7 @@ export function simpleAiApi() {
             persona,
             training_scope: trainingScope,
             account_id: activeAccountId,
+            history,
           }),
         },
         true,
