@@ -506,6 +506,45 @@ At the very end of your response, after the story ends, you MUST propose exactly
 }
 
 /**
+ * Calls the FastAPI backend, which runs the user's own trained LoRA adapter
+ * (ai/inference/local_provider.py). Throws a clear error instead of falling back to another model.
+ */
+async function generateWithLocalLoRA(prompt: string): Promise<string> {
+  const backendUrl = process.env.INTERNAL_API_URL || "http://127.0.0.1:8000";
+  const token = process.env.LOCAL_MODEL_TOKEN || "";
+  if (!token) {
+    throw new Error(
+      "TaleForge LoRA is not configured: set LOCAL_MODEL_TOKEN in the web app's and API server's environment.",
+    );
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${backendUrl}/api/v1/generate/local`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-local-model-token": token },
+      body: JSON.stringify({ prompt }),
+      // Local generation (especially the first call, which loads the model) can be slow
+      signal: AbortSignal.timeout(300_000),
+    });
+  } catch {
+    throw new Error(
+      `TaleForge LoRA: could not reach the API server at ${backendUrl}. Start it with "npm run dev:api".`,
+    );
+  }
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(`TaleForge LoRA (${res.status}): ${json?.detail || "local generation failed"}`);
+  }
+  const text = typeof json?.text === "string" ? json.text.trim() : "";
+  if (!text) {
+    throw new Error("TaleForge LoRA returned an empty story.");
+  }
+  return text;
+}
+
+/**
  * Diverse Bengali names for procedural character generation.
  */
 const CHARACTER_NAMES = {
@@ -1066,10 +1105,13 @@ export async function generateStoryAndChat(
     // Offline smart procedural engine
     generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
     activeModel = "TaleForge Smart Engine (Offline)";
+  } else if (model === "taleforge-lora") {
+    // The user's own fine-tuned model. Errors propagate so a failure is never hidden behind another model.
+    generatedStory = await generateWithLocalLoRA(cleanPrompt);
+    activeModel = "TaleForge LoRA Adapter (Your Trained Model)";
   } else if (geminiKey) {
     try {
       const targetModel = model === "gemini-1.5-pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
-      const targetPersona = model === "taleforge-lora" ? "personal" : persona;
 
       generatedStory = await generateWithGemini(
         cleanPrompt,
@@ -1078,12 +1120,10 @@ export async function generateStoryAndChat(
         isBengali,
         image,
         targetModel,
-        targetPersona,
+        persona,
       );
 
-      if (model === "taleforge-lora") {
-        activeModel = "TaleForge LoRA Adapter (Personal Voice)";
-      } else if (model === "gemini-1.5-pro") {
+      if (model === "gemini-1.5-pro") {
         activeModel = "Google Gemini 1.5 Pro (Deep Literary)";
       } else {
         activeModel = image
@@ -1097,9 +1137,7 @@ export async function generateStoryAndChat(
     }
   } else {
     generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
-    if (model === "taleforge-lora") {
-      activeModel = "TaleForge LoRA Adapter (Personal Style)";
-    } else if (image) {
+    if (image) {
       activeModel = "TaleForge Smart Engine (Visual Synthesis)";
     } else {
       activeModel = "TaleForge Smart Engine (Rule-based)";

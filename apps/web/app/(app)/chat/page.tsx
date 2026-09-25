@@ -94,8 +94,8 @@ const getAvailableModels = (lang: "en" | "bn") => [
     badge: lang === "bn" ? "আমার স্টাইল" : "My Style",
     desc:
       lang === "bn"
-        ? "আপনার নিজস্ব আপলোড করা ও অটো-ট্রেইন্ড গল্পগুলোর অবিকল বাচনভঙ্গি ও শব্দচয়নকে প্রাধান্য দেয়।"
-        : "Emulates the exact vocabulary, cadence, and tone of your uploaded and trained stories.",
+        ? "আপনার নিজের গল্পে ফাইন-টিউন করা LoRA মডেল দিয়ে লেখে। আগে Colab-এ ট্রেইন করে লোকাল API সার্ভার চালু রাখতে হবে।"
+        : "Writes with a LoRA model fine-tuned on your own stories. Requires training in Colab and a running local API server.",
     icon: BookOpen,
     color: "text-emerald-500",
   },
