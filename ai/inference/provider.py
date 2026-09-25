@@ -19,6 +19,11 @@ class GenerationParams:
     temperature: float = 0.8
     top_p: float = 0.9
     max_new_tokens: int = 1024
+    # Recent conversation ending with the user's latest message ({"role": "user"|"assistant", "content": str}).
+    # When set, it replaces `prompt` as the model input so follow-ups act on the previous story.
+    messages: list[dict[str, str]] | None = None
+    # Overrides the default system prompt (must match the one the adapter was trained with).
+    system_prompt: str = ""
 
 
 @dataclass
