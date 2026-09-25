@@ -1,142 +1,139 @@
 """TaleForge Training Dataset Exporter & Formatter
 
-Reads all stored Bengali stories and formats them into standard ChatML / Alpaca
-instruction-tuning datasets (JSONL) ready for LoRA / QLoRA fine-tuning.
+Reads an account's own Bengali stories (saved by the web app's Train AI page) and formats
+them into ChatML / Alpaca instruction-tuning datasets (JSONL) ready for LoRA / QLoRA fine-tuning.
+
+Mirrors apps/web/lib/training-dataset.ts (LOCAL_LORA_CHUNKS) — keep the two in sync.
 """
 
 import argparse
 import json
-import os
 import re
 from pathlib import Path
 
 # Paths
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_MEMORY_FILE = REPO_ROOT / "storage" / "ai_model_memory.json"
+PERSONAL_TRAINING_DIR = REPO_ROOT / "apps" / "web" / "storage" / "personal_training"
+DEFAULT_ACCOUNT_ID = "default_local_author"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "data" / "datasets"
 
+# Must match the system prompt used at inference time (ai/inference/local_provider.py)
+SYSTEM_PROMPT = "You are TaleForge AI, an expert literary novelist specializing in Bengali literature."
 
-def extract_prompts_from_story(title: str, text: str, is_bengali: bool) -> list[dict]:
-    """Extracts high-quality training pairs from a story.
+# Bengali is token-heavy: Qwen2.5 uses ~1.1 tokens per character. A 650-char chunk (~720 tokens)
+# plus the prompt and 150 chars of context (~260 tokens) stays under the 1024-token training limit,
+# so the end of each chunk is never truncated away.
+MAX_CHUNK_CHARS = 650
+CONTEXT_CHARS = 150
 
-    Produces instruction-output pairs for:
-    1. Direct prompt generation (e.g. 'Write a story titled...')
-    2. Theme/Emotion-based generation
-    3. Story continuation / chapter extension
-    """
-    clean_text = text.strip()
-    clean_title = title.replace("Auto-Trained:", "").replace("Trained Story", "").strip() or "একটি নতুন গল্প"
+# Stories written by Gemini / the template engine are saved with this title prefix.
+# They are not the user's own voice, so they are excluded from fine-tuning.
+AUTO_TRAINED_PREFIX = "Auto-Trained:"
 
-    pairs = []
 
-    # 1. Title/Topic Generation Pair
-    if is_bengali:
-        instruction = f"'{clean_title}' শিরোনামে একটি সাহিত্যিক ও আবেগঘন বাংলা গল্প রচনা করো।"
-    else:
-        instruction = f"Write a captivating and atmospheric story titled '{clean_title}'."
+def sanitize_account_id(raw_id: str | None) -> str:
+    """Same rules as sanitizeAccountId() in apps/web/lib/story-engine.ts."""
+    if not raw_id or not raw_id.strip():
+        return DEFAULT_ACCOUNT_ID
+    return re.sub(r"[^a-zA-Z0-9_-]", "_", raw_id.strip())[:80] or DEFAULT_ACCOUNT_ID
 
-    pairs.append({
+
+def chunk_story(text: str) -> list[str]:
+    """Splits a story into chunks of at most MAX_CHUNK_CHARS on paragraph/sentence boundaries."""
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text.replace("\r\n", "\n")) if p.strip()]
+
+    pieces: list[str] = []
+    for p in paragraphs:
+        if len(p) <= MAX_CHUNK_CHARS:
+            pieces.append(p)
+            continue
+        sentences = re.findall(r"[^।?!]+[।?!]*\s*", p) or [p]
+        buf = ""
+        for s in sentences:
+            if buf and len(buf) + len(s) > MAX_CHUNK_CHARS:
+                pieces.append(buf.strip())
+                buf = ""
+            buf += s
+        if buf.strip():
+            pieces.append(buf.strip())
+
+    chunks: list[str] = []
+    current = ""
+    for piece in pieces:
+        if current and len(current) + len(piece) + 2 > MAX_CHUNK_CHARS:
+            chunks.append(current)
+            current = ""
+        current = f"{current}\n\n{piece}" if current else piece
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def build_sample(instruction: str, output: str) -> dict:
+    return {
         "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are TaleForge AI, an expert literary novelist specializing in rich Bengali literature (বাংলা সাহিত্য) "
-                    "and storytelling. You write authentic, atmospheric, and emotive narratives."
-                    if is_bengali
-                    else "You are TaleForge AI, a master literary novelist. You craft captivating, atmospheric prose."
-                ),
-            },
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": instruction},
-            {"role": "assistant", "content": clean_text},
+            {"role": "assistant", "content": output},
         ],
         "instruction": instruction,
         "input": "",
-        "output": clean_text,
-    })
+        "output": output,
+    }
 
-    # 2. Scene / Continuation Pair (if story is longer than 150 words)
-    paragraphs = [p.strip() for p in clean_text.split("\n\n") if len(p.strip()) > 30]
-    if len(paragraphs) >= 2:
-        context_p = paragraphs[0]
-        remaining = "\n\n".join(paragraphs[1:])
 
-        if is_bengali:
-            continuation_prompt = f"নিচের গল্পের অংশটির প্রেক্ষাপট বজায় রেখে পরবর্তী ঘটনাপ্রবাহ রচনা করো:\n\n\"{context_p}\""
+def story_to_samples(title: str, text: str) -> list[dict]:
+    clean_title = title.strip() or "গল্প"
+    chunks = chunk_story(text)
+    samples = []
+    for i, chunk in enumerate(chunks):
+        if i == 0:
+            instruction = f"'{clean_title}' শিরোনামে একটি সাহিত্যিক বাংলা গল্প রচনা করো।"
         else:
-            continuation_prompt = f"Continue the story naturally from the following opening scene:\n\n\"{context_p}\""
-
-        pairs.append({
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are TaleForge AI, an expert literary author. Continue stories seamlessly in authentic style.",
-                },
-                {"role": "user", "content": continuation_prompt},
-                {"role": "assistant", "content": remaining},
-            ],
-            "instruction": continuation_prompt,
-            "input": "",
-            "output": remaining,
-        })
-
-    return pairs
+            context = chunks[i - 1][-CONTEXT_CHARS:]
+            instruction = f"'{clean_title}' গল্পটি নিচের অংশ থেকে একই ধারায় এগিয়ে নাও:\n\n\"{context}\""
+        samples.append(build_sample(instruction, chunk))
+    return samples
 
 
-def export_dataset(memory_file: Path = DEFAULT_MEMORY_FILE, output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict:
-    """Exports all stored stories into train.jsonl and val.jsonl datasets."""
+def export_dataset(
+    account_id: str = DEFAULT_ACCOUNT_ID,
+    memory_file: Path | None = None,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+) -> dict:
+    """Exports the account's own stories into train.jsonl and val.jsonl datasets."""
+    if memory_file is None:
+        memory_file = PERSONAL_TRAINING_DIR / f"{sanitize_account_id(account_id)}.json"
+
+    if not memory_file.exists():
+        raise SystemExit(
+            f"❌ No training memory found at {memory_file}\n"
+            "   Add your stories on the web app's Train AI page first, or pass --memory / --account."
+        )
+
+    data = json.loads(memory_file.read_text(encoding="utf-8"))
+    stories = [
+        s
+        for s in data.get("trained_stories", [])
+        if s.get("text", "").strip() and not s.get("title", "").startswith(AUTO_TRAINED_PREFIX)
+    ]
+    if not stories:
+        raise SystemExit(
+            f"❌ {memory_file} has no stories of your own (auto-generated stories are excluded)."
+        )
+
+    all_samples = []
+    for s in stories:
+        all_samples.extend(story_to_samples(s.get("title", ""), s["text"]))
+
+    # Hold out ~10% for validation only when there is enough data to spare
+    val_count = int(len(all_samples) * 0.1) if len(all_samples) >= 10 else 0
+    train_data = all_samples[: len(all_samples) - val_count]
+    val_data = all_samples[len(all_samples) - val_count :]
+
     output_dir.mkdir(parents=True, exist_ok=True)
     train_path = output_dir / "train.jsonl"
     val_path = output_dir / "val.jsonl"
-
-    stories = []
-    if memory_file.exists():
-        try:
-            data = json.loads(memory_file.read_text(encoding="utf-8"))
-            stories = data.get("trained_stories", [])
-        except Exception as e:
-            print(f"Error reading memory file: {e}")
-
-    # If memory file is empty or missing, provide a rich starter Bangla training story
-    if not stories:
-        stories = [
-            {
-                "id": "starter_1",
-                "title": "বৃষ্টির দিনে ফেলে আসা স্মৃতি",
-                "text": (
-                    "শ্রাবণের মেঘলা আকাশে গুঁড়ি গুঁড়ি বৃষ্টি পড়ছিল। পুরনো বারান্দার গ্রিলে হাত রেখে "
-                    "অনিন্দিতা দূর আকাশের দিকে তাকিয়ে ছিল। বাতাসে ভেসে আসছিল ভেজা মাটির চিরচেনা গন্ধ। "
-                    "চা-এর কাপ থেকে ওঠা ধোঁয়া বাতাসে মিলিয়ে যাওয়ার সাথে সাথে মনে পড়ছিল অনেক বছর আগের ফেলে আসা এক বিকেলের কথা। "
-                    "জীবনে কত মানুষ আসে, কত কথা হারিয়ে যায়, কিন্তু কিছু স্মৃতি সময়ের ধুলোবালি ভেদ করে চিরকাল অম্লান থেকে যায়। "
-                    "বৃষ্টির শব্দ তখনো অবিরাম বেজে চলেছে, যেন এক নীরব কবিতার ছন্দ।"
-                ),
-            },
-            {
-                "id": "starter_2",
-                "title": "রহস্যময় পুরোনো বাড়ি",
-                "text": (
-                    "পুরাতন ঢাকার সরু গলির শেষ প্রান্তে সেই জীর্ণ হলুদ রঙের বাড়িটা বছরের পর বছর ধরে একা দাঁড়িয়ে আছে। "
-                    "প্রতি সন্ধ্যায় দোতলার বন্ধ জানালা দিয়ে এক অদ্ভুত আলো জ্বলে ওঠে। "
-                    "অর্ণব অনেক দিন ধরেই এই রহস্য উদ্ঘাটনের সুযোগ খুঁজছিল। আজ রাতে যখন ঘড়ির কাঁটা বারোটা স্পর্শ করল, "
-                    "সে নিঃশব্দে বাগানের ভাঙা প্রাচীর পেরিয়ে বাড়ির প্রধান দরজার সামনে এসে দাঁড়াল। কাঠের দরজায় হাত দিতেই "
-                    "ভেতর থেকে এক দীর্ঘশ্বাসের মৃদু শব্দ ভেসে এল।"
-                ),
-            },
-        ]
-
-    all_pairs = []
-    for s in stories:
-        text = s.get("text", "")
-        title = s.get("title", "")
-        if not text:
-            continue
-        is_bengali = bool(re.search(r"[\u0980-\u09FF]", text))
-        pairs = extract_prompts_from_story(title, text, is_bengali)
-        all_pairs.extend(pairs)
-
-    # Split into Train (85%) and Validation (15%)
-    split_idx = max(1, int(len(all_pairs) * 0.85)) if len(all_pairs) > 1 else 1
-    train_data = all_pairs[:split_idx]
-    val_data = all_pairs[split_idx:] or all_pairs[:1]
 
     with open(train_path, "w", encoding="utf-8") as f:
         for item in train_data:
@@ -146,14 +143,17 @@ def export_dataset(memory_file: Path = DEFAULT_MEMORY_FILE, output_dir: Path = D
         for item in val_data:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
-    print(f"Dataset successfully exported:")
+    total_words = sum(len(s["text"].split()) for s in stories)
+    print("Dataset successfully exported:")
+    print(f"  - Source: {len(stories)} stories ({total_words} words) from {memory_file}")
     print(f"  - Training samples: {len(train_data)} -> {train_path}")
     print(f"  - Validation samples: {len(val_data)} -> {val_path}")
 
     return {
         "success": True,
         "total_stories": len(stories),
-        "total_samples": len(all_pairs),
+        "total_words": total_words,
+        "total_samples": len(all_samples),
         "train_samples": len(train_data),
         "val_samples": len(val_data),
         "train_path": str(train_path),
@@ -163,8 +163,14 @@ def export_dataset(memory_file: Path = DEFAULT_MEMORY_FILE, output_dir: Path = D
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export TaleForge stories to ML training dataset")
-    parser.add_argument("--memory", type=Path, default=DEFAULT_MEMORY_FILE, help="Path to ai_model_memory.json")
+    parser.add_argument(
+        "--account",
+        type=str,
+        default=DEFAULT_ACCOUNT_ID,
+        help="Account ID whose stories to export (see apps/web/storage/personal_training/)",
+    )
+    parser.add_argument("--memory", type=Path, default=None, help="Explicit path to a personal training JSON file")
     parser.add_argument("--outdir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Output directory for datasets")
     args = parser.parse_args()
 
-    export_dataset(args.memory, args.outdir)
+    export_dataset(args.account, args.memory, args.outdir)
