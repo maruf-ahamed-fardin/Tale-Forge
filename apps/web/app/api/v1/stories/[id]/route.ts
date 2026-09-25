@@ -11,12 +11,17 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const story = getSavedStory(id);
-  if (!story) {
-    return NextResponse.json({ detail: "Story not found" }, { status: 404 });
+  try {
+    const { id } = await params;
+    const story = await getSavedStory(id);
+    if (!story) {
+      return NextResponse.json({ detail: "Story not found" }, { status: 404 });
+    }
+    return NextResponse.json(story);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to load story";
+    return NextResponse.json({ detail: message }, { status: 500 });
   }
-  return NextResponse.json(story);
 }
 
 export async function PUT(
@@ -26,7 +31,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const updated = updateSavedStory(id, body);
+    const updated = await updateSavedStory(id, body);
     if (!updated) {
       return NextResponse.json({ detail: "Story not found" }, { status: 404 });
     }
@@ -41,10 +46,15 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const deleted = deleteSavedStory(id);
-  if (!deleted) {
-    return NextResponse.json({ detail: "Story not found" }, { status: 404 });
+  try {
+    const { id } = await params;
+    const deleted = await deleteSavedStory(id);
+    if (!deleted) {
+      return NextResponse.json({ detail: "Story not found" }, { status: 404 });
+    }
+    return new NextResponse(null, { status: 204 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to delete story";
+    return NextResponse.json({ detail: message }, { status: 500 });
   }
-  return new NextResponse(null, { status: 204 });
 }
