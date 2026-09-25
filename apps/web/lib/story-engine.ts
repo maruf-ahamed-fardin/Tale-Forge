@@ -589,7 +589,7 @@ async function generateWithLocalLoRA(conversation: ConversationTurn[]): Promise<
   } catch {
     throw new Error(
       `TaleForge LoRA: could not reach the model server at ${backendUrl}. ` +
-        "Deploy it with `modal deploy ai/deploy/modal_app.py` and set LORA_MODEL_URL, or run `npm run dev:api` locally.",
+        "Your model is not deployed yet: follow docs/DEPLOYMENT_PLAN.md and set LORA_MODEL_URL, or run `npm run dev:api` locally.",
     );
   }
 

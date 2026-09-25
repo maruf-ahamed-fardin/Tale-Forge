@@ -86,11 +86,13 @@ function StudioContent() {
       }
 
       setSaveMsg(`Generated ${res.word_count} words!`);
+      setTimeout(() => setSaveMsg(""), 4000);
     } catch (err: unknown) {
+      // Keep errors visible long enough to read; they explain what to set up
       setSaveMsg(err instanceof Error ? err.message : "Generation failed");
+      setTimeout(() => setSaveMsg(""), 15000);
     } finally {
       setGenerating(false);
-      setTimeout(() => setSaveMsg(""), 4000);
     }
   };
 
