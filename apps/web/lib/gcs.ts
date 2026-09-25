@@ -1,6 +1,6 @@
 /**
  * Minimal Google Cloud Storage + auth helpers (JSON API over fetch).
- * Used by Vertex AI tuning, so it works on hosts without a persistent disk.
+ * Used for persistent story storage and Vertex AI tuning, so the app works on hosts without a persistent disk.
  */
 import { GoogleAuth } from "google-auth-library";
 
@@ -83,4 +83,37 @@ export async function writeObject(
   );
   if (res.status === 412) throw new PreconditionFailedError(`${name} was changed by another request`);
   if (!res.ok) throw new Error(`Cloud Storage upload failed: ${await readGoogleError(res)}`);
+}
+
+/** Reads a JSON object, or null if it doesn't exist. */
+export async function readJsonObject<T>(name: string): Promise<T | null> {
+  const obj = await readObject(name);
+  return obj ? (JSON.parse(obj.text) as T) : null;
+}
+
+/**
+ * Read-modify-write of a JSON object. The write only succeeds if nobody else wrote in between;
+ * otherwise `mutate` is re-applied to a fresh copy, so concurrent updates are never lost.
+ * `initial` supplies the value when the object doesn't exist yet.
+ */
+export async function updateJsonObject<T, R>(
+  name: string,
+  initial: () => T,
+  mutate: (value: T) => R,
+): Promise<R> {
+  const maxAttempts = 8;
+  for (let attempt = 1; ; attempt++) {
+    const obj = await readObject(name);
+    const value = obj ? (JSON.parse(obj.text) as T) : initial();
+    const result = mutate(value);
+    try {
+      // "0" = create only if still absent
+      await writeObject(name, JSON.stringify(value, null, 2), "application/json", obj ? obj.generation : "0");
+      return result;
+    } catch (err) {
+      if (!(err instanceof PreconditionFailedError) || attempt >= maxAttempts) throw err;
+      // Random backoff so concurrent writers don't collide again in lockstep
+      await new Promise((resolve) => setTimeout(resolve, 50 + Math.random() * 150 * attempt));
+    }
+  }
 }

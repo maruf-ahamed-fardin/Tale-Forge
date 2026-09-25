@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const accountId = req.headers.get("x-account-id") || "default_local_author";
-    const stories = getOwnStories(accountId);
+    const stories = await getOwnStories(accountId);
 
     if (stories.length === 0) {
       return NextResponse.json(

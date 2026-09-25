@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         const data = await pyRes.json();
         // Also keep local engine memory in sync
         try {
-          trainOnText(text, title, accountId);
+          await trainOnText(text, title, accountId);
         } catch {
           // ignore
         }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       // Python backend unreachable; proceed with embedded engine
     }
 
-    const result = trainOnText(text, title, accountId);
+    const result = await trainOnText(text, title, accountId);
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Training failed";

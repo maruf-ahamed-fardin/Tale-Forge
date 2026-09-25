@@ -112,7 +112,7 @@ export async function startTuning(accountId: string): Promise<TuningState> {
     throw new Error("A training job is already running for this account. Wait for it to finish.");
   }
 
-  const stories = getOwnStories(safeId);
+  const stories = await getOwnStories(safeId);
   const samples = buildTrainingSamples(stories, GEMINI_TUNING_CHUNKS);
   if (samples.length < MIN_TUNING_EXAMPLES) {
     throw new Error(

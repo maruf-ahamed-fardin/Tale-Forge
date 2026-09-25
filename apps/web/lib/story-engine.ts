@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { isCloudStorageConfigured, readJsonObject, updateJsonObject } from "@/lib/gcs";
 import { generateWithTunedGemini, isVertexTuningConfigured } from "@/lib/vertex-tuning";
 
 export interface TrainedStory {
@@ -148,10 +149,18 @@ export const DEFAULT_TRAINED_STORIES: TrainedStory[] = [
   },
 ];
 
-// In-memory cache for personal training by account ID
-const accountPersonalStories: Map<string, TrainedStory[]> = new Map();
-const accountChatHistory: Map<string, ChatMessageRecord[]> = new Map();
-const memoryLoadedAccounts = new Set<string>();
+// ─── Per-account memory storage ──────────────────────────────────────────────
+// With GCS_BUCKET set, each account's memory is an object in Cloud Storage (survives restarts and
+// serverless hosts). Without it, a JSON file per account under storage/personal_training.
+
+interface AccountMemory {
+  trained_stories: TrainedStory[];
+  chat_history: ChatMessageRecord[];
+}
+
+// Local-file mode only: this single server is the only writer, so memory can be cached.
+// Never used in cloud mode, where other server instances may have written since.
+const localMemoryCache: Map<string, AccountMemory> = new Map();
 
 const DEFAULT_ACCOUNT_ID = "default_local_author";
 
@@ -175,25 +184,19 @@ function getAccountStoragePath(accountId: string): string {
   }
 }
 
-function loadAccountMemory(accountId: string): void {
-  const safeId = sanitizeAccountId(accountId);
-  if (memoryLoadedAccounts.has(safeId)) return;
+function toAccountMemory(data: { trained_stories?: unknown; chat_history?: unknown } | null): AccountMemory {
+  return {
+    trained_stories: Array.isArray(data?.trained_stories) ? (data.trained_stories as TrainedStory[]) : [],
+    chat_history: Array.isArray(data?.chat_history) ? (data.chat_history as ChatMessageRecord[]) : [],
+  };
+}
 
-  const filePath = getAccountStoragePath(safeId);
+/** Reads an account's memory from local disk (including the legacy shared file for the default account). */
+function readMemoryFromDisk(safeId: string): AccountMemory | null {
   try {
+    const filePath = getAccountStoragePath(safeId);
     if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, "utf-8");
-      const data = JSON.parse(raw);
-      accountPersonalStories.set(
-        safeId,
-        Array.isArray(data.trained_stories) ? data.trained_stories : [],
-      );
-      accountChatHistory.set(
-        safeId,
-        Array.isArray(data.chat_history) ? data.chat_history : [],
-      );
-      memoryLoadedAccounts.add(safeId);
-      return;
+      return toAccountMemory(JSON.parse(fs.readFileSync(filePath, "utf-8")));
     }
   } catch {
     // filesystem read fallback
@@ -204,56 +207,83 @@ function loadAccountMemory(accountId: string): void {
     try {
       const legacyPath = path.join(process.cwd(), "storage", "ai_model_memory.json");
       if (fs.existsSync(legacyPath)) {
-        const raw = fs.readFileSync(legacyPath, "utf-8");
-        const data = JSON.parse(raw);
-        if (Array.isArray(data.trained_stories) && data.trained_stories.length > 0) {
-          accountPersonalStories.set(safeId, data.trained_stories);
-          accountChatHistory.set(safeId, data.chat_history || []);
-          memoryLoadedAccounts.add(safeId);
-          return;
-        }
+        const memory = toAccountMemory(JSON.parse(fs.readFileSync(legacyPath, "utf-8")));
+        if (memory.trained_stories.length > 0) return memory;
       }
     } catch {
       // ignore
     }
   }
-
-  accountPersonalStories.set(safeId, []);
-  accountChatHistory.set(safeId, []);
-  memoryLoadedAccounts.add(safeId);
+  return null;
 }
 
-function saveAccountMemory(accountId: string): void {
-  const safeId = sanitizeAccountId(accountId);
-  const filePath = getAccountStoragePath(safeId);
+function memoryObjectName(safeId: string): string {
+  return `taleforge/${safeId}/memory.json`;
+}
+
+function serializeMemory(safeId: string, memory: AccountMemory) {
+  return {
+    account_id: safeId,
+    trained_stories: memory.trained_stories,
+    chat_history: memory.chat_history.slice(-50),
+    last_updated: new Date().toISOString(),
+  };
+}
+
+async function readAccountMemory(safeId: string): Promise<AccountMemory> {
+  if (isCloudStorageConfigured()) {
+    const stored = await readJsonObject<Parameters<typeof toAccountMemory>[0]>(memoryObjectName(safeId));
+    // Before the first cloud write, fall back to stories this server already has on disk
+    return stored ? toAccountMemory(stored) : readMemoryFromDisk(safeId) || toAccountMemory(null);
+  }
+
+  let memory = localMemoryCache.get(safeId);
+  if (!memory) {
+    memory = readMemoryFromDisk(safeId) || toAccountMemory(null);
+    localMemoryCache.set(safeId, memory);
+  }
+  return memory;
+}
+
+/** Read-modify-write of an account's memory; in cloud mode concurrent updates are never lost. */
+async function updateAccountMemory<T>(safeId: string, mutate: (memory: AccountMemory) => T): Promise<T> {
+  if (isCloudStorageConfigured()) {
+    return updateJsonObject(
+      memoryObjectName(safeId),
+      // First cloud write: carry over stories this server already has on disk
+      () => serializeMemory(safeId, readMemoryFromDisk(safeId) || toAccountMemory(null)),
+      (stored) => {
+        const memory = toAccountMemory(stored);
+        const result = mutate(memory);
+        Object.assign(stored, serializeMemory(safeId, memory));
+        return result;
+      },
+    );
+  }
+
+  const memory = await readAccountMemory(safeId);
+  const result = mutate(memory);
   try {
+    const filePath = getAccountStoragePath(safeId);
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    const data = {
-      account_id: safeId,
-      trained_stories: accountPersonalStories.get(safeId) || [],
-      chat_history: (accountChatHistory.get(safeId) || []).slice(-50),
-      last_updated: new Date().toISOString(),
-    };
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    fs.writeFileSync(filePath, JSON.stringify(serializeMemory(safeId, memory), null, 2), "utf-8");
   } catch {
     // In-memory remains intact if fs is read-only
   }
+  return result;
 }
 
-export function getAccountPersonalStories(accountId?: string): TrainedStory[] {
-  const safeId = sanitizeAccountId(accountId);
-  loadAccountMemory(safeId);
-  return accountPersonalStories.get(safeId) || [];
+export async function getAccountPersonalStories(accountId?: string): Promise<TrainedStory[]> {
+  const memory = await readAccountMemory(sanitizeAccountId(accountId));
+  return memory.trained_stories;
 }
 
-export function getAIStatus(accountId?: string): AIModelStatus {
-  const safeId = sanitizeAccountId(accountId);
-  loadAccountMemory(safeId);
+function buildAIStatus(safeId: string, memory: AccountMemory): AIModelStatus {
+  const personalStories = memory.trained_stories;
 
-  const personalStories = accountPersonalStories.get(safeId) || [];
   const defaultWords = DEFAULT_TRAINED_STORIES.reduce(
     (acc, s) => acc + (s.word_count || 0),
     0,
@@ -262,10 +292,9 @@ export function getAIStatus(accountId?: string): AIModelStatus {
     (acc, s) => acc + (s.word_count || 0),
     0,
   );
+
   const totalWords = defaultWords + personalWords;
   const totalStories = DEFAULT_TRAINED_STORIES.length + personalStories.length;
-
-  const chatHist = accountChatHistory.get(safeId) || [];
 
   // Recent stories list (personal prioritized, followed by default)
   const recentStories = [
@@ -302,36 +331,33 @@ export function getAIStatus(accountId?: string): AIModelStatus {
     account_id: safeId,
     recent_stories: recentStories,
     trained_stories: personalStories.length > 0 ? personalStories : DEFAULT_TRAINED_STORIES,
-    chat_count: chatHist.length,
+    chat_count: memory.chat_history.length,
     active_model: "TaleForge Adaptive AI (Bengali Master Engine)",
   };
 }
 
-export function deleteTrainedStory(id: string, accountId?: string): AIModelStatus {
+export async function getAIStatus(accountId?: string): Promise<AIModelStatus> {
   const safeId = sanitizeAccountId(accountId);
-  loadAccountMemory(safeId);
+  const memory = await readAccountMemory(safeId);
+  return buildAIStatus(safeId, memory);
+}
+
+export async function deleteTrainedStory(id: string, accountId?: string): Promise<AIModelStatus> {
+  const safeId = sanitizeAccountId(accountId);
 
   // Default master stories are system protected and cannot be deleted
   if (DEFAULT_TRAINED_STORIES.some((s) => s.id === id)) {
     throw new Error("ডিফল্ট মাস্টার সাহিত্য গল্পগুলো সিস্টেম প্রটেক্টেড। এগুলো মোছা যাবে না।");
   }
 
-  const existing = accountPersonalStories.get(safeId) || [];
-  const updated = existing.filter((s) => s.id !== id);
-  accountPersonalStories.set(safeId, updated);
-  saveAccountMemory(safeId);
-
-  return getAIStatus(safeId);
+  return updateAccountMemory(safeId, (memory) => {
+    memory.trained_stories = memory.trained_stories.filter((s) => s.id !== id);
+    return buildAIStatus(safeId, memory);
+  });
 }
 
-export function trainOnText(
-  text: string,
-  title = "Trained Story",
-  accountId?: string,
-) {
-  const safeId = sanitizeAccountId(accountId);
-  loadAccountMemory(safeId);
-
+/** Adds a story to an already-loaded memory (no I/O). */
+function addTrainedStory(memory: AccountMemory, safeId: string, text: string, title: string) {
   const clean = text.trim();
   if (!clean) {
     throw new Error("Story text cannot be empty for training.");
@@ -342,8 +368,7 @@ export function trainOnText(
   const isBengali = /[\u0980-\u09FF]/.test(clean);
   const language: "bn" | "en" = isBengali ? "bn" : "en";
 
-  const personalStories = accountPersonalStories.get(safeId) || [];
-
+  const personalStories = memory.trained_stories;
   const newStory: TrainedStory = {
     id: `personal_${safeId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     title: title.trim() || `My Story #${personalStories.length + 1}`,
@@ -356,8 +381,6 @@ export function trainOnText(
   };
 
   personalStories.push(newStory);
-  accountPersonalStories.set(safeId, personalStories);
-  saveAccountMemory(safeId);
 
   const totalPersonalWords = personalStories.reduce(
     (acc, s) => acc + (s.word_count || 0),
@@ -366,7 +389,7 @@ export function trainOnText(
 
   return {
     success: true,
-    message: `আপনার অ্যাকাউন্ট (${safeId})-এ '${newStory.title}' (${wordCount} শব্দ) সফলভাবে ট্রেইন করা হয়েছে।`,
+    message: `আপনার অ্যাকাউন্ট (${safeId})-এ '${newStory.title}' (${wordCount} শব্দ) সফলভাবে ট্রেইন করা হয়েছে।`,
     story: newStory,
     personal_trained_stories: personalStories.length,
     personal_words: totalPersonalWords,
@@ -375,15 +398,25 @@ export function trainOnText(
   };
 }
 
-export function resetAIMemory(accountId?: string) {
+export async function trainOnText(
+  text: string,
+  title = "Trained Story",
+  accountId?: string,
+) {
   const safeId = sanitizeAccountId(accountId);
-  accountPersonalStories.set(safeId, []);
-  accountChatHistory.set(safeId, []);
-  saveAccountMemory(safeId);
+  return updateAccountMemory(safeId, (memory) => addTrainedStory(memory, safeId, text, title));
+}
+
+export async function resetAIMemory(accountId?: string) {
+  const safeId = sanitizeAccountId(accountId);
+  await updateAccountMemory(safeId, (memory) => {
+    memory.trained_stories = [];
+    memory.chat_history = [];
+  });
 
   return {
     success: true,
-    message: `অ্যাকাউন্ট (${safeId})-এর ব্যক্তিগত AI প্রশিক্ষণ মেমোরি সফলভাবে রিসেট করা হয়েছে। ডিফল্ট গল্পগুলো অপরিবর্তিত রয়েছে।`,
+    message: `অ্যাকাউন্ট (${safeId})-এর ব্যক্তিগত AI প্রশিক্ষণ মেমোরি সফলভাবে রিসেট করা হয়েছে। ডিফল্ট গল্পগুলো অপরিবর্তিত রয়েছে।`,
     account_id: safeId,
   };
 }
@@ -1051,7 +1084,6 @@ export async function generateStoryAndChat(
   choices: StoryChoice[];
 }> {
   const safeAccountId = sanitizeAccountId(accountId);
-  loadAccountMemory(safeAccountId);
 
   const cleanPrompt =
     prompt.trim() || (image ? "এই ছবিটি দেখে একটি সুন্দর ও বাস্তবসম্মত বাংলা গল্প রচনা করো।" : "");
@@ -1064,7 +1096,7 @@ export async function generateStoryAndChat(
   const isBengali = !isEnglishExplicit;
 
   // Collect style snippets based on chosen training scope
-  const personalStories = accountPersonalStories.get(safeAccountId) || [];
+  const personalStories = await getAccountPersonalStories(safeAccountId);
   const styleSnippets: string[] = [];
 
   if (trainingScope === "personal") {
@@ -1168,38 +1200,31 @@ export async function generateStoryAndChat(
     isBengali,
   );
 
-  // Save chat history for this specific account
-  const chatHist = accountChatHistory.get(safeAccountId) || [];
-  chatHist.push({
-    role: "user",
-    content: cleanPrompt,
-    timestamp: new Date().toISOString(),
-  });
-  chatHist.push({
-    role: "assistant",
-    content: finalStory,
-    timestamp: new Date().toISOString(),
-  });
-  accountChatHistory.set(safeAccountId, chatHist);
-
-  if (autoTrain) {
-    // Auto-retrain: save this newly generated story into this account's personal memory
-    const firstLine = finalStory
-      .split("\n")[0]
-      .replace(/[#*]/g, "")
-      .trim()
-      .slice(0, 40);
-    trainOnText(
-      finalStory,
-      `Auto-Trained: ${firstLine || cleanPrompt.slice(0, 30)}`,
-      safeAccountId,
+  // Save chat history (and, with auto-train, the new story) for this account in a single write
+  const personalStoryCount = await updateAccountMemory(safeAccountId, (memory) => {
+    memory.chat_history.push(
+      { role: "user", content: cleanPrompt, timestamp: new Date().toISOString() },
+      { role: "assistant", content: finalStory, timestamp: new Date().toISOString() },
     );
-  } else {
-    saveAccountMemory(safeAccountId);
-  }
 
-  const updatedPersonalStories = accountPersonalStories.get(safeAccountId) || [];
-  const currentTotal = DEFAULT_TRAINED_STORIES.length + updatedPersonalStories.length;
+    if (autoTrain) {
+      // Auto-retrain: save this newly generated story into this account's personal memory
+      const firstLine = finalStory
+        .split("\n")[0]
+        .replace(/[#*]/g, "")
+        .trim()
+        .slice(0, 40);
+      addTrainedStory(
+        memory,
+        safeAccountId,
+        finalStory,
+        `Auto-Trained: ${firstLine || cleanPrompt.slice(0, 30)}`,
+      );
+    }
+    return memory.trained_stories.length;
+  });
+
+  const currentTotal = DEFAULT_TRAINED_STORIES.length + personalStoryCount;
 
   return {
     story: finalStory,

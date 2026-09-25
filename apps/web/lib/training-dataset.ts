@@ -27,8 +27,8 @@ export interface TrainingSample {
 }
 
 /** The account's own stories — excludes auto-generated ones. */
-export function getOwnStories(accountId: string): TrainedStory[] {
-  return getAccountPersonalStories(accountId).filter(
+export async function getOwnStories(accountId: string): Promise<TrainedStory[]> {
+  return (await getAccountPersonalStories(accountId)).filter(
     (s) => s.text?.trim() && !s.title.startsWith(AUTO_TRAINED_PREFIX),
   );
 }
