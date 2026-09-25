@@ -153,26 +153,29 @@ def run_training(
 
     def tokenize_format(example):
         messages = example.get("messages")
-        if messages:
-            if hasattr(tokenizer, "apply_chat_template"):
-                text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-            else:
-                text = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
+        if messages and hasattr(tokenizer, "apply_chat_template"):
+            prompt_text = tokenizer.apply_chat_template(messages[:-1], tokenize=False, add_generation_prompt=True)
+            full_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
         else:
-            instruction = example.get("instruction", "")
-            output = example.get("output", "")
-            text = f"User: {instruction}\nAssistant: {output}"
+            prompt_text = f"User: {example.get('instruction', '')}\nAssistant: "
+            full_text = prompt_text + example.get("output", "") + (tokenizer.eos_token or "")
 
-        tokenized = tokenizer(
-            text,
-            truncation=True,
-            max_length=max_seq_length,
-            padding="max_length",
-        )
-        tokenized["labels"] = tokenized["input_ids"].copy()
+        # No padding here: the collator pads each batch dynamically and fills label padding with -100
+        tokenized = tokenizer(full_text, truncation=True, max_length=max_seq_length)
+        prompt_len = len(tokenizer(prompt_text, truncation=True, max_length=max_seq_length)["input_ids"])
+
+        # Only the story (assistant reply) is learned; system/user prompt tokens are ignored in the loss
+        labels = list(tokenized["input_ids"])
+        labels[:prompt_len] = [-100] * prompt_len
+        tokenized["labels"] = labels
         return tokenized
 
     tokenized_dataset = dataset.map(tokenize_format, remove_columns=dataset.column_names)
+    # Drop samples whose prompt filled the whole window (no story tokens left to learn from)
+    tokenized_dataset = tokenized_dataset.filter(lambda ex: any(label != -100 for label in ex["labels"]))
+    if len(tokenized_dataset) == 0:
+        print("❌ Error: No usable training samples after tokenization.")
+        sys.exit(1)
 
     # 5. Training Arguments & Execution
     print("\n[5/5] Executing LoRA Training Loop...")

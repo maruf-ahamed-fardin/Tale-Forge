@@ -39,7 +39,7 @@ export async function DELETE(
       if (pyRes.ok) {
         const data = await pyRes.json();
         try {
-          deleteTrainedStory(id, accountId);
+          await deleteTrainedStory(id, accountId);
         } catch {
           // ignore
         }
@@ -49,7 +49,7 @@ export async function DELETE(
       // ignore
     }
 
-    const updatedStatus = deleteTrainedStory(id, accountId);
+    const updatedStatus = await deleteTrainedStory(id, accountId);
     return NextResponse.json({
       success: true,
       message: "Trained story removed from model memory.",

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { isCloudStorageConfigured, readJsonObject, updateJsonObject } from "@/lib/gcs";
 
 export interface SavedStoryItem {
   id: string;
@@ -14,6 +15,11 @@ export interface SavedStoryItem {
   updated_at: string;
 }
 
+// With GCS_BUCKET set, the library is an object in Cloud Storage (survives restarts and serverless
+// hosts). Without it, storage/saved_stories.json on local disk.
+const LIBRARY_OBJECT = "taleforge/library/saved_stories.json";
+
+// Local-file mode only: this single server is the only writer, so the library can be cached.
 let inMemorySavedStories: SavedStoryItem[] = [];
 let savedStoriesLoaded = false;
 
@@ -29,59 +35,68 @@ function getStoragePath(): string {
   }
 }
 
-function loadStories(): void {
-  if (savedStoriesLoaded) return;
-  const filePath = getStoragePath();
+function readStoriesFromDisk(): SavedStoryItem[] {
   try {
+    const filePath = getStoragePath();
     if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, "utf-8");
-      const parsed = JSON.parse(raw);
-      inMemorySavedStories = Array.isArray(parsed) ? parsed : [];
-      savedStoriesLoaded = true;
-      return;
+      const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      return Array.isArray(parsed) ? parsed : [];
     }
   } catch {
     // ignore
   }
-  savedStoriesLoaded = true;
+  return [];
 }
 
-function persistStories(): void {
+async function readStories(): Promise<SavedStoryItem[]> {
+  if (isCloudStorageConfigured()) {
+    // Before the first cloud write, fall back to the library this server already has on disk
+    return (await readJsonObject<SavedStoryItem[]>(LIBRARY_OBJECT)) ?? readStoriesFromDisk();
+  }
+  if (!savedStoriesLoaded) {
+    inMemorySavedStories = readStoriesFromDisk();
+    savedStoriesLoaded = true;
+  }
+  return inMemorySavedStories;
+}
+
+/** Read-modify-write of the library (mutate in place); in cloud mode concurrent updates are never lost. */
+async function updateStories<R>(mutate: (stories: SavedStoryItem[]) => R): Promise<R> {
+  if (isCloudStorageConfigured()) {
+    // First cloud write carries over the library this server already has on disk
+    return updateJsonObject(LIBRARY_OBJECT, readStoriesFromDisk, mutate);
+  }
+
+  const stories = await readStories();
+  const result = mutate(stories);
   try {
-    const filePath = getStoragePath();
-    fs.writeFileSync(
-      filePath,
-      JSON.stringify(inMemorySavedStories, null, 2),
-      "utf-8",
-    );
+    fs.writeFileSync(getStoragePath(), JSON.stringify(stories, null, 2), "utf-8");
   } catch {
     // In-memory retains state if fs is read-only
   }
+  return result;
 }
 
-export function listSavedStories(): { stories: SavedStoryItem[]; total: number } {
-  loadStories();
+export async function listSavedStories(): Promise<{ stories: SavedStoryItem[]; total: number }> {
+  const stories = await readStories();
   return {
-    stories: [...inMemorySavedStories].reverse(),
-    total: inMemorySavedStories.length,
+    stories: [...stories].reverse(),
+    total: stories.length,
   };
 }
 
-export function getSavedStory(id: string): SavedStoryItem | null {
-  loadStories();
-  return inMemorySavedStories.find((s) => s.id === id) || null;
+export async function getSavedStory(id: string): Promise<SavedStoryItem | null> {
+  return (await readStories()).find((s) => s.id === id) || null;
 }
 
-export function createSavedStory(data: {
+export async function createSavedStory(data: {
   title?: string;
   content?: string;
   genre?: string;
   mood?: string;
   setting?: string;
   is_favorite?: boolean;
-}): SavedStoryItem {
-  loadStories();
-
+}): Promise<SavedStoryItem> {
   const content = (data.content || "").trim();
   const words = content.split(/\s+/).filter(Boolean);
   const firstLine = content.split("\n")[0].replace(/[#*]/g, "").trim();
@@ -100,42 +115,41 @@ export function createSavedStory(data: {
     updated_at: new Date().toISOString(),
   };
 
-  inMemorySavedStories.push(newStory);
-  persistStories();
+  await updateStories((stories) => {
+    stories.push(newStory);
+  });
   return newStory;
 }
 
-export function updateSavedStory(
+export async function updateSavedStory(
   id: string,
   updates: Partial<SavedStoryItem>,
-): SavedStoryItem | null {
-  loadStories();
-  const idx = inMemorySavedStories.findIndex((s) => s.id === id);
-  if (idx === -1) return null;
+): Promise<SavedStoryItem | null> {
+  return updateStories((stories) => {
+    const idx = stories.findIndex((s) => s.id === id);
+    if (idx === -1) return null;
 
-  const existing = inMemorySavedStories[idx];
-  const updated: SavedStoryItem = {
-    ...existing,
-    ...updates,
-    updated_at: new Date().toISOString(),
-  };
+    const existing = stories[idx];
+    const updated: SavedStoryItem = {
+      ...existing,
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
 
-  if (updates.content) {
-    updated.word_count = updates.content.split(/\s+/).filter(Boolean).length;
-  }
+    if (updates.content) {
+      updated.word_count = updates.content.split(/\s+/).filter(Boolean).length;
+    }
 
-  inMemorySavedStories[idx] = updated;
-  persistStories();
-  return updated;
+    stories[idx] = updated;
+    return updated;
+  });
 }
 
-export function deleteSavedStory(id: string): boolean {
-  loadStories();
-  const prevLen = inMemorySavedStories.length;
-  inMemorySavedStories = inMemorySavedStories.filter((s) => s.id !== id);
-  if (inMemorySavedStories.length !== prevLen) {
-    persistStories();
+export async function deleteSavedStory(id: string): Promise<boolean> {
+  return updateStories((stories) => {
+    const idx = stories.findIndex((s) => s.id === id);
+    if (idx === -1) return false;
+    stories.splice(idx, 1);
     return true;
-  }
-  return false;
+  });
 }

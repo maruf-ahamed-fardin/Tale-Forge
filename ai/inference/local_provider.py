@@ -107,7 +107,8 @@ class LocalStoryProvider(StoryGenerationProvider):
 
         is_bn = params.language == "bn"
         system_msg = (
-            "You are TaleForge AI, a master literary novelist specializing in Bengali literature."
+            # Must match SYSTEM_PROMPT in ai/data_pipeline/export_dataset.py (the training data)
+            "You are TaleForge AI, an expert literary novelist specializing in Bengali literature."
             if is_bn
             else "You are TaleForge AI, an expert literary storyteller."
         )
@@ -128,6 +129,7 @@ class LocalStoryProvider(StoryGenerationProvider):
             outputs = self._model.generate(
                 **inputs,
                 max_new_tokens=params.max_new_tokens,
+                do_sample=True,
                 temperature=params.temperature,
                 top_p=params.top_p,
                 repetition_penalty=1.1,
@@ -136,6 +138,22 @@ class LocalStoryProvider(StoryGenerationProvider):
         gen_tokens = outputs[0][inputs.input_ids.shape[1] :]
         story_text = self._tokenizer.decode(gen_tokens, skip_special_tokens=True)
         return story_text.strip()
+
+    def generate_with_adapter(self, params: GenerationParams) -> GenerationResult:
+        """Generates strictly with the trained LoRA adapter (blocking).
+
+        Unlike generate(), this never falls back to Ollama or a notice text: it raises
+        FileNotFoundError if no adapter has been trained, so callers can report it.
+        """
+        if not self.is_adapter_available():
+            raise FileNotFoundError(f"No trained LoRA adapter found at {self.adapter_path}")
+        text = self._generate_via_hf(params)
+        return GenerationResult(
+            text=text,
+            word_count=len(text.split()),
+            provider="local-lora-model",
+            finish_reason="stop",
+        )
 
     async def generate(self, params: GenerationParams) -> GenerationResult:
         """Generate a story using local ML model."""

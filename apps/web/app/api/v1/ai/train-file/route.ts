@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
       if (pyRes.ok) {
         const data = await pyRes.json();
         try {
-          trainOnText(text, cleanTitle, accountId);
+          await trainOnText(text, cleanTitle, accountId);
         } catch {
           // ignore
         }
@@ -234,7 +234,7 @@ export async function POST(req: NextRequest) {
       // Fall back to embedded engine
     }
 
-    const result = trainOnText(text, cleanTitle, accountId);
+    const result = await trainOnText(text, cleanTitle, accountId);
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "File training failed";

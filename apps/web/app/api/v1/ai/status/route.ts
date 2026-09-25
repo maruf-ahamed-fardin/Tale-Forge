@@ -34,6 +34,6 @@ export async function GET(req: NextRequest) {
   }
 
 
-  const status = getAIStatus(accountId);
+  const status = await getAIStatus(accountId);
   return NextResponse.json(status);
 }

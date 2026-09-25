@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
 
-    const res = resetAIMemory(accountId);
+    const res = await resetAIMemory(accountId);
     return NextResponse.json(res);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Reset failed";

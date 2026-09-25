@@ -24,8 +24,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const data = listSavedStories();
-  return NextResponse.json(data);
+  try {
+    const data = await listSavedStories();
+    return NextResponse.json(data);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to load stories";
+    return NextResponse.json({ detail: message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
           const data = await pyRes.json();
           // Also mirror in local storage
           try {
-            createSavedStory(body);
+            await createSavedStory(body);
           } catch {
             // ignore
           }
@@ -63,7 +68,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const story = createSavedStory(body);
+    const story = await createSavedStory(body);
     return NextResponse.json(story, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to save story";

@@ -46,3 +46,66 @@ async def test_generate_story_en(client: AsyncClient, auth_headers: dict[str, st
     data = res.json()
     assert "Detective Hayes" in data["text"]
     assert data["word_count"] > 0
+
+
+# ─── Local LoRA endpoint (/api/v1/generate/local) ────────────────────────────
+
+from types import SimpleNamespace
+
+from ai.inference import GenerationResult
+from app.api.v1 import generate as generate_module
+
+
+def _set_local_token(monkeypatch: pytest.MonkeyPatch, token: str) -> None:
+    monkeypatch.setattr(generate_module, "get_settings", lambda: SimpleNamespace(local_model_token=token))
+
+
+@pytest.mark.asyncio
+async def test_local_generate_disabled_without_token(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    _set_local_token(monkeypatch, "")
+    res = await client.post("/api/v1/generate/local", json={"prompt": "বৃষ্টির গল্প"})
+    assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_local_generate_rejects_wrong_token(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    _set_local_token(monkeypatch, "secret")
+    res = await client.post(
+        "/api/v1/generate/local",
+        headers={"x-local-model-token": "wrong"},
+        json={"prompt": "বৃষ্টির গল্প"},
+    )
+    assert res.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_local_generate_reports_missing_adapter(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    _set_local_token(monkeypatch, "secret")
+    monkeypatch.setattr(generate_module._local_provider, "is_adapter_available", lambda: False)
+    res = await client.post(
+        "/api/v1/generate/local",
+        headers={"x-local-model-token": "secret"},
+        json={"prompt": "বৃষ্টির গল্প"},
+    )
+    assert res.status_code == 503
+    assert "No trained LoRA adapter" in res.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_local_generate_uses_adapter(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    _set_local_token(monkeypatch, "secret")
+    monkeypatch.setattr(generate_module._local_provider, "is_adapter_available", lambda: True)
+    monkeypatch.setattr(
+        generate_module._local_provider,
+        "generate_with_adapter",
+        lambda params: GenerationResult(text=f"গল্প: {params.prompt}", word_count=2, provider="local-lora-model"),
+    )
+    res = await client.post(
+        "/api/v1/generate/local",
+        headers={"x-local-model-token": "secret"},
+        json={"prompt": "বৃষ্টির গল্প"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["provider"] == "local-lora-model"
+    assert data["text"] == "গল্প: বৃষ্টির গল্প"

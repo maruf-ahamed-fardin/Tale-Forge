@@ -16,10 +16,11 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { CloudTuningCard } from "@/components/training/cloud-tuning-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { datasetsApi, trainingApi, type DatasetOut, type TrainingRunOut } from "@/lib/api";
+import { datasetsApi, getAccountId, trainingApi, type DatasetOut, type TrainingRunOut } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 
 const baseModels = [
@@ -114,8 +115,15 @@ export default function TrainingPage() {
     setExporting(true);
     setError("");
     try {
-      const res = await fetch("/api/v1/ai/export-dataset", { method: "POST" });
+      const res = await fetch("/api/v1/ai/export-dataset", {
+        method: "POST",
+        headers: { "x-account-id": getAccountId() },
+      });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.detail || (isBn ? "ডেটাসেট এক্সপোর্ট করতে ব্যর্থ।" : "Failed to export dataset."));
+        return;
+      }
       setSuccessMsg(data.message || (isBn ? "ডেটাসেট data/datasets/train.jsonl-এ এক্সপোর্ট হয়েছে!" : "Dataset exported to data/datasets/train.jsonl!"));
     } catch {
       setError(isBn ? "ডেটাসেট এক্সপোর্ট করতে ব্যর্থ।" : "Failed to export dataset.");
@@ -214,6 +222,8 @@ export default function TrainingPage() {
           </CardContent>
         </Card>
       </div>
+
+      <CloudTuningCard />
 
       {/* True ML Training Hub Banner */}
       <Card className="mb-6 border-primary/40 bg-gradient-to-r from-primary/10 via-surface to-surface">
