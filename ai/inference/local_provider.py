@@ -17,6 +17,34 @@ from ai.inference.provider import GenerationParams, GenerationResult, StoryGener
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_ADAPTER_DIR = REPO_ROOT / "models" / "adapters" / "taleforge-lora"
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+OLLAMA_CHAT_URL = "http://127.0.0.1:11434/api/chat"
+
+# Must match TRAINING_SYSTEM_PROMPT in apps/web/lib/system-prompt.ts and SYSTEM_PROMPT in
+# ai/data_pipeline/export_dataset.py (the training data), so the adapter sees the framing it learned.
+DEFAULT_SYSTEM_PROMPT_BN = (
+    "You are TaleForge AI, an expert literary novelist specializing in Bengali literature. "
+    "Follow the user's latest instruction exactly. If they ask to expand, continue, shorten, rewrite or change "
+    "the previous story, work on that story from the conversation and keep its title, characters and events. "
+    "Otherwise write a new story. Write in Bengali unless the user asks for English."
+)
+DEFAULT_SYSTEM_PROMPT_EN = "You are TaleForge AI, an expert literary storyteller."
+
+
+def build_chat_messages(params: GenerationParams) -> list[dict[str, str]]:
+    """The chat turns a model receives: system prompt, then the conversation (or just the prompt)."""
+    is_bn = params.language == "bn"
+    system_msg = params.system_prompt or (DEFAULT_SYSTEM_PROMPT_BN if is_bn else DEFAULT_SYSTEM_PROMPT_EN)
+    turns = [
+        {"role": m["role"], "content": m["content"]}
+        for m in (params.messages or [])
+        if m.get("role") in ("user", "assistant") and str(m.get("content", "")).strip()
+    ]
+    # Chat templates expect alternating turns that start with the user
+    while turns and turns[0]["role"] != "user":
+        turns.pop(0)
+    if not turns:
+        turns = [{"role": "user", "content": params.prompt or f"Write a {params.genre} story about {params.title}"}]
+    return [{"role": "system", "content": system_msg}, *turns]
 
 
 class LocalStoryProvider(StoryGenerationProvider):
@@ -43,6 +71,28 @@ class LocalStoryProvider(StoryGenerationProvider):
 
     def _generate_via_ollama(self, params: GenerationParams) -> str:
         """Generates story using local Ollama model."""
+        if params.messages:
+            # Multi-turn: Ollama's chat endpoint keeps the previous story in context
+            payload = {
+                "model": "qwen2.5:1.5b",
+                "messages": build_chat_messages(params),
+                "stream": False,
+                "options": {
+                    "temperature": params.temperature,
+                    "top_p": params.top_p,
+                    "num_predict": params.max_new_tokens,
+                },
+            }
+            req = urllib.request.Request(
+                OLLAMA_CHAT_URL,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=120) as response:
+                res_data = json.loads(response.read().decode("utf-8"))
+                return (res_data.get("message") or {}).get("content", "").strip()
+
         prompt = (
             f"তুমি TaleForge AI। নিচের বিষয়ের ওপর একটি আকর্ষণীয় বাংলা গল্প রচনা করো:\n\n"
             f"বিষয়: {params.prompt or params.title}\n"
@@ -105,22 +155,15 @@ class LocalStoryProvider(StoryGenerationProvider):
         self._load_hf_model()
         import torch
 
-        is_bn = params.language == "bn"
-        system_msg = (
-            # Must match SYSTEM_PROMPT in ai/data_pipeline/export_dataset.py (the training data)
-            "You are TaleForge AI, an expert literary novelist specializing in Bengali literature."
-            if is_bn
-            else "You are TaleForge AI, an expert literary storyteller."
-        )
-        messages = [
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": params.prompt or f"Write a {params.genre} story about {params.title}"},
-        ]
+        messages = build_chat_messages(params)
 
         if hasattr(self._tokenizer, "apply_chat_template"):
             text = self._tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         else:
-            text = f"User: {params.prompt}\nAssistant:"
+            transcript = "\n".join(
+                f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}" for m in messages[1:]
+            )
+            text = f"{transcript}\nAssistant:"
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
         inputs = self._tokenizer([text], return_tensors="pt").to(device)

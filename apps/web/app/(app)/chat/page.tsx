@@ -64,10 +64,22 @@ interface ImageAttachment {
 
 const getAvailableModels = (lang: "en" | "bn") => [
   {
+    id: "taleforge-lora",
+    name: "TaleForge LoRA Adapter",
+    tag: "Personal Trained Voice",
+    badge: lang === "bn" ? "সুপারিশকৃত" : "Recommended",
+    desc:
+      lang === "bn"
+        ? "আপনার নিজের গল্পে ফাইন-টিউন করা LoRA মডেল দিয়ে লেখে। আগে Colab-এ ট্রেইন করে লোকাল API সার্ভার চালু রাখতে হবে।"
+        : "Writes with a LoRA model fine-tuned on your own stories. Requires training in Colab and a running local API server.",
+    icon: BookOpen,
+    color: "text-emerald-500",
+  },
+  {
     id: "gemini-1.5-flash",
     name: "Google Gemini 1.5 Flash",
     tag: "Fast & Multimodal",
-    badge: lang === "bn" ? "সুপারিশকৃত" : "Recommended",
+    badge: lang === "bn" ? "ক্লাউড" : "Cloud",
     desc:
       lang === "bn"
         ? "বিদ্যুৎগতির দ্রুত ও গভীর বাংলা গল্প কথন। ছবি দেখেও নিখুঁত দৃশ্য বর্ণনা ও গল্প সৃষ্টি করতে সক্ষম।"
@@ -86,18 +98,6 @@ const getAvailableModels = (lang: "en" | "bn") => [
         : "World-class model for intricate plots, multi-chapter novels, and deep character development.",
     icon: Sparkles,
     color: "text-indigo-500",
-  },
-  {
-    id: "taleforge-lora",
-    name: "TaleForge LoRA Adapter",
-    tag: "Personal Trained Voice",
-    badge: lang === "bn" ? "আমার স্টাইল" : "My Style",
-    desc:
-      lang === "bn"
-        ? "আপনার নিজের গল্পে ফাইন-টিউন করা LoRA মডেল দিয়ে লেখে। আগে Colab-এ ট্রেইন করে লোকাল API সার্ভার চালু রাখতে হবে।"
-        : "Writes with a LoRA model fine-tuned on your own stories. Requires training in Colab and a running local API server.",
-    icon: BookOpen,
-    color: "text-emerald-500",
   },
   {
     id: "smart-engine",
@@ -238,7 +238,7 @@ export default function AIChatPage() {
   const [loading, setLoading] = useState(false);
   const [autoTrain, setAutoTrain] = useState(true);
   const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>("gemini-1.5-flash");
+  const [selectedModel, setSelectedModel] = useState<string>("taleforge-lora");
   const [selectedPersona, setSelectedPersona] = useState<string>("default");
   const [selectedTrainingScope, setSelectedTrainingScope] = useState<string>("hybrid");
 
@@ -283,7 +283,9 @@ export default function AIChatPage() {
     refreshStatus();
     if (typeof window !== "undefined") {
       const savedModel = localStorage.getItem("tf_preferred_model");
-      if (savedModel) setSelectedModel(savedModel);
+      // A remembered Gemini choice is useless without a key: it would silently fall back to the template engine
+      const hasGeminiKey = Boolean(localStorage.getItem("tf_gemini_api_key"));
+      if (savedModel && (hasGeminiKey || !savedModel.startsWith("gemini"))) setSelectedModel(savedModel);
       const savedPersona = localStorage.getItem("tf_preferred_persona");
       if (savedPersona) setSelectedPersona(savedPersona);
       const savedScope = localStorage.getItem("tf_preferred_training_scope");
@@ -488,6 +490,11 @@ export default function AIChatPage() {
     isAutoScrollEnabledRef.current = true;
     setTimeout(() => scrollToBottom("smooth"), 50);
 
+    // The conversation so far (before this message), so the model can act on the previous story
+    const history = messages
+      .filter((m) => !m.id.startsWith("error_") && m.content.trim())
+      .map((m) => ({ role: m.role, content: m.content }));
+
     try {
       const res = await simpleAiApi().chat(
         promptText,
@@ -497,6 +504,8 @@ export default function AIChatPage() {
         activeModel,
         activePersona,
         selectedTrainingScope,
+        undefined,
+        history,
       );
 
       // Transition from spinner to typewriter streaming
@@ -570,7 +579,13 @@ export default function AIChatPage() {
       const errorMsg: ChatMessage = {
         id: `error_${Date.now()}`,
         role: "assistant",
-        content: `দুঃখিত, গল্পটি তৈরিতে সাময়িক সমস্যা হয়েছে: ${errDetail}\n\n💡 পরামর্শ: সেটিংস পেজে গিয়ে আপনার বিনামূল্যে পাওয়া Google Gemini API Key যুক্ত রয়েছে কিনা তা যাচাই করে নিন।`,
+        content:
+          `দুঃখিত, গল্পটি তৈরিতে সমস্যা হয়েছে: ${errDetail}
+
+` +
+          (activeModel === "taleforge-lora"
+            ? "💡 পরামর্শ: আপনার নিজের মডেল ব্যবহার করতে (১) Train AI পাতায় গল্প যোগ করে ডেটাসেট এক্সপোর্ট করুন, (২) Colab নোটবুকে ট্রেইন করে অ্যাডাপ্টারটি models/adapters/taleforge-lora ফোল্ডারে রাখুন, (৩) npm run dev:api দিয়ে API সার্ভার চালু রাখুন।"
+            : "💡 পরামর্শ: সেটিংস পেজে গিয়ে Google Gemini API Key যুক্ত আছে কিনা যাচাই করুন, অথবা মডেল তালিকা থেকে TaleForge LoRA বেছে নিন।"),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {

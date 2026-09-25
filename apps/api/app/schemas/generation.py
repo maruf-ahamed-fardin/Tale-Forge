@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -15,8 +17,18 @@ class GenerateRequest(BaseModel):
     temperature: float = Field(default=0.8, ge=0.1, le=1.5)
 
 
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., min_length=1, max_length=8000)
+
+
 class LocalGenerateRequest(BaseModel):
+    """`prompt` is the user's latest message. `messages` is the recent conversation ending with that
+    message, so follow-ups such as "make it longer" apply to the previous story."""
+
     prompt: str = Field(..., min_length=1, max_length=2000)
+    messages: list[ChatTurn] | None = Field(default=None, max_length=12)
+    system_prompt: str | None = Field(default=None, max_length=2000)
     temperature: float = Field(default=0.8, ge=0.1, le=1.5)
     max_new_tokens: int = Field(default=1024, ge=64, le=2048)
 

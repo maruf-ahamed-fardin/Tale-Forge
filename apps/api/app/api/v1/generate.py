@@ -118,6 +118,8 @@ async def generate_with_local_adapter(
 
     params = GenerationParams(
         prompt=request.prompt,
+        messages=[{"role": m.role, "content": m.content} for m in request.messages] if request.messages else None,
+        system_prompt=request.system_prompt or "",
         language="bn",
         temperature=request.temperature,
         max_new_tokens=request.max_new_tokens,

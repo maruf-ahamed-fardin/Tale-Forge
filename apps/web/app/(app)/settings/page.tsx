@@ -47,7 +47,7 @@ export default function SettingsPage() {
   // Live AI Model & API Key
   const [geminiApiKey, setGeminiApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
+  const [selectedModel, setSelectedModel] = useState("taleforge-lora");
   const [keySavedMsg, setKeySavedMsg] = useState("");
 
   useEffect(() => {
@@ -77,7 +77,8 @@ export default function SettingsPage() {
     // Load AI Model & Gemini API Key
     const savedKey = localStorage.getItem("tf_gemini_api_key");
     if (savedKey) setGeminiApiKey(savedKey);
-    const savedModel = localStorage.getItem("tf_ai_model");
+    // Same key the chat page reads, so the choice made here is the one used in chat
+    const savedModel = localStorage.getItem("tf_preferred_model");
     if (savedModel) setSelectedModel(savedModel);
   }, []);
 
@@ -97,7 +98,7 @@ export default function SettingsPage() {
   const handleSaveAIConfig = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem("tf_gemini_api_key", geminiApiKey.trim());
-    localStorage.setItem("tf_ai_model", selectedModel);
+    localStorage.setItem("tf_preferred_model", selectedModel);
     setKeySavedMsg(t("settings.aiConfigSaved", undefined, "AI settings saved!"));
     setTimeout(() => setKeySavedMsg(""), 4000);
   };
@@ -388,25 +389,25 @@ export default function SettingsPage() {
                     onChange={(e) => setSelectedModel(e.target.value)}
                     className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs sm:text-sm text-foreground outline-none focus:border-primary truncate"
                   >
+                    <option value="taleforge-lora">
+                      TaleForge LoRA Adapter (Your Trained Model)
+                    </option>
                     <option value="gemini-1.5-flash">
                       Google Gemini 1.5 Flash (Cloud AI - Fast)
                     </option>
-                    <option value="gemini-2.0-flash">
-                      Google Gemini 2.0 Flash (Next-Gen AI)
+                    <option value="gemini-1.5-pro">
+                      Google Gemini 1.5 Pro (Cloud AI - Deep)
                     </option>
-                    <option value="local-lora">
-                      TaleForge LoRA Adapter (Personal Style)
-                    </option>
-                    <option value="taleforge-smart">
-                      TaleForge Smart Engine (Offline)
+                    <option value="smart-engine">
+                      TaleForge Smart Engine (Offline, no AI)
                     </option>
                   </select>
                   <p className="mt-1.5 text-xs text-muted-foreground flex items-center gap-1.5">
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                    {selectedModel === "gemini-1.5-flash" && "Ultra-fast live storytelling in Bangla & English"}
-                    {selectedModel === "gemini-2.0-flash" && "Cutting-edge multimodal literary intelligence"}
-                    {selectedModel === "local-lora" && "Replicates your personal trained stories and tone"}
-                    {selectedModel === "taleforge-smart" && "Offline local engine (no API key or network required)"}
+                    {selectedModel === "taleforge-lora" && "Your own model, trained on your stories. No cloud API needed."}
+                    {selectedModel === "gemini-1.5-flash" && "Ultra-fast live storytelling in Bangla & English (needs an API key)"}
+                    {selectedModel === "gemini-1.5-pro" && "Deep literary quality for long plots (needs an API key)"}
+                    {selectedModel === "smart-engine" && "Offline template engine (no API key or network required)"}
                   </p>
                 </div>
 

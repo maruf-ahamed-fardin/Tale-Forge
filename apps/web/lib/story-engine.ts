@@ -2,6 +2,14 @@ import fs from "fs";
 import path from "path";
 import { isCloudStorageConfigured, readJsonObject, updateJsonObject } from "@/lib/gcs";
 import { generateWithTunedGemini, isVertexTuningConfigured } from "@/lib/vertex-tuning";
+import {
+  TRAINING_SYSTEM_PROMPT,
+  buildConversation,
+  isFollowUpInstruction,
+  type ConversationTurn,
+} from "@/lib/system-prompt";
+
+export type { ConversationTurn };
 
 export interface TrainedStory {
   id: string;
@@ -425,7 +433,7 @@ export async function resetAIMemory(accountId?: string) {
  * Calls the Google Gemini API to generate an authentic story mirroring user trained style.
  */
 async function generateWithGemini(
-  prompt: string,
+  conversation: ConversationTurn[],
   apiKey: string,
   styleSnippets: string[],
   isBengali: boolean,
@@ -441,7 +449,11 @@ YOUR CORE MISSION: You MUST ALWAYS write the story strictly in authentic, beauti
 Even if the user's prompt is written in English or Banglish (such as 'prem er story', 'bistir rat', 'ekta meyer golpo'), you MUST write the story entirely in rich Bengali (বাংলা হরফে).
 Never write in English or Banglish unless the user explicitly commands 'write in english'.
 
-Story Guidelines:
+FOLLOW THE CONVERSATION: Read the previous turns. If the user's latest message asks to expand, continue, shorten,
+rewrite or change the previous story, do exactly that to THAT story: keep its title, characters and events, and
+return the complete updated story. Only write a brand-new story when the user asks for one.
+
+Story Guidelines (for a new story):
 1. Provide a captivating Bengali title at the top: # [গল্পের শিরোনাম]
 2. Generate a long, complete, multi-paragraph story with at least 4 immersive scenes:
    - Scene 1: Atmospheric setting, mood, weather, sensory details
@@ -496,10 +508,10 @@ At the very end of your response, after the story ends, you MUST propose exactly
 3. [সংক্ষিপ্ত বিকল্প ৩] | [বিস্তারিত নির্দেশনা ৩]
 [/CHOICES]`;
 
-  const userContent = `User Prompt: ${prompt}\n\nPlease generate a full, beautiful Bengali story based on this.`;
-
+  const latest = conversation[conversation.length - 1];
+  const previousTurns = conversation.slice(0, -1);
   const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
-    { text: `${systemInstruction}\n\n${userContent}` },
+    { text: latest.content },
   ];
 
   if (image && image.base64) {
@@ -513,7 +525,14 @@ At the very end of your response, after the story ends, you MUST propose exactly
   }
 
   const payload = {
-    contents: [{ role: "user", parts }],
+    systemInstruction: { parts: [{ text: systemInstruction }] },
+    contents: [
+      ...previousTurns.map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      })),
+      { role: "user", parts },
+    ],
     generationConfig: {
       temperature: 0.85,
       maxOutputTokens: 2048,
@@ -543,12 +562,14 @@ At the very end of your response, after the story ends, you MUST propose exactly
  * Calls the FastAPI backend, which runs the user's own trained LoRA adapter
  * (ai/inference/local_provider.py). Throws a clear error instead of falling back to another model.
  */
-async function generateWithLocalLoRA(prompt: string): Promise<string> {
-  const backendUrl = process.env.INTERNAL_API_URL || "http://127.0.0.1:8000";
+async function generateWithLocalLoRA(conversation: ConversationTurn[]): Promise<string> {
+  // In production this is the Modal deployment (ai/deploy/modal_app.py); locally it is the FastAPI server.
+  // Both serve the same /api/v1/generate/local contract.
+  const backendUrl = process.env.LORA_MODEL_URL || process.env.INTERNAL_API_URL || "http://127.0.0.1:8000";
   const token = process.env.LOCAL_MODEL_TOKEN || "";
   if (!token) {
     throw new Error(
-      "TaleForge LoRA is not configured: set LOCAL_MODEL_TOKEN in the web app's and API server's environment.",
+      "TaleForge LoRA is not configured: set LOCAL_MODEL_TOKEN on the web app and on the model server (see ai/deploy/README.md).",
     );
   }
 
@@ -557,13 +578,18 @@ async function generateWithLocalLoRA(prompt: string): Promise<string> {
     res = await fetch(`${backendUrl}/api/v1/generate/local`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-local-model-token": token },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({
+        prompt: conversation[conversation.length - 1].content,
+        messages: conversation,
+        system_prompt: TRAINING_SYSTEM_PROMPT,
+      }),
       // Local generation (especially the first call, which loads the model) can be slow
       signal: AbortSignal.timeout(300_000),
     });
   } catch {
     throw new Error(
-      `TaleForge LoRA: could not reach the API server at ${backendUrl}. Start it with "npm run dev:api".`,
+      `TaleForge LoRA: could not reach the model server at ${backendUrl}. ` +
+        "Deploy it with `modal deploy ai/deploy/modal_app.py` and set LORA_MODEL_URL, or run `npm run dev:api` locally.",
     );
   }
 
@@ -673,28 +699,35 @@ function getBengaliStoryTitle(prompt: string, theme: string): string {
  * Generates rich, diverse, multi-paragraph authentic Bengali literature.
  * Never repeats the same text twice!
  */
+/**
+ * Template engine (no AI). With `expandFrom`, it appends new paragraphs to that previous story
+ * instead of inventing a new one, so follow-ups like "make it longer" keep the same story.
+ */
 function composeSmartStory(
   prompt: string,
   isBengali: boolean,
   styleSnippets: string[],
+  expandFrom?: string,
 ): string {
   const pLower = prompt.toLowerCase();
+  // For an expansion, the theme comes from the story being expanded, not from "make it longer"
+  const themeSource = expandFrom ? `${expandFrom}\n${prompt}` : prompt;
 
   // Detect theme
   let theme = "general";
-  if (/প্রেম|ভালোবাসা|ভালবাসা|রোমান্টিক|love|romance|romantic|prem|valobasha|bhalobasha/i.test(prompt)) {
+  if (/প্রেম|ভালোবাসা|ভালবাসা|রোমান্টিক|love|romance|romantic|prem|valobasha|bhalobasha/i.test(themeSource)) {
     theme = "romance";
-  } else if (/বৃষ্টি|মেঘ|শ্রাবণ|বর্ষা|rain|storm|brishti|megh|barsa/i.test(prompt)) {
+  } else if (/বৃষ্টি|মেঘ|শ্রাবণ|বর্ষা|rain|storm|brishti|megh|barsa/i.test(themeSource)) {
     theme = "rain";
-  } else if (/ভয়|ভয়|ভূত|ভৌতিক|আতঙ্ক|কবর|অন্ধকার|horror|ghost|scary|fear|shadow|bhoy|voot|bhoutik/i.test(prompt)) {
+  } else if (/ভয়|ভয়|ভূত|ভৌতিক|আতঙ্ক|কবর|অন্ধকার|horror|ghost|scary|fear|shadow|bhoy|voot|bhoutik/i.test(themeSource)) {
     theme = "horror";
-  } else if (/রহস্য|ডিটেকটিভ|গোয়েন্দা|খুন|চিঠি|mystery|detective|secret|investigation|rohoshyo|goyenda/i.test(prompt)) {
+  } else if (/রহস্য|ডিটেকটিভ|গোয়েন্দা|খুন|চিঠি|mystery|detective|secret|investigation|rohoshyo|goyenda/i.test(themeSource)) {
     theme = "mystery";
-  } else if (/শৈশব|স্মৃতি|গ্রাম|নদী|মা|দাদি|স্কুল|nostalgia|childhood|village|river|gram|smriti|sad/i.test(prompt)) {
+  } else if (/শৈশব|স্মৃতি|গ্রাম|নদী|মা|দাদি|স্কুল|nostalgia|childhood|village|river|gram|smriti|sad/i.test(themeSource)) {
     theme = "nostalgia";
-  } else if (/ট্রেন|স্টেশন|ভ্রমণ|যাত্রা|পাহাড়|সমুদ্র|train|station|journey|travel|trip|station/i.test(prompt)) {
+  } else if (/ট্রেন|স্টেশন|ভ্রমণ|যাত্রা|পাহাড়|সমুদ্র|train|station|journey|travel|trip|station/i.test(themeSource)) {
     theme = "journey";
-  } else if (/শহর|ঢাকা|রাত|স্বপ্ন|অফিস|কফি|city|dhaka|night|dream|coffee|shohor/i.test(prompt)) {
+  } else if (/শহর|ঢাকা|রাত|স্বপ্ন|অফিস|কফি|city|dhaka|night|dream|coffee|shohor/i.test(themeSource)) {
     theme = "city";
   } else {
     // When prompt is generic (e.g. "now can you make a story", "একটি গল্প বলো"),
@@ -899,6 +932,21 @@ function composeSmartStory(
   };
 
   const selectedGen = generators[theme] || generators.general;
+
+  if (expandFrom) {
+    // Keep the previous story (title included) and grow it with paragraphs it does not already contain
+    const fresh = (options: string[]) => {
+      const unused = options.filter((o) => !expandFrom.includes(o));
+      return unused.length ? unused : options;
+    };
+    const extra = [
+      pickRandom(fresh(selectedGen.developments)),
+      pickRandom(fresh(selectedGen.climaxes)),
+      pickRandom(fresh(selectedGen.endings)),
+    ];
+    return `${expandFrom.trim()}\n\n${extra.join("\n\n")}`;
+  }
+
   const p1 = pickRandom(selectedGen.openings);
   const p2 = pickRandom(selectedGen.developments);
   const p3 = pickRandom(selectedGen.climaxes);
@@ -1069,10 +1117,12 @@ export async function generateStoryAndChat(
   autoTrain = true,
   customApiKey?: string,
   image?: { base64: string; mimeType: string },
-  model = "gemini-1.5-flash",
+  model = "taleforge-lora",
   persona = "default",
   trainingScope: "hybrid" | "personal" | "default" = "hybrid",
   accountId: string = "default_local_author",
+  /** The conversation shown in the client. When omitted, the account's saved chat history is used. */
+  history?: ConversationTurn[],
 ): Promise<{
   story: string;
   prompt: string;
@@ -1131,20 +1181,28 @@ export async function generateStoryAndChat(
   // Check for Gemini API key (from parameter or environment)
   const geminiKey = customApiKey || process.env.GEMINI_API_KEY || "";
 
+  // What the model sees: the recent conversation (client's view, else the saved history) plus this message.
+  // This is what lets "make it longer" apply to the previous story instead of starting a new one.
+  const priorTurns: ConversationTurn[] =
+    history ?? (await readAccountMemory(safeAccountId)).chat_history.map((m) => ({ role: m.role, content: m.content }));
+  const conversation = buildConversation(priorTurns, cleanPrompt);
+  const previousStory = [...conversation.slice(0, -1)].reverse().find((m) => m.role === "assistant")?.content;
+  const expandPrevious = isFollowUpInstruction(cleanPrompt) && previousStory ? previousStory : undefined;
+
   let generatedStory = "";
   let activeModel = "TaleForge Smart Engine";
 
   if (model === "smart-engine") {
     // Offline smart procedural engine
-    generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
+    generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets, expandPrevious);
     activeModel = "TaleForge Smart Engine (Offline)";
   } else if (model === "taleforge-lora") {
     // The user's own fine-tuned model. Errors propagate so a failure is never hidden behind another model.
     if (isVertexTuningConfigured()) {
-      generatedStory = await generateWithTunedGemini(safeAccountId, cleanPrompt);
+      generatedStory = await generateWithTunedGemini(safeAccountId, conversation);
       activeModel = "Your Tuned Gemini (Vertex AI)";
     } else {
-      generatedStory = await generateWithLocalLoRA(cleanPrompt);
+      generatedStory = await generateWithLocalLoRA(conversation);
       activeModel = "TaleForge LoRA Adapter (Your Trained Model)";
     }
   } else if (geminiKey) {
@@ -1152,7 +1210,7 @@ export async function generateStoryAndChat(
       const targetModel = model === "gemini-1.5-pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
 
       generatedStory = await generateWithGemini(
-        cleanPrompt,
+        conversation,
         geminiKey,
         styleSnippets,
         isBengali,
@@ -1170,11 +1228,11 @@ export async function generateStoryAndChat(
       }
     } catch (err: unknown) {
       console.warn("Gemini API call failed, falling back to Smart Engine:", err);
-      generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
+      generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets, expandPrevious);
       activeModel = "TaleForge Smart Engine (Fallback)";
     }
   } else {
-    generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets);
+    generatedStory = composeSmartStory(cleanPrompt, isBengali, styleSnippets, expandPrevious);
     if (image) {
       activeModel = "TaleForge Smart Engine (Visual Synthesis)";
     } else {
@@ -1182,15 +1240,16 @@ export async function generateStoryAndChat(
     }
   }
 
-  // Extract theme for procedural choices fallback
+  // Extract theme for procedural choices fallback (from the story itself when this was a follow-up)
+  const themeSource = expandPrevious ? `${expandPrevious}\n${cleanPrompt}` : cleanPrompt;
   let promptTheme = "general";
-  if (/প্রেম|ভালোবাসা|ভালবাসা|রোমান্টিক|love|romance|romantic|prem/i.test(cleanPrompt)) {
+  if (/প্রেম|ভালোবাসা|ভালবাসা|রোমান্টিক|love|romance|romantic|prem/i.test(themeSource)) {
     promptTheme = "romance";
-  } else if (/রহস্য|গোয়েন্দা|ফেলুদা|খুন|চুরি|mystery|detective|investigation/i.test(cleanPrompt)) {
+  } else if (/রহস্য|গোয়েন্দা|ফেলুদা|খুন|চুরি|mystery|detective|investigation/i.test(themeSource)) {
     promptTheme = "mystery";
-  } else if (/ভয়|ভূত|আতঙ্ক|শ্মশান|রাক্ষস|horror|ghost|scary/i.test(cleanPrompt)) {
+  } else if (/ভয়|ভূত|আতঙ্ক|শ্মশান|রাক্ষস|horror|ghost|scary/i.test(themeSource)) {
     promptTheme = "horror";
-  } else if (/বৃষ্টি|মেঘ|শ্রাবণ|বর্ষা|rain|storm/i.test(cleanPrompt)) {
+  } else if (/বৃষ্টি|মেঘ|শ্রাবণ|বর্ষা|rain|storm/i.test(themeSource)) {
     promptTheme = "rain";
   }
 

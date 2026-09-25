@@ -28,11 +28,7 @@ export async function POST(req: NextRequest) {
 
     // ChatML + Alpaca fields, as read by ai/training/train_lora.py and the Colab notebook
     const samples = buildTrainingSamples(stories, LOCAL_LORA_CHUNKS).map((s) => ({
-      messages: [
-        { role: "system", content: TRAINING_SYSTEM_PROMPT },
-        { role: "user", content: s.instruction },
-        { role: "assistant", content: s.output },
-      ],
+      messages: [{ role: "system", content: TRAINING_SYSTEM_PROMPT }, ...s.messages],
       instruction: s.instruction,
       input: "",
       output: s.output,
