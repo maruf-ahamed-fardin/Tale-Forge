@@ -1131,7 +1131,7 @@ export default function AIChatPage() {
           {aiStatus && (
             <Link
               href="/train"
-              className="hidden md:flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition shrink-0"
+              className="hidden lg:flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:opacity-90 transition shrink-0"
               title={t("nav.goToTraining", undefined, "View personal and default training stories")}
             >
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -1149,7 +1149,7 @@ export default function AIChatPage() {
             title={t("chat.newStoryButton", undefined, "New Conversation")}
           >
             <Plus className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden md:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
+            <span className="hidden lg:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
           </button>
 
           {/* Story Library Button */}
@@ -1159,7 +1159,7 @@ export default function AIChatPage() {
             title={t("nav.stories", undefined, "Story Library")}
           >
             <Library className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden md:inline">{t("nav.stories", undefined, "Library")}</span>
+            <span className="hidden lg:inline">{t("nav.stories", undefined, "Library")}</span>
           </Link>
         </div>
       </header>
