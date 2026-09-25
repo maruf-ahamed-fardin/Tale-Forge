@@ -10,17 +10,24 @@ while _current.parent != _current:
         break
     _current = _current.parent
 
-from fastapi import APIRouter, Depends, status
+import secrets
+
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 
-from ai.inference import GenerationParams, get_inference_provider
+from ai.inference import GenerationParams, LocalStoryProvider, get_inference_provider
 from app.core.rate_limiter import rate_limit
+from app.core.settings import get_settings
 from app.models.user import User
-from app.schemas.generation import GenerateRequest, GenerateResponse
+from app.schemas.generation import GenerateRequest, GenerateResponse, LocalGenerateRequest
 from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/generate", tags=["generation"])
 rate_limit_generate = rate_limit(max_requests=20, window_seconds=60)
+
+# Module-level so the base model + adapter are loaded once and reused across requests
+_local_provider = LocalStoryProvider()
 
 
 @router.post("", response_model=GenerateResponse, status_code=status.HTTP_200_OK)
@@ -78,3 +85,59 @@ async def stream_story(
             yield chunk
 
     return StreamingResponse(token_generator(), media_type="text/plain")
+
+
+@router.post("/local", response_model=GenerateResponse, dependencies=[Depends(rate_limit_generate)])
+async def generate_with_local_adapter(
+    request: LocalGenerateRequest,
+    x_local_model_token: str | None = Header(default=None),
+) -> GenerateResponse:
+    """Generates a story with the user's own trained LoRA adapter.
+
+    Called server-side by the web app's "TaleForge LoRA" chat model. Protected by the
+    LOCAL_MODEL_TOKEN shared secret instead of user JWT auth. Never falls back to another
+    model: a missing adapter or ML dependency is reported as an error.
+    """
+    expected_token = get_settings().local_model_token
+    if not expected_token:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Local model endpoint is disabled. Set LOCAL_MODEL_TOKEN on the API server.",
+        )
+    if not secrets.compare_digest(x_local_model_token or "", expected_token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid local model token.")
+
+    if not _local_provider.is_adapter_available():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                f"No trained LoRA adapter found at {_local_provider.adapter_path}. "
+                "Export your dataset, train in the Colab notebook, and extract the adapter there."
+            ),
+        )
+
+    params = GenerationParams(
+        prompt=request.prompt,
+        language="bn",
+        temperature=request.temperature,
+        max_new_tokens=request.max_new_tokens,
+    )
+    try:
+        result = await run_in_threadpool(_local_provider.generate_with_adapter, params)
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"ML dependencies missing on the API server ({exc}). Install: torch transformers peft",
+        ) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Local LoRA generation failed: {exc}",
+        ) from exc
+
+    return GenerateResponse(
+        text=result.text,
+        word_count=result.word_count,
+        provider=result.provider,
+        finish_reason=result.finish_reason,
+    )

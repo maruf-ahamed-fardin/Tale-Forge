@@ -25,6 +25,9 @@ class Settings(BaseSettings):
 
     model_name: str = ""
     model_adapter_path: str = ""
+    # Shared secret for /api/v1/generate/local (called server-side by the web app).
+    # The endpoint is disabled while this is empty.
+    local_model_token: str = ""
     generation_config_path: str = "./configs/generation.yaml"
     training_config_path: str = "./configs/training.yaml"
 

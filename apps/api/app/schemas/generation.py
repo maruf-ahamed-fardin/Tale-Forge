@@ -15,6 +15,12 @@ class GenerateRequest(BaseModel):
     temperature: float = Field(default=0.8, ge=0.1, le=1.5)
 
 
+class LocalGenerateRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=2000)
+    temperature: float = Field(default=0.8, ge=0.1, le=1.5)
+    max_new_tokens: int = Field(default=1024, ge=64, le=2048)
+
+
 class GenerateResponse(BaseModel):
     text: str
     word_count: int
