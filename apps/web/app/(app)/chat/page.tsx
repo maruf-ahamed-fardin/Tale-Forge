@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { simpleAiApi, storiesApi, type AIStatus, type StoryChoice } from "@/lib/api";
 import { exportStoryAsPdf } from "@/lib/pdf-export";
+import { detectSpeechLang, hasSpeechSynthesis, loadVoices, speakText, type SpeakHandle } from "@/lib/tts";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -257,6 +258,12 @@ export default function AIChatPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const speakHandleRef = useRef<SpeakHandle | null>(null);
+
+  const showToast = (message: string, duration = 3000) => {
+    setToastMsg(message);
+    setTimeout(() => setToastMsg(null), duration);
+  };
   const [isStreaming, setIsStreaming] = useState(false);
   const stopStreamingRef = useRef(false);
 
@@ -321,10 +328,13 @@ export default function AIChatPage() {
     document.addEventListener("click", handleClickOutside);
     return () => {
       document.removeEventListener("click", handleClickOutside);
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
+      speakHandleRef.current?.stop();
     };
+  }, []);
+
+  // Warm up the voice list so the first "Read aloud" click does not hit an empty getVoices().
+  useEffect(() => {
+    if (hasSpeechSynthesis()) void loadVoices();
   }, []);
 
   // Mutually exclusive toggle for topbar dropdowns
@@ -406,9 +416,8 @@ export default function AIChatPage() {
   const handleNewChat = () => {
     stopStreamingRef.current = true;
     setIsStreaming(false);
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    speakHandleRef.current?.stop();
+    speakHandleRef.current = null;
     setSpeakingId(null);
     setMessages([]);
     setInputPrompt("");
@@ -658,35 +667,46 @@ export default function AIChatPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleReadAloud = (storyText: string, messageId: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setToastMsg("আপনার ব্রাউজারে Text-to-Speech সুবিধা পাওয়া যায়নি।");
-      setTimeout(() => setToastMsg(null), 3000);
+  const handleReadAloud = async (storyText: string, messageId: string) => {
+    if (!hasSpeechSynthesis()) {
+      showToast(
+        language === "bn"
+          ? "আপনার ব্রাউজারে Text-to-Speech সুবিধা পাওয়া যায়নি।"
+          : "Text-to-speech is not available in this browser."
+      );
       return;
     }
 
+    // Same message clicked again: stop.
     if (speakingId === messageId) {
-      window.speechSynthesis.cancel();
+      speakHandleRef.current?.stop();
+      speakHandleRef.current = null;
       setSpeakingId(null);
       return;
     }
 
-    window.speechSynthesis.cancel();
-
-    // Clean markdown headings/bullets for clean audio reading
-    const cleanSpeech = storyText.replace(/[#*`_~>-]/g, "").trim();
-    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
-
-    const voices = window.speechSynthesis.getVoices();
-    const bnVoice = voices.find((v) => v.lang.startsWith("bn")) || voices[0];
-    if (bnVoice) utterance.voice = bnVoice;
-
-    utterance.rate = 0.95;
-    utterance.onend = () => setSpeakingId(null);
-    utterance.onerror = () => setSpeakingId(null);
-
-    window.speechSynthesis.speak(utterance);
+    speakHandleRef.current?.stop();
     setSpeakingId(messageId);
+
+    const lang = detectSpeechLang(storyText);
+    const handle = await speakText(storyText, {
+      lang,
+      rate: 0.95,
+      onEnd: () => {
+        speakHandleRef.current = null;
+        setSpeakingId((current) => (current === messageId ? null : current));
+      },
+    });
+    speakHandleRef.current = handle;
+
+    if (!handle.voiceFound && lang === "bn-BD") {
+      showToast(
+        language === "bn"
+          ? "এই ব্রাউজারে বাংলা ভয়েস নেই। Microsoft Edge ব্যবহার করুন অথবা Windows এ বাংলা Speech pack ইনস্টল করুন।"
+          : "No Bangla voice is installed in this browser. Try Microsoft Edge or install the Windows Bangla speech pack.",
+        5000
+      );
+    }
   };
 
   const handleSelectTrainingScope = (scopeId: string) => {
