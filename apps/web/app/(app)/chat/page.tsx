@@ -9,12 +9,13 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
+  SlidersHorizontal,
   Copy,
   Cpu,
   Download,
   GraduationCap,
   Image as ImageIcon,
-  Library,
   MessageSquare,
   Plus,
   FileText,
@@ -33,6 +34,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { LanguageToggle } from "@/components/shared/language-toggle";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { simpleAiApi, storiesApi, type AIStatus, type StoryChoice } from "@/lib/api";
@@ -1141,26 +1144,22 @@ export default function AIChatPage() {
             </Link>
           )}
 
-          {/* New Conversation Button */}
+          {/* New Chat Button (Library lives in the sidebar) */}
           <button
             type="button"
             onClick={handleNewChat}
-            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 text-foreground hover:bg-surface-hover active:scale-95 transition shadow-2xs shrink-0"
-            title={t("chat.newStoryButton", undefined, "New Conversation")}
+            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 text-foreground hover:bg-surface-hover active:scale-95 transition shadow-2xs shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            title={t("chat.newStoryButton", undefined, "New Chat")}
           >
             <Plus className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden lg:inline">{t("chat.newStoryButton", undefined, "New Story")}</span>
+            <span className="hidden lg:inline">{t("chat.newStoryButton", undefined, "New Chat")}</span>
           </button>
 
-          {/* Story Library Button */}
-          <Link
-            href="/stories"
-            className="inline-flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold bg-surface border border-border/80 hover:bg-surface-hover text-foreground active:scale-95 transition shadow-2xs shrink-0"
-            title={t("nav.stories", undefined, "Story Library")}
-          >
-            <Library className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden lg:inline">{t("nav.stories", undefined, "Library")}</span>
-          </Link>
+          {/* Language & Theme (desktop only; the mobile shell header already has them) */}
+          <div className="hidden md:flex items-center gap-1 sm:gap-2 pl-1 sm:pl-2 border-l border-border/70">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
