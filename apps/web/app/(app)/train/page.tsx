@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import {
   AlertCircle,
-  ArrowRight,
   BookOpen,
   Check,
   CheckCircle2,
@@ -20,7 +18,6 @@ import {
   GraduationCap,
   Info,
   Lock,
-  MessageSquare,
   PenTool,
   RefreshCw,
   Search,
@@ -259,17 +256,6 @@ export default function SimpleTrainPage() {
               "Upload your personal literature, essays, and stories to fine-tune the AI's vocabulary, dialogue style, and narrative cadence."
             )}
           </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          <Link
-            href="/chat"
-            className="w-full sm:w-auto justify-center inline-flex items-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-radiant px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all group"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span>{t("nav.chat", undefined, "Story Chat")}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </Link>
         </div>
       </div>
 
