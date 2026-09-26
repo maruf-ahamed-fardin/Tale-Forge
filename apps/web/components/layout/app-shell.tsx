@@ -57,9 +57,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="fixed inset-0 h-full w-full overflow-hidden bg-background text-foreground flex relative">
-      {/* Ambient Glow Lights for rich atmospheric feel */}
-      <div className="ambient-glow-mesh pointer-events-none" />
-      <div className="ambient-glow-mesh-2 pointer-events-none" />
 
       {/* Permanent Desktop/Tablet Sticky Sidebar - Collapsible with smooth transition */}
       <aside

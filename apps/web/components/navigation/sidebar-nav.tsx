@@ -144,11 +144,6 @@ export function SidebarNav({ onNavigate, collapsed = false, onToggleCollapse }: 
               {!collapsed && (
                 <span className="truncate flex-1">{label}</span>
               )}
-              {!collapsed && item.href === "/chat" && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-radiant text-white shadow-xs">
-                  Pro
-                </span>
-              )}
             </Link>
           );
         })}
@@ -198,21 +193,9 @@ export function SidebarNav({ onNavigate, collapsed = false, onToggleCollapse }: 
                   )
                 : t("nav.readyToTrain", undefined, "Ready to train")}
             </p>
-            {/* Memory Capacity Bar */}
-            <div className="mt-2.5 h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
-              <div
-                className="h-full bg-gradient-radiant rounded-full transition-all duration-500"
-                style={{
-                  width: aiStatus?.personal_trained_stories ? `${Math.min(100, 40 + (aiStatus.personal_trained_stories * 15))}%` : "35%",
-                }}
-              />
-            </div>
-            <div className="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                <Zap className="h-3 w-3 text-amber-500" />
-                {t("nav.autoRetrainActive", undefined, "Auto-Retrain Active")}
-              </span>
-              <span className="text-[10px] text-muted-foreground">98% Match</span>
+            <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <Zap className="h-3 w-3 text-amber-500" />
+              {t("nav.autoRetrainActive", undefined, "Auto-Retrain Active")}
             </div>
           </Link>
         </div>
