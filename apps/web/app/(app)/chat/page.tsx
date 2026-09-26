@@ -1180,7 +1180,7 @@ export default function AIChatPage() {
         {messages.length === 0 ? (
           /* ─── Clean, Focused Welcome State ─── */
           <div className="flex flex-col items-center justify-center text-center max-w-xl mx-auto my-auto py-4 sm:py-10">
-            <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-radiant text-white shadow-radiant mb-3 sm:mb-4">
+            <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3 sm:mb-4">
               <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
 
@@ -1229,6 +1229,15 @@ export default function AIChatPage() {
               // Word count & read time
               const wordCount = m.content.trim().split(/\s+/).filter(Boolean).length;
               const readMinutes = Math.max(1, Math.ceil(wordCount / 180));
+              const hasBengali = /[ঀ-৿]/.test(m.content);
+              const scopeLabel =
+                m.trainingScope === "personal"
+                  ? t("train.tabPersonal", undefined, "Personal")
+                  : m.trainingScope === "default"
+                  ? t("train.tabDefault", undefined, "Default")
+                  : m.trainingScope
+                  ? "Hybrid"
+                  : null;
 
               return (
                 <div
@@ -1236,86 +1245,54 @@ export default function AIChatPage() {
                   className={`flex gap-3.5 ${isUser ? "justify-end" : "justify-start"}`}
                 >
                   {!isUser && (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-xs mt-0.5">
+                    <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary mt-1">
                       <Sparkles className="h-4 w-4" />
                     </div>
                   )}
 
                   <div
                     className={cn(
-                      "max-w-[92%] sm:max-w-[82%] rounded-3xl px-4 py-3.5 sm:px-6 sm:py-5 transition-all",
+                      "min-w-0 transition-all",
                       isUser
-                        ? "bg-gradient-radiant text-white rounded-tr-sm shadow-radiant"
-                        : "bg-surface/90 backdrop-blur-md border border-border/80 text-foreground rounded-tl-sm shadow-card-elevated"
+                        ? "max-w-[92%] sm:max-w-[75%] rounded-2xl rounded-tr-md bg-surface-hover border border-border/70 px-4 py-3 text-foreground"
+                        : "flex-1 py-1"
                     )}
                   >
-                    {/* Model & Persona Attribution (Assistant only) */}
-                    {!isUser && (
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-3 border-b border-border/60 text-[11px] text-muted-foreground">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-display font-bold text-primary flex items-center gap-1">
-                            <Sparkles className="h-3 w-3" />
-                            TaleForge
-                          </span>
-                          {m.model && (
-                            <span className="rounded-lg bg-surface-hover/80 px-2 py-0.5 text-[10px] font-medium text-foreground border border-border/40">
-                              {m.model}
-                            </span>
-                          )}
-                          {m.trainingScope && (
-                            <span className="rounded-lg bg-surface-hover/80 px-2 py-0.5 text-[10px] font-medium text-foreground flex items-center gap-1 border border-border/40">
-                              {m.trainingScope === "personal" ? (
-                                <>
-                                  <User className="h-2.5 w-2.5 text-emerald-600" />
-                                  <span>{t("train.tabPersonal", undefined, "Personal")}</span>
-                                </>
-                              ) : m.trainingScope === "default" ? (
-                                <>
-                                  <BookOpen className="h-2.5 w-2.5 text-indigo-600" />
-                                  <span>{t("train.tabDefault", undefined, "Default")}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="h-2.5 w-2.5 text-amber-600" />
-                                  <span>Hybrid</span>
-                                </>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {m.isStreaming ? (
-                            <span className="text-[10px] text-primary font-medium flex items-center gap-1.5 animate-pulse">
-                              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
-                              {language === "bn" ? "লিখছে..." : "Typing..."}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-muted-foreground">
-                              {wordCount} {t("common.words", undefined, "words")} • {readMinutes} min
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
                     {/* Attached Image Preview (User message) */}
                     {isUser && m.imageUrl && (
-                      <div className="mb-3 overflow-hidden rounded-2xl border border-white/20">
+                      <div className="mb-3 overflow-hidden rounded-xl border border-border/70">
                         <img
                           src={m.imageUrl}
                           alt="Uploaded input"
-                          className="max-h-60 w-auto rounded-2xl object-cover"
+                          className="max-h-60 w-auto rounded-xl object-cover"
                         />
                       </div>
                     )}
 
                     {/* Story / Prompt Body */}
-                    <div className="prose dark:prose-invert max-w-none font-bengali font-serif text-[15px] sm:text-[17px] leading-[1.9] tracking-wide break-words whitespace-pre-wrap text-foreground">
+                    <div
+                      className={cn(
+                        "max-w-[68ch] break-words whitespace-pre-wrap text-foreground",
+                        hasBengali ? "font-bengali" : "font-sans",
+                        isUser
+                          ? "text-[15px] leading-relaxed"
+                          : "text-[17px] sm:text-lg leading-[1.9]"
+                      )}
+                    >
                       {m.content}
                       {m.isStreaming && (
                         <span className="inline-block w-2 h-4.5 bg-primary ml-1 rounded-xs animate-pulse align-middle" />
                       )}
                     </div>
+
+                    {/* Story Meta (Assistant only, shown once the story is complete) */}
+                    {!isUser && !m.isStreaming && (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        {[m.model, scopeLabel, `${wordCount} ${t("common.words", undefined, "words")}`, `${readMinutes} min`]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
 
                     {/* Assistant Action Bar (Copy, Save, TTS, Download, Regenerate) */}
                     {!isUser && !m.isStreaming && (
@@ -1487,7 +1464,7 @@ export default function AIChatPage() {
                   </div>
 
                   {isUser && (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-surface-hover text-foreground shadow-xs mt-0.5">
+                    <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-hover text-muted-foreground mt-1">
                       <User className="h-4 w-4" />
                     </div>
                   )}
@@ -1498,10 +1475,10 @@ export default function AIChatPage() {
             {/* Typing / Generating Animation */}
             {loading && (
               <div className="flex gap-3.5 justify-start max-w-3xl mx-auto animate-in fade-in-50">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-xs">
+                <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <Sparkles className="h-4 w-4 animate-spin" />
                 </div>
-                <div className="rounded-3xl rounded-tl-sm border border-border bg-surface px-5 py-4 shadow-xs">
+                <div className="py-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <RefreshCw className="h-4 w-4 animate-spin text-primary" />
                     <span className="font-medium text-foreground">
