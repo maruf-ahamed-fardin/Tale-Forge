@@ -7,10 +7,10 @@
     "apps/web"
   ],
   "scripts": {
-    "dev": "npm run dev:web",
+    "dev": "node api.js && npm run dev:web",
     "dev:web": "npm run dev --workspace @taleforge/web",
     "dev:api": "python -m uvicorn app.main:app --app-dir apps/api --reload --host 0.0.0.0 --port 8000",
-    "build": "npm run build --workspace @taleforge/web",
+    "build": "node api.js && npm run build --workspace @taleforge/web",
     "lint": "npm run lint --workspace @taleforge/web",
     "typecheck": "npm run typecheck --workspace @taleforge/web"
   },
