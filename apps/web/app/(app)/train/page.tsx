@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import {
   AlertCircle,
-  ArrowRight,
   BookOpen,
   Check,
   CheckCircle2,
@@ -20,7 +18,6 @@ import {
   GraduationCap,
   Info,
   Lock,
-  MessageSquare,
   PenTool,
   RefreshCw,
   Search,
@@ -240,14 +237,14 @@ export default function SimpleTrainPage() {
               <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" />
               {language === "bn" ? "এআই সাহিত্য ও স্টাইল প্রশিক্ষণ" : "AI Style & Vocabulary Forge"}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border/80 text-[11px] text-muted-foreground font-medium shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border/80 text-xs text-muted-foreground font-medium shadow-2xs">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
               <span className="truncate max-w-[140px] sm:max-w-[160px] font-mono font-semibold">{accountDisplay}</span>
             </span>
           </div>
 
           <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground font-display tracking-tight flex items-center gap-2 sm:gap-2.5">
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
               <GraduationCap className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
             </span>
             {t("train.title", undefined, "Train AI on Your Stories")}
@@ -259,17 +256,6 @@ export default function SimpleTrainPage() {
               "Upload your personal literature, essays, and stories to fine-tune the AI's vocabulary, dialogue style, and narrative cadence."
             )}
           </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          <Link
-            href="/chat"
-            className="w-full sm:w-auto justify-center inline-flex items-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-radiant px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] transition-all group"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span>{t("nav.chat", undefined, "Story Chat")}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </Link>
         </div>
       </div>
 
@@ -294,7 +280,7 @@ export default function SimpleTrainPage() {
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all",
                   activeTab === "personal"
-                    ? "bg-gradient-radiant text-white shadow-radiant scale-105"
+                    ? "bg-primary text-white scale-105"
                     : "bg-surface-hover text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
                 )}
               >
@@ -307,18 +293,18 @@ export default function SimpleTrainPage() {
                   </h2>
                   <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Model Active" />
                 </div>
-                <p className="text-[11px] text-muted-foreground truncate max-w-[170px] font-mono">
+                <p className="text-xs text-muted-foreground truncate max-w-[170px] font-mono">
                   {accountDisplay}
                 </p>
               </div>
             </div>
 
             {activeTab === "personal" ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold border border-primary/25">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/25">
                 <Check className="h-3 w-3" /> Active
               </span>
             ) : (
-              <span className="text-[11px] text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-surface-hover">
+              <span className="text-xs text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-surface-hover">
                 Select
               </span>
             )}
@@ -383,18 +369,18 @@ export default function SimpleTrainPage() {
                   </h2>
                   <span className="flex h-2 w-2 rounded-full bg-amber-500" title="Core Benchmark" />
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Bengali Classics Benchmark
                 </p>
               </div>
             </div>
 
             {activeTab === "default" ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-amber-500/25">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/25">
                 <Check className="h-3 w-3" /> Active
               </span>
             ) : (
-              <span className="text-[11px] text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-surface-hover">
+              <span className="text-xs text-muted-foreground font-medium px-2 py-0.5 rounded-full bg-surface-hover">
                 Select
               </span>
             )}
@@ -436,7 +422,7 @@ export default function SimpleTrainPage() {
           className={cn(
             "flex-1 py-2 px-2.5 sm:px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 sm:gap-2",
             activeTab === "personal"
-              ? "bg-primary text-white shadow-radiant"
+              ? "bg-primary text-white"
               : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/60"
           )}
         >
@@ -445,7 +431,7 @@ export default function SimpleTrainPage() {
           <span className="hidden sm:inline truncate">{t("train.tabPersonal", undefined, "Personal Stories")}</span>
           <span
             className={cn(
-              "text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.2 rounded-full font-bold shrink-0",
+              "text-xs px-1.5 sm:px-2 py-0.2 rounded-full font-bold shrink-0",
               activeTab === "personal" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
             )}
           >
@@ -468,7 +454,7 @@ export default function SimpleTrainPage() {
           <span className="hidden sm:inline truncate">{t("train.tabDefault", undefined, "Default Curated Library")}</span>
           <span
             className={cn(
-              "text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.2 rounded-full font-bold shrink-0",
+              "text-xs px-1.5 sm:px-2 py-0.2 rounded-full font-bold shrink-0",
               activeTab === "default" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
             )}
           >
@@ -483,7 +469,7 @@ export default function SimpleTrainPage() {
           {/* Account Isolation & Privacy Glass Banner */}
           <div className="rounded-2xl border border-border/80 bg-surface/70 backdrop-blur-xl p-4 sm:p-4.5 flex items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-start sm:items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-primary border border-primary/20 shadow-2xs">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-2xs">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
@@ -493,11 +479,11 @@ export default function SimpleTrainPage() {
                       ? "নিরাপদ ও ব্যক্তিগত অ্যাকাউন্ট আইসোলেশন"
                       : "Private Account Model Isolation"}
                   </h3>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                     Encrypted
                   </span>
                 </div>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                   {language === "bn"
                     ? `আপনার আপলোড করা লেখা কেবল আপনার এই অ্যাকাউন্টে (${accountDisplay}) সীমাবদ্ধ এবং সম্পূর্ণ ব্যক্তিগত।`
                     : `Training data is strictly isolated to your author workspace (${accountDisplay}) and never exposed to other users.`}
@@ -644,7 +630,7 @@ export default function SimpleTrainPage() {
                     <Button
                       type="submit"
                       disabled={training || !text.trim()}
-                      className="rounded-2xl bg-gradient-radiant px-6 py-2.5 font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all self-end sm:self-auto border-0"
+                      className="rounded-2xl bg-primary px-6 py-2.5 font-bold text-white hover:brightness-110 active:scale-95 transition-all self-end sm:self-auto border-0"
                     >
                       {training ? (
                         <>
@@ -699,16 +685,16 @@ export default function SimpleTrainPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
                         .TXT
                       </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
                         .PDF
                       </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
                         .DOCX
                       </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-surface-hover text-muted-foreground border border-border/60">
                         .DOC
                       </span>
                     </div>
@@ -845,7 +831,7 @@ export default function SimpleTrainPage() {
                                   <span className="font-bold text-sm text-foreground truncate">
                                     {story.title}
                                   </span>
-                                  <Badge variant="primary" className="text-[10px] px-2 py-0.2 rounded-md">
+                                  <Badge variant="primary" className="text-xs px-2 py-0.2 rounded-md">
                                     Personal
                                   </Badge>
                                 </div>
@@ -934,7 +920,7 @@ export default function SimpleTrainPage() {
                                 {isDeleting ? (
                                   <RefreshCw className="h-3.5 w-3.5 animate-spin text-red-600" />
                                 ) : isConfirming ? (
-                                  <span className="text-[11px] font-bold text-red-600">
+                                  <span className="text-xs font-bold text-red-600">
                                     {t("common.confirm", undefined, "Confirm?")}
                                   </span>
                                 ) : (
@@ -1004,16 +990,16 @@ export default function SimpleTrainPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {story.genre && (
-                          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] px-2 py-0.5 font-bold border border-amber-500/25 rounded-md">
+                          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs px-2 py-0.5 font-bold border border-amber-500/25 rounded-md">
                             {story.genre}
                           </Badge>
                         )}
-                        <Badge variant="neutral" className="text-[10px] text-muted-foreground rounded-md">
+                        <Badge variant="neutral" className="text-xs text-muted-foreground rounded-md">
                           <Lock className="h-2.5 w-2.5 mr-1" />
                           Core Model
                         </Badge>
                       </div>
-                      <span className="text-[11px] text-muted-foreground font-semibold shrink-0">
+                      <span className="text-xs text-muted-foreground font-semibold shrink-0">
                         {story.word_count.toLocaleString()} {t("common.words", undefined, "words")}
                       </span>
                     </div>
@@ -1093,7 +1079,7 @@ export default function SimpleTrainPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   {modalStory.genre && (
-                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-md font-bold">
+                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs px-2 py-0.5 rounded-md font-bold">
                       {modalStory.genre}
                     </Badge>
                   )}

@@ -66,7 +66,7 @@ export default function DashboardPage() {
           <Sparkles className="h-4 w-4 mr-1.5 text-primary" aria-hidden="true" />
           {t("dashboard.trainAiModel", undefined, "Train AI Model")}
         </Link>
-        <Link href="/chat" className="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-4 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all">
+        <Link href="/chat" className="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:brightness-110 active:scale-95 transition-all">
           <BookOpen className="h-4 w-4" aria-hidden="true" />
           {t("dashboard.aiStoryChat", undefined, "AI Story Chat")}
         </Link>

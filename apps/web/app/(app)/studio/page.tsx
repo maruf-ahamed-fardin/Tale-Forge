@@ -225,7 +225,7 @@ function StudioContent() {
           id="generate-story-btn"
           onClick={handleGenerate}
           disabled={generating}
-          className="w-full sm:w-auto rounded-xl bg-gradient-radiant text-white shadow-radiant hover:brightness-110 active:scale-95 border-0 font-bold"
+          className="w-full sm:w-auto rounded-xl bg-primary text-white hover:brightness-110 active:scale-95 border-0 font-bold"
         >
           <Wand2 className={`h-4 w-4 mr-1.5 ${generating ? "animate-spin" : ""}`} aria-hidden="true" />
           {generating
@@ -242,7 +242,7 @@ function StudioContent() {
           className={cn(
             "flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5",
             mobileTab === "settings"
-              ? "bg-primary text-white shadow-radiant"
+              ? "bg-primary text-white"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -255,7 +255,7 @@ function StudioContent() {
           className={cn(
             "flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5",
             mobileTab === "editor"
-              ? "bg-primary text-white shadow-radiant"
+              ? "bg-primary text-white"
               : "text-muted-foreground hover:text-foreground"
           )}
         >

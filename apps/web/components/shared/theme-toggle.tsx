@@ -45,7 +45,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
       <span className="sr-only">{isDark ? "Light Mode" : "Night Mode"}</span>
 
       {/* Track Background Icons */}
-      <span className="flex w-full justify-between px-1.5 text-[10px] text-muted-foreground select-none pointer-events-none">
+      <span className="flex w-full justify-between px-1.5 text-xs text-muted-foreground select-none pointer-events-none">
         <Sun
           className={cn(
             "h-3.5 w-3.5 transition-all duration-300",

@@ -243,7 +243,7 @@ export default function TrainingPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded px-2.5 py-1">
+              <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded px-2.5 py-1">
                 GTX 1650 4GB Supported
               </span>
             </div>
@@ -261,7 +261,7 @@ export default function TrainingPage() {
                   ? "টার্মিনালে নিচের কমান্ডটি চালালেই আপনার গল্পগুলোর ওপর Qwen2.5-1.5B মডেল ট্রেইন হবে:"
                   : "Run this terminal command to fine-tune Qwen 2.5 on your trained story corpus:"}
               </p>
-              <div className="relative rounded bg-slate-900 text-slate-100 p-2.5 pr-16 font-mono text-[11px] break-all">
+              <div className="relative rounded bg-slate-900 text-slate-100 p-2.5 pr-16 font-mono text-xs break-all">
                 python ai/training/train_lora.py --base_model Qwen/Qwen2.5-1.5B-Instruct
                 <button
                   type="button"
@@ -270,7 +270,7 @@ export default function TrainingPage() {
                     setCopiedCmd(true);
                     setTimeout(() => setCopiedCmd(false), 2500);
                   }}
-                  className="absolute right-2 top-2 rounded bg-slate-800 px-2 py-0.5 text-[10px] text-slate-300 hover:text-white"
+                  className="absolute right-2 top-2 rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300 hover:text-white"
                 >
                   {copiedCmd ? (isBn ? "কপি হয়েছে!" : "Copied!") : (isBn ? "কপি" : "Copy")}
                 </button>
