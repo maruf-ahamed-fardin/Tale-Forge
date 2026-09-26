@@ -94,7 +94,7 @@ export function SidebarNav({ onNavigate, collapsed = false, onToggleCollapse }: 
               <span className="block font-display text-lg font-extrabold text-foreground tracking-tight leading-tight truncate">
                 {t("nav.appName", undefined, "TaleForge")}
               </span>
-              <span className="block text-[11px] font-medium text-muted-foreground truncate">
+              <span className="block text-xs font-medium text-muted-foreground truncate">
                 {t("nav.appTagline", undefined, "Self-Learning Story AI")}
               </span>
             </span>

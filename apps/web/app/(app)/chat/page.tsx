@@ -739,7 +739,7 @@ export default function AIChatPage() {
                       <h3 className="text-sm font-bold text-foreground font-display">
                         {t("chat.modelSelector", undefined, "Select AI Engine")}
                       </h3>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {language === "bn" ? "গল্প রচনার জন্য এআই মডেল নির্বাচন করুন" : "Choose AI generation model"}
                       </p>
                     </div>
@@ -777,7 +777,7 @@ export default function AIChatPage() {
                             <span className="text-xs font-bold truncate">{m.name}</span>
                             <span
                               className={cn(
-                                "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                                "text-xs font-semibold px-2 py-0.5 rounded-full",
                                 isSelected
                                   ? "bg-primary text-white"
                                   : "bg-surface-hover text-muted-foreground"
@@ -786,7 +786,7 @@ export default function AIChatPage() {
                               {m.badge}
                             </span>
                           </div>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
                             {m.desc}
                           </p>
                         </div>
@@ -811,7 +811,7 @@ export default function AIChatPage() {
                       <h3 className="text-sm font-bold text-foreground font-display">
                         {t("chat.personaSelector", undefined, "Literary Style / লেখক শৈলী")}
                       </h3>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {language === "bn" ? "গল্পের বাচনভঙ্গি ও সাহিত্যের ধরণ" : "Writing cadence & narrative tone"}
                       </p>
                     </div>
@@ -843,7 +843,7 @@ export default function AIChatPage() {
                         <span className="text-xl shrink-0 mt-0.5">{p.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold leading-snug">{p.name}</p>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
                             {p.desc}
                           </p>
                         </div>
@@ -870,7 +870,7 @@ export default function AIChatPage() {
                       <h3 className="text-sm font-bold text-foreground font-display">
                         Knowledge Scope / জ্ঞান পরিসীমা
                       </h3>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {language === "bn" ? "কোন ডেটাসেটের ওপর ভিত্তি করে গল্প লিখবে" : "Training knowledge baseline"}
                       </p>
                     </div>
@@ -917,7 +917,7 @@ export default function AIChatPage() {
                               {s.badge}
                             </span>
                           </div>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
                             {s.desc}
                           </p>
                         </div>
@@ -956,7 +956,7 @@ export default function AIChatPage() {
                 onClick={(e) => e.stopPropagation()}
                 className="hidden sm:block absolute left-0 top-full mt-2 w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                <p className="px-3 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.modelSelector", undefined, "Select AI Generation Engine")}
                 </p>
                 <div className="space-y-1">
@@ -983,7 +983,7 @@ export default function AIChatPage() {
                             <span className="text-xs font-bold truncate">{m.name}</span>
                             <span
                               className={cn(
-                                "text-[10px] font-semibold px-1.5 py-0.2 rounded-full",
+                                "text-xs font-semibold px-1.5 py-0.2 rounded-full",
                                 isSelected
                                   ? "bg-primary text-white"
                                   : "bg-surface-hover text-muted-foreground"
@@ -992,7 +992,7 @@ export default function AIChatPage() {
                               {m.badge}
                             </span>
                           </div>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                             {m.desc}
                           </p>
                         </div>
@@ -1025,7 +1025,7 @@ export default function AIChatPage() {
                 onClick={(e) => e.stopPropagation()}
                 className="hidden sm:block absolute left-0 top-full mt-2 w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                <p className="px-3 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {t("chat.personaSelector", undefined, "Literary Persona / লেখক শৈলী")}
                 </p>
                 <div className="space-y-1">
@@ -1046,7 +1046,7 @@ export default function AIChatPage() {
                         <span className="text-lg shrink-0 mt-0.5">{p.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold leading-snug">{p.name}</p>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
                             {p.desc}
                           </p>
                         </div>
@@ -1079,7 +1079,7 @@ export default function AIChatPage() {
                 onClick={(e) => e.stopPropagation()}
                 className="hidden sm:block absolute right-0 sm:right-auto sm:left-0 lg:left-auto lg:right-0 top-full mt-2 w-80 max-h-[calc(75dvh)] overflow-y-auto rounded-2xl bg-surface border border-border p-2 shadow-2xl z-50 animate-in fade-in-50 zoom-in-95"
               >
-                <p className="px-3 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                <p className="px-3 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Knowledge Scope / জ্ঞান পরিসীমা
                 </p>
                 <div className="space-y-1">
@@ -1115,7 +1115,7 @@ export default function AIChatPage() {
                               {s.badge}
                             </span>
                           </div>
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
                             {s.desc}
                           </p>
                         </div>
@@ -1209,7 +1209,7 @@ export default function AIChatPage() {
                     <h3 className="text-xs sm:text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                       {item.title}
                     </h3>
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-snug">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-snug">
                       {item.desc}
                     </p>
                   </div>
@@ -1416,7 +1416,7 @@ export default function AIChatPage() {
                             }
                           }}
                           disabled={loading}
-                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary active:scale-95 transition shrink-0"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary active:scale-95 transition shrink-0"
                           title="Generate a fresh variation"
                         >
                           <RotateCcw className="h-3 w-3" />
@@ -1428,7 +1428,7 @@ export default function AIChatPage() {
                     {/* Interactive Story Branching Options (Choose Your Own Adventure) */}
                     {!isUser && !m.isStreaming && m.choices && m.choices.length > 0 && (
                       <div className="mt-3.5 pt-3 border-t border-border/70 animate-in fade-in-50 slide-in-from-bottom-2">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                           <GitFork className="h-3.5 w-3.5 text-primary" />
                           <span>
                             {language === "bn"
@@ -1446,14 +1446,14 @@ export default function AIChatPage() {
                               className="group flex flex-col items-start p-2.5 rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 text-left transition-all hover:scale-[1.01] active:scale-[0.99] shadow-2xs disabled:opacity-50"
                             >
                               <div className="flex items-center gap-1.5 w-full">
-                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary text-[10px] font-black shrink-0">
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-primary text-xs font-black shrink-0">
                                   {idx + 1}
                                 </span>
                                 <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                                   {c.label}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-snug">
+                              <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-snug">
                                 {c.prompt.replace(/^গল্পটি এভাবে এগিয়ে নাও:\s*/, "")}
                               </p>
                             </button>
@@ -1570,7 +1570,7 @@ export default function AIChatPage() {
                   type="button"
                   onClick={() => setAutoTrain((prev) => !prev)}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold transition shrink-0 active:scale-95",
+                    "inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-1 text-xs font-semibold transition shrink-0 active:scale-95",
                     autoTrain
                       ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                       : "bg-surface-hover text-muted-foreground hover:text-foreground"
@@ -1582,7 +1582,7 @@ export default function AIChatPage() {
                 </button>
 
                 {/* Quick Persona Badge */}
-                <span className="hidden sm:inline-flex text-[11px] text-muted-foreground">
+                <span className="hidden sm:inline-flex text-xs text-muted-foreground">
                   {currentPersonaInfo.emoji} {currentPersonaInfo.name.split(" ")[0]}
                 </span>
               </div>
@@ -1619,7 +1619,7 @@ export default function AIChatPage() {
           </div>
 
           {/* Minimalist Bottom Disclaimer */}
-          <p className="text-center text-[10px] text-muted-foreground mt-1 sm:mt-1.5 px-2">
+          <p className="text-center text-xs text-muted-foreground mt-1 sm:mt-1.5 px-2">
             {language === "bn"
               ? "টেলফোর্জ আপনার গল্প থেকে শিখে নতুন গল্প সৃষ্টি করে। গুরুত্বপূর্ণ তথ্য ও চরিত্রের নাম যাচাই করে নিন।"
               : "TaleForge learns from your stories and crafts original tales. Review important creative details."}

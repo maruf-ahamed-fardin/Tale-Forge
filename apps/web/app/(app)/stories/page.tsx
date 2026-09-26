@@ -408,7 +408,7 @@ export default function StoriesPage() {
 
             {/* Modal Footer */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 sm:px-6 py-3 bg-surface-hover/50 rounded-b-2xl text-xs">
-              <span className="text-muted-foreground text-[11px] sm:text-xs">
+              <span className="text-muted-foreground text-xs">
                 Saved in TaleForge Library
               </span>
               <div className="flex items-center gap-2">
