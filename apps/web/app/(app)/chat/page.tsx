@@ -249,6 +249,7 @@ export default function AIChatPage() {
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showPersonaDropdown, setShowPersonaDropdown] = useState(false);
   const [showTrainingScopeDropdown, setShowTrainingScopeDropdown] = useState(false);
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
 
   // Message action states
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -710,18 +711,87 @@ export default function AIChatPage() {
     <div className="relative flex flex-col h-full w-full max-w-4xl mx-auto overflow-hidden">
       {/* ─── Mobile Bottom Sheet Portal (Mounted to document.body so backdrop-filter & overflow never trap it) ─── */}
       {mounted &&
-        (showModelDropdown || showPersonaDropdown || showTrainingScopeDropdown) &&
+        (showMobileSettings || showModelDropdown || showPersonaDropdown || showTrainingScopeDropdown) &&
         createPortal(
           <div className="sm:hidden">
             {/* Dark Backdrop */}
             <div
               className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-xs animate-in fade-in-50"
               onClick={() => {
+                setShowMobileSettings(false);
                 setShowModelDropdown(false);
                 setShowPersonaDropdown(false);
                 setShowTrainingScopeDropdown(false);
               }}
             />
+
+            {/* Combined Story Settings Sheet (one entry point on phones; each row opens its own picker) */}
+            {showMobileSettings && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-x-0 bottom-0 z-[1000] max-h-[82dvh] rounded-t-3xl border-t border-border bg-surface p-4 shadow-2xl animate-in slide-in-from-bottom duration-200 overflow-y-auto"
+              >
+                <div className="mx-auto mb-2.5 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+                <div className="flex items-center justify-between px-1 pb-3 border-b border-border/60 mb-2">
+                  <h3 className="text-sm font-bold text-foreground font-display">
+                    {language === "bn" ? "গল্পের সেটিংস" : "Story settings"}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileSettings(false)}
+                    className="p-1.5 rounded-xl text-muted-foreground hover:bg-surface-hover hover:text-foreground active:scale-95 transition"
+                    aria-label={t("common.close", undefined, "Close")}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  {[
+                    {
+                      key: "model",
+                      label: t("chat.modelSelector", undefined, "AI Model"),
+                      value: currentModelInfo.name,
+                      icon: <ModelIcon className={`h-4 w-4 ${currentModelInfo.color}`} />,
+                      open: () => setShowModelDropdown(true),
+                    },
+                    {
+                      key: "persona",
+                      label: t("chat.personaSelector", undefined, "Literary Style"),
+                      value: currentPersonaInfo.name,
+                      icon: <span className="text-base leading-none">{currentPersonaInfo.emoji}</span>,
+                      open: () => setShowPersonaDropdown(true),
+                    },
+                    {
+                      key: "scope",
+                      label: language === "bn" ? "জ্ঞানের পরিধি" : "Knowledge Scope",
+                      value: currentScopeInfo.shortName,
+                      icon: <ScopeIcon className={`h-4 w-4 ${currentScopeInfo.color}`} />,
+                      open: () => setShowTrainingScopeDropdown(true),
+                    },
+                  ].map((row) => (
+                    <button
+                      key={row.key}
+                      type="button"
+                      onClick={() => {
+                        setShowMobileSettings(false);
+                        row.open();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl p-3 text-left hover:bg-surface-hover active:scale-[0.99] transition"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-hover">
+                        {row.icon}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-xs text-muted-foreground">{row.label}</span>
+                        <span className="block text-sm font-semibold text-foreground truncate">{row.value}</span>
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Model Bottom Sheet */}
             {showModelDropdown && (
@@ -935,8 +1005,21 @@ export default function AIChatPage() {
       <header className="shrink-0 relative z-20 flex items-center justify-between gap-1 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2.5 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
         {/* Left: AI Generation Controls */}
         <div className="flex items-center gap-1 sm:gap-2 min-w-0 overflow-x-auto sm:overflow-visible no-scrollbar py-0.5">
+          {/* Mobile: single Story Settings trigger (model / style / scope live in one sheet) */}
+          <button
+            type="button"
+            onClick={() => setShowMobileSettings(true)}
+            className="sm:hidden flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-foreground bg-surface border border-border/80 shadow-2xs hover:bg-surface-hover active:scale-95 transition shrink-0 max-w-[60vw]"
+            title={language === "bn" ? "গল্পের সেটিংস" : "Story settings"}
+          >
+            <ModelIcon className={`h-3.5 w-3.5 shrink-0 ${currentModelInfo.color}`} />
+            <span className="truncate">{currentModelInfo.name}</span>
+            <span className="text-muted-foreground shrink-0">· {currentPersonaInfo.emoji}</span>
+            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          </button>
+
           {/* Model Selector Dropdown */}
-          <div className="relative shrink-0" ref={modelDropdownRef}>
+          <div className="relative shrink-0 hidden sm:block" ref={modelDropdownRef}>
             <button
               type="button"
               onClick={(e) => toggleDropdown("model", e)}
@@ -1005,7 +1088,7 @@ export default function AIChatPage() {
           </div>
 
           {/* Persona / Style Selector Dropdown */}
-          <div className="relative shrink-0" ref={personaDropdownRef}>
+          <div className="relative shrink-0 hidden sm:block" ref={personaDropdownRef}>
             <button
               type="button"
               onClick={(e) => toggleDropdown("persona", e)}
@@ -1059,7 +1142,7 @@ export default function AIChatPage() {
           </div>
 
           {/* Training Scope Selector Dropdown */}
-          <div className="relative shrink-0" ref={trainingScopeDropdownRef}>
+          <div className="relative shrink-0 hidden sm:block" ref={trainingScopeDropdownRef}>
             <button
               type="button"
               onClick={(e) => toggleDropdown("scope", e)}
