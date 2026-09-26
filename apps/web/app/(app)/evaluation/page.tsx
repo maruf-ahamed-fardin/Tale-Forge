@@ -295,7 +295,7 @@ export default function EvaluationPage() {
                       <div className="text-3xl font-extrabold text-primary">
                         {metrics.overallScore}
                       </div>
-                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         / 100 Points
                       </div>
                     </div>

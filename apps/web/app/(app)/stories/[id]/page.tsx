@@ -176,7 +176,7 @@ export default function StoryDetailPage() {
         </Link>
         <Link
           href={`/studio?id=${story.id}&action=continue`}
-          className={buttonVariants({ className: "w-full sm:w-auto justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant" })}
+          className={buttonVariants({ className: "w-full sm:w-auto justify-center rounded-xl bg-primary text-white" })}
         >
           <Wand2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
           {t("storyDetail.continueStory", undefined, "Continue Story")}

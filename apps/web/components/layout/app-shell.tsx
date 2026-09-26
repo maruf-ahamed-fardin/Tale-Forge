@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, PanelLeftClose, PanelLeftOpen, Plus, Search, X } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, Plus, X } from "lucide-react";
 
 import { SidebarNav } from "@/components/navigation/sidebar-nav";
 import { LanguageToggle } from "@/components/shared/language-toggle";
@@ -57,9 +57,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="fixed inset-0 h-full w-full overflow-hidden bg-background text-foreground flex relative">
-      {/* Ambient Glow Lights for rich atmospheric feel */}
-      <div className="ambient-glow-mesh pointer-events-none" />
-      <div className="ambient-glow-mesh-2 pointer-events-none" />
 
       {/* Permanent Desktop/Tablet Sticky Sidebar - Collapsible with smooth transition */}
       <aside
@@ -151,44 +148,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {/* Tablet & Desktop Header */}
-        <header className="shrink-0 z-10 hidden h-14 md:h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-4 md:px-5 lg:px-6 backdrop-blur-xl md:flex">
-          <div className="flex items-center gap-3 lg:gap-4 min-w-0">
-            {/* Quick Spotlight Search Bar */}
-            <div className="hidden xl:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-border/70 bg-surface/70 text-muted-foreground text-xs hover:border-primary/40 transition-all shadow-2xs w-64">
-              <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <input
-                type="text"
-                placeholder={t("common.search", undefined, "Search stories, prompts...")}
-                className="bg-transparent border-0 outline-none w-full text-xs text-foreground placeholder:text-muted-foreground/70"
-              />
-              <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-muted/70 border border-border/70 text-muted-foreground shrink-0">
-                ⌘K
-              </kbd>
-            </div>
-
+        {/* Tablet & Desktop Header (the chat page renders its own single header) */}
+        {!isChat && (
+          <header className="shrink-0 z-10 hidden h-14 md:h-16 items-center justify-between border-b border-border/70 bg-surface/75 px-4 md:px-5 lg:px-6 backdrop-blur-xl md:flex">
             <div className="truncate">
               <p className="text-sm font-bold text-foreground leading-tight truncate">
                 {t("nav.creativeWorkspace", undefined, "Creative Workspace")}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate hidden sm:block">
+              <p className="text-xs text-muted-foreground truncate hidden sm:block">
                 {t("nav.workspaceSubtitle", undefined, "Personalized AI Storytelling Platform")}
               </p>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 lg:gap-3 shrink-0">
-            <LanguageToggle />
-            <ThemeToggle />
-            <Link
-              href="/studio"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-3.5 py-2 text-xs font-bold text-white shadow-radiant hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">{t("nav.newStory", undefined, "New Story")}</span>
-            </Link>
-          </div>
-        </header>
+            <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+              <LanguageToggle />
+              <ThemeToggle />
+              <Link
+                href="/studio"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-xs hover:opacity-90 active:scale-[0.98] transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">{t("nav.openStudio", undefined, "Open Studio")}</span>
+              </Link>
+            </div>
+          </header>
+        )}
 
         {/* Workspace Main Content Area */}
         <main

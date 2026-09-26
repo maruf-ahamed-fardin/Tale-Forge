@@ -240,7 +240,7 @@ export function QuoteCardDialog({
               <h2 className="text-sm sm:text-base font-bold text-foreground font-display">
                 {language === "bn" ? "সোশ্যাল মিডিয়া উদ্ধৃতি কার্ড" : "Social Quote Card Generator"}
               </h2>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {language === "bn"
                   ? "গল্পের আকর্ষণীয় পঙক্তিগুলো ছবির মতো তৈরি করে শেয়ার করুন"
                   : "Export captivating literary moments into beautiful social cards"}
@@ -295,7 +295,7 @@ export function QuoteCardDialog({
           <div>
             <label className="text-xs font-bold text-foreground flex items-center justify-between mb-1.5">
               <span>{language === "bn" ? "কার্ডের উদ্ধৃতি বা সংলাপ" : "Quote Text"}</span>
-              <span className="text-[10px] text-muted-foreground font-mono">
+              <span className="text-xs text-muted-foreground font-mono">
                 {quoteText.length}/280
               </span>
             </label>
@@ -311,7 +311,7 @@ export function QuoteCardDialog({
 
           {/* Live Canvas Preview */}
           <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-black/40 border border-border/60">
-            <p className="text-[11px] font-bold text-muted-foreground mb-2 self-start flex items-center gap-1.5">
+            <p className="text-xs font-bold text-muted-foreground mb-2 self-start flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span>{language === "bn" ? "লাইভ প্রিভিউ (1080×1080 HD)" : "Live Retina Preview"}</span>
             </p>
@@ -337,7 +337,7 @@ export function QuoteCardDialog({
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:brightness-110 active:scale-95 transition"
           >
             <Download className="h-4 w-4" />
             <span>
