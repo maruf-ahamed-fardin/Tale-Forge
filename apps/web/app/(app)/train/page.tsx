@@ -240,14 +240,14 @@ export default function SimpleTrainPage() {
               <Sparkles className="h-3.5 w-3.5 animate-pulse text-primary" />
               {language === "bn" ? "এআই সাহিত্য ও স্টাইল প্রশিক্ষণ" : "AI Style & Vocabulary Forge"}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border/80 text-[11px] text-muted-foreground font-medium shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface border border-border/80 text-xs text-muted-foreground font-medium shadow-2xs">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
               <span className="truncate max-w-[140px] sm:max-w-[160px] font-mono font-semibold">{accountDisplay}</span>
             </span>
           </div>
 
           <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground font-display tracking-tight flex items-center gap-2 sm:gap-2.5">
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-radiant text-white shadow-radiant">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
               <GraduationCap className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
             </span>
             {t("train.title", undefined, "Train AI on Your Stories")}
@@ -294,7 +294,7 @@ export default function SimpleTrainPage() {
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all",
                   activeTab === "personal"
-                    ? "bg-gradient-radiant text-white shadow-radiant scale-105"
+                    ? "bg-primary text-white scale-105"
                     : "bg-surface-hover text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
                 )}
               >
@@ -436,7 +436,7 @@ export default function SimpleTrainPage() {
           className={cn(
             "flex-1 py-2 px-2.5 sm:px-4 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 sm:gap-2",
             activeTab === "personal"
-              ? "bg-primary text-white shadow-radiant"
+              ? "bg-primary text-white"
               : "text-muted-foreground hover:text-foreground hover:bg-surface-hover/60"
           )}
         >
@@ -483,7 +483,7 @@ export default function SimpleTrainPage() {
           {/* Account Isolation & Privacy Glass Banner */}
           <div className="rounded-2xl border border-border/80 bg-surface/70 backdrop-blur-xl p-4 sm:p-4.5 flex items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-start sm:items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-primary border border-primary/20 shadow-2xs">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-2xs">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
@@ -644,7 +644,7 @@ export default function SimpleTrainPage() {
                     <Button
                       type="submit"
                       disabled={training || !text.trim()}
-                      className="rounded-2xl bg-gradient-radiant px-6 py-2.5 font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition-all self-end sm:self-auto border-0"
+                      className="rounded-2xl bg-primary px-6 py-2.5 font-bold text-white hover:brightness-110 active:scale-95 transition-all self-end sm:self-auto border-0"
                     >
                       {training ? (
                         <>

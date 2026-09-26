@@ -233,17 +233,17 @@ export default function StoriesPage() {
           return (
             <Card
               key={story.id}
-              className="flex flex-col justify-between transition-all rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-1 hover:shadow-radiant group"
+              className="flex flex-col justify-between transition-all rounded-2xl sm:rounded-3xl border border-border/80 bg-surface/85 backdrop-blur-xl shadow-card-elevated hover:border-primary/40 hover:-translate-y-1 hover:shadow-card-elevated group"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
                         {story.genre || "Story"}
                       </span>
                       {story.mood && (
-                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-lg bg-surface-hover text-muted-foreground border border-border/60">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-lg bg-surface-hover text-muted-foreground border border-border/60">
                           {story.mood}
                         </span>
                       )}

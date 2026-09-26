@@ -337,7 +337,7 @@ export function QuoteCardDialog({
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-radiant px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-radiant hover:brightness-110 active:scale-95 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:brightness-110 active:scale-95 transition"
           >
             <Download className="h-4 w-4" />
             <span>
